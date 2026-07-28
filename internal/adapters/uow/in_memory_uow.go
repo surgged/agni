@@ -12,6 +12,8 @@ import (
 	"github.com/surgged/agni/internal/domain/shared"
 	"github.com/surgged/agni/internal/domain/user"
 	// crank:tx-repo-imports (do not remove — `crank make scaffold` splices new domain imports here)
+	domainapp "github.com/surgged/agni/internal/domain/app"
+	domainsharelink "github.com/surgged/agni/internal/domain/sharelink"
 	"github.com/surgged/agni/internal/ports"
 )
 
@@ -19,11 +21,15 @@ import (
 // in-memory repositories passed at construction time. There is no real
 // transaction — the repos are just shared references.
 type inMemoryTxRepositories struct {
-	userRepo user.Repository
+	userRepo      user.Repository
+	appRepo       domainapp.Repository
+	shareLinkRepo domainsharelink.Repository
 	// crank:tx-repo-fields (do not remove — `crank make scaffold` splices new repo fields here)
 }
 
-func (r *inMemoryTxRepositories) Users() user.Repository { return r.userRepo }
+func (r *inMemoryTxRepositories) Users() user.Repository                     { return r.userRepo }
+func (r *inMemoryTxRepositories) Apps() domainapp.Repository                  { return r.appRepo }
+func (r *inMemoryTxRepositories) ShareLinks() domainsharelink.Repository      { return r.shareLinkRepo }
 
 // crank:tx-repo-methods (do not remove — `crank make scaffold` splices new repo accessor methods here)
 
@@ -34,6 +40,14 @@ type Option func(*inMemoryTxRepositories)
 
 func WithUserRepo(r user.Repository) Option {
 	return func(repos *inMemoryTxRepositories) { repos.userRepo = r }
+}
+
+func WithAppRepo(r domainapp.Repository) Option {
+	return func(repos *inMemoryTxRepositories) { repos.appRepo = r }
+}
+
+func WithShareLinkRepo(r domainsharelink.Repository) Option {
+	return func(repos *inMemoryTxRepositories) { repos.shareLinkRepo = r }
 }
 
 // crank:inmem-options (do not remove — `crank make scaffold` splices new WithXxxRepo options here)

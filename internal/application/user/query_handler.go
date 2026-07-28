@@ -34,3 +34,8 @@ func (h *QueryHandler) HandleGet(ctx context.Context, q GetUserQuery) (*user.Use
 func (h *QueryHandler) HandleList(ctx context.Context, _ ListUsersQuery) ([]*user.User, error) {
 	return h.repo.List(ctx)
 }
+
+// HandleGetByEmail fetches a single user aggregate by email address.
+func (h *QueryHandler) HandleGetByEmail(ctx context.Context, q GetUserByEmailQuery) (*user.User, error) {
+	return h.repo.GetByEmail(ctx, q.Email)
+}

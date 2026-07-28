@@ -30,3 +30,29 @@ logging:
   format: "json"
   # Set to true to include compressed source locations (e.g. handler/user.go:42)
   add_source: false
+
+mcp:
+  agent_signing_secret: "change-me-in-production"
+  agent_token_ttl: 720h
+
+email:
+  provider: "resend"
+  resend_api_key: ""
+  from_address: "agni@agni.dev"
+
+share:
+  domain: "agni.dev"
+  magic_link_ttl: 24h
+  session_ttl: 168h
+
+deploy:
+  max_tarball_size_mb: 500
+  build_timeout_s: 300
+  deploy_timeout_s: 120
+
+k3s:
+  namespace: "agni"
+  registry_addr: "registry.agni.svc:5000"
+  kata_runtime_class: "kata-fc"
+  ingress_class: "nginx"
+  cert_issuer: "letsencrypt-prod"

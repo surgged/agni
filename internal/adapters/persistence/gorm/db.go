@@ -7,6 +7,8 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/surgged/agni/internal/config"
+	domainapp "github.com/surgged/agni/internal/domain/app"
+	domainsharelink "github.com/surgged/agni/internal/domain/sharelink"
 )
 
 // NewDB opens a connection to SQLite using the supplied configuration
@@ -23,6 +25,14 @@ func NewDB(cfg config.DatabaseConfig) (*gorm.DB, error) {
 		return nil, fmt.Errorf("get underlying *sql.DB: %w", err)
 	}
 	sqlDB.SetMaxOpenConns(1) // SQLite only supports a single writer.
+
+	// Auto-migrate domain models
+	if err := db.AutoMigrate(
+		&domainapp.App{},
+		&domainsharelink.ShareLink{},
+	); err != nil {
+		return nil, fmt.Errorf("auto-migrate: %w", err)
+	}
 
 	return db, nil
 }

@@ -28,6 +28,12 @@ type Config struct {
 
 	// crank:config-fields
 	Logging LoggingConfig `mapstructure:"logging"`
+
+	MCP    MCPConfig    `mapstructure:"mcp"`
+	Email  EmailConfig  `mapstructure:"email"`
+	Share  ShareConfig  `mapstructure:"share"`
+	Deploy DeployConfig `mapstructure:"deploy"`
+	K3s    K3sConfig    `mapstructure:"k3s"`
 }
 
 // AppConfig holds settings for the HTTP server itself.
@@ -72,6 +78,42 @@ type LoggingConfig struct {
 	Level     string `mapstructure:"level"`
 	Format    string `mapstructure:"format"`
 	AddSource bool   `mapstructure:"add_source"`
+}
+
+// MCPConfig holds settings for the MCP agent authentication.
+type MCPConfig struct {
+	AgentSigningSecret string        `mapstructure:"agent_signing_secret"`
+	AgentTokenTTL      time.Duration `mapstructure:"agent_token_ttl"`
+}
+
+// EmailConfig holds settings for the email provider.
+type EmailConfig struct {
+	Provider     string `mapstructure:"provider"`
+	ResendAPIKey string `mapstructure:"resend_api_key" env:"RESEND_API_KEY"`
+	FromAddress  string `mapstructure:"from_address"`
+}
+
+// ShareConfig holds settings for share links and magic links.
+type ShareConfig struct {
+	Domain       string        `mapstructure:"domain"`
+	MagicLinkTTL time.Duration `mapstructure:"magic_link_ttl"`
+	SessionTTL   time.Duration `mapstructure:"session_ttl"`
+}
+
+// DeployConfig holds settings for the deploy pipeline.
+type DeployConfig struct {
+	MaxTarballSizeMB int `mapstructure:"max_tarball_size_mb"`
+	BuildTimeoutS    int `mapstructure:"build_timeout_s"`
+	DeployTimeoutS   int `mapstructure:"deploy_timeout_s"`
+}
+
+// K3sConfig holds settings for the k3s cluster.
+type K3sConfig struct {
+	Namespace        string `mapstructure:"namespace"`
+	RegistryAddr     string `mapstructure:"registry_addr"`
+	KataRuntimeClass string `mapstructure:"kata_runtime_class"`
+	IngressClass     string `mapstructure:"ingress_class"`
+	CertIssuer       string `mapstructure:"cert_issuer"`
 }
 
 // Load reads non-secret values from configs/config.yaml (via Viper) and then
@@ -132,4 +174,21 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("logging.level", "info")
 	v.SetDefault("logging.format", "text")
 	v.SetDefault("logging.add_source", false)
+
+	v.SetDefault("mcp.agent_signing_secret", "change-me-in-production")
+	v.SetDefault("mcp.agent_token_ttl", "720h")
+	v.SetDefault("email.provider", "resend")
+	v.SetDefault("email.resend_api_key", "")
+	v.SetDefault("email.from_address", "agni@agni.dev")
+	v.SetDefault("share.domain", "agni.dev")
+	v.SetDefault("share.magic_link_ttl", "24h")
+	v.SetDefault("share.session_ttl", "168h")
+	v.SetDefault("deploy.max_tarball_size_mb", 500)
+	v.SetDefault("deploy.build_timeout_s", 300)
+	v.SetDefault("deploy.deploy_timeout_s", 120)
+	v.SetDefault("k3s.namespace", "agni")
+	v.SetDefault("k3s.registry_addr", "registry.agni.svc:5000")
+	v.SetDefault("k3s.kata_runtime_class", "kata-fc")
+	v.SetDefault("k3s.ingress_class", "nginx")
+	v.SetDefault("k3s.cert_issuer", "letsencrypt-prod")
 }

@@ -18,6 +18,8 @@ import (
 	"github.com/surgged/agni/internal/domain/shared"
 	"github.com/surgged/agni/internal/domain/user"
 	// crank:tx-repo-imports (do not remove — `crank make scaffold` splices new domain imports here)
+	domainapp "github.com/surgged/agni/internal/domain/app"
+	domainsharelink "github.com/surgged/agni/internal/domain/sharelink"
 )
 
 // TxRepositories provides transaction-scoped domain repositories to the
@@ -30,6 +32,8 @@ import (
 // to import the persistence adapter or *gorm.DB directly.
 type TxRepositories interface {
 	Users() user.Repository
+	Apps() domainapp.Repository
+	ShareLinks() domainsharelink.Repository
 	// crank:tx-repositories (do not remove — `crank make scaffold` splices new repo accessors here)
 }
 

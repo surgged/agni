@@ -15,16 +15,22 @@ import (
 	echoSwagger "github.com/swaggo/echo-swagger/v2"
 
 	_ "github.com/surgged/agni/docs"
+	"github.com/surgged/agni/internal/adapters/auth/agentapikey"
+	"github.com/surgged/agni/internal/adapters/auth/jwt"
+	redisclient "github.com/surgged/agni/internal/adapters/cache/redis"
+	resendadapter "github.com/surgged/agni/internal/adapters/email/resend"
 	"github.com/surgged/agni/internal/adapters/eventbus"
 	"github.com/surgged/agni/internal/adapters/http/web"
 	"github.com/surgged/agni/internal/adapters/http/web/middleware"
 	v1 "github.com/surgged/agni/internal/adapters/http/web/v1"
 	"github.com/surgged/agni/internal/adapters/persistence/gorm"
+	"github.com/surgged/agni/internal/adapters/provider/k3s"
 	"github.com/surgged/agni/internal/adapters/uow"
+	appapp "github.com/surgged/agni/internal/application/app"
+	"github.com/surgged/agni/internal/application/deploy"
+	shareapp "github.com/surgged/agni/internal/application/sharelink"
 	userapp "github.com/surgged/agni/internal/application/user"
 	// crank:composition-imports (do not remove — `crank make handler` splices new application imports here)
-	"github.com/surgged/agni/internal/adapters/auth/jwt"
-	redisclient "github.com/surgged/agni/internal/adapters/cache/redis"
 	"github.com/surgged/agni/internal/config"
 	"github.com/surgged/agni/pkg/crypto"
 	"github.com/surgged/agni/pkg/logging"
@@ -83,10 +89,14 @@ func main() {
 	bus := eventbus.NewInMemory()
 	userRepo := gorm.NewUserRepository(gormDB)
 	// crank:repos (do not remove — `crank make handler` splices new repository constructors here)
+	appRepo := gorm.NewAppRepository(gormDB)
+	sharelinkRepo := gorm.NewShareLinkRepository(gormDB)
 
 	uowOpts := []uow.Option{
 		uow.WithUserRepo(userRepo),
 		// crank:uow-repos (do not remove — `crank make handler` splices new WithXxxRepo options here)
+		uow.WithAppRepo(appRepo),
+		uow.WithShareLinkRepo(sharelinkRepo),
 	}
 	uow := uow.NewInMemoryUoW(bus, userRepo, uowOpts...)
 
@@ -95,9 +105,35 @@ func main() {
 	denylist := gorm.NewTokenDenylist(gormDB)
 	tokens := jwt.NewTokenService(cfg.JWT, denylist)
 
+	// ---- Agent token service ----
+	agentTokens := agentapikey.NewAgentTokenService(cfg.MCP.AgentSigningSecret, cfg.MCP.AgentTokenTTL)
+
+	// ---- Email adapter ----
+	emailClient := resendadapter.NewClient(cfg.Email.ResendAPIKey, cfg.Email.FromAddress, cfg.Share.Domain)
+
+	// ---- k3s provider ----
+	k3sProvider := k3s.NewProvider(cfg.K3s.Namespace, cfg.K3s.RegistryAddr)
+
 	userCmd := userapp.NewCommandHandler(userRepo, uow, hasher)
 	userQry := userapp.NewQueryHandler(userRepo)
 	userHandler := v1.NewUserHandler(userCmd, userQry)
+
+	// ---- Application services ----
+	appCmd := appapp.NewCommandHandler(appRepo, uow)
+	appQry := appapp.NewQueryHandler(appRepo)
+	sharelinkCmd := shareapp.NewCommandHandler(sharelinkRepo, uow)
+	sharelinkQry := shareapp.NewQueryHandler(sharelinkRepo)
+
+	// ---- Deploy pipeline ----
+	deployPipe := deploy.NewPipeline(k3sProvider, appCmd, appQry)
+	_ = deployPipe // wired into app handler or background worker in v2
+
+	appHandler := v1.NewAppHandler(appCmd, appQry, deployPipe, agentTokens)
+	shareHandler := v1.NewShareHandler(sharelinkCmd, sharelinkQry)
+	magicHandler := v1.NewMagicHandler(cfg.Share, agentTokens, emailClient, userCmd, userQry)
+	sessionHandler := v1.NewSessionHandler(agentTokens, sharelinkRepo)
+	meHandler := v1.NewMeHandler(userQry)
+	clusterHealthHandler := v1.NewClusterHealthHandler()
 	// crank:composition-root (do not remove — `crank make handler` splices new cmd/qry/handler wiring here)
 
 	e := web.NewServer(logger)
@@ -116,7 +152,13 @@ func main() {
 	e.GET("/health", web.Health)
 
 	mountCfg := v1.MountConfig{
-		UserHandler: userHandler,
+		UserHandler:          userHandler,
+		AppHandler:           appHandler,
+		ShareHandler:         shareHandler,
+		MagicHandler:         magicHandler,
+		SessionHandler:       sessionHandler,
+		MeHandler:            meHandler,
+		ClusterHealthHandler: clusterHealthHandler,
 		// crank:mount-config (do not remove — `crank make handler` splices new handler fields here)
 	}
 	v1.Mount(e, mountCfg)

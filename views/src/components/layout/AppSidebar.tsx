@@ -3,7 +3,7 @@ import {
   BookOpen,
   Command,
   Frame,
-  GalleryVerticalEnd,
+  Flame,
   Settings2,
   Files,
   HardDrive,
@@ -11,7 +11,7 @@ import {
   LogOut,
   ChevronDown,
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import {
   Sidebar,
@@ -31,7 +31,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
 
 const mainNavItems = [
   {
@@ -70,7 +72,7 @@ const projectItems = [
   {
     title: 'Media',
     url: '#',
-    icon: GalleryVerticalEnd,
+    icon: Flame,
   },
 ];
 
@@ -89,6 +91,24 @@ const teams = [
 
 export function AppSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const getInitials = (name?: string) => {
+    if (!name) return 'AD';
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Logged out successfully');
+    navigate('/login');
+  };
 
   return (
     <Sidebar collapsible="icon" variant="inset">
@@ -101,11 +121,11 @@ export function AppSidebar() {
                   size="lg"
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                    <GalleryVerticalEnd className="size-4" />
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-tr from-amber-500 to-orange-600 text-white shadow-sm">
+                    <Flame className="size-4 animate-pulse" />
                   </div>
                   <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-semibold">Agni</span>
+                    <span className="font-semibold">Agni Engine</span>
                     <span className="text-xs text-muted-foreground">v0.1.0</span>
                   </div>
                   <ChevronDown className="ml-auto size-4" />
@@ -185,13 +205,18 @@ export function AppSidebar() {
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-xs font-medium">
-                      AK
+                    {user?.avatar ? <AvatarImage src={user.avatar} alt={user?.name} /> : null}
+                    <AvatarFallback className="rounded-lg bg-gradient-to-tr from-amber-500 to-orange-600 text-white text-xs font-semibold">
+                      {getInitials(user?.name)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-semibold text-sm">Bang Komeng</span>
-                    <span className="text-xs text-muted-foreground">komeng@agni.dev</span>
+                    <span className="font-semibold text-sm truncate max-w-[120px]">
+                      {user?.name || 'Agni Developer'}
+                    </span>
+                    <span className="text-xs text-muted-foreground truncate max-w-[120px]">
+                      {user?.email || 'dev@agni.io'}
+                    </span>
                   </div>
                   <ChevronDown className="ml-auto size-4" />
                 </SidebarMenuButton>
@@ -202,11 +227,11 @@ export function AppSidebar() {
                 side="top"
                 sideOffset={4}
               >
-                <DropdownMenuItem>
-                  <Settings2 className="mr-2 size-4" />
+                <DropdownMenuItem onClick={() => navigate('/settings')}>
+                  <Settings2 className="mr-2 size-4 text-muted-foreground" />
                   <span>Account Settings</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive font-medium" onClick={handleLogout}>
                   <LogOut className="mr-2 size-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
@@ -218,3 +243,4 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
