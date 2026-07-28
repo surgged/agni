@@ -28,3 +28,14 @@ help:
 
 clean:
 	rm -rf $(BIN_DIR)
+
+.PHONY: dev
+dev:
+	@echo "Starting backend (Go) & frontend (Vite)..."
+	@trap 'kill 0' EXIT; \
+	crank run & \
+	BE_PID=$$!; \
+	sleep 1; \
+	cd views && bun run dev & \
+	FE_PID=$$!; \
+	wait

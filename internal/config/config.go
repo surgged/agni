@@ -32,11 +32,10 @@ type Config struct {
 
 // AppConfig holds settings for the HTTP server itself.
 type AppConfig struct {
-	Name        string   `mapstructure:"name"`
-	Host        string   `mapstructure:"host"`
-	Port        int      `mapstructure:"port"`
-	Env         string   `mapstructure:"env"`
-	CORSOrigins []string `mapstructure:"cors_origins"`
+	Name string `mapstructure:"name"`
+	Host string `mapstructure:"host"`
+	Port int    `mapstructure:"port"`
+	Env  string `mapstructure:"env"`
 }
 
 // JWTConfig holds settings for JWT issuance and validation.
@@ -62,21 +61,9 @@ type ViewsConfig struct {
 	DevServer string `mapstructure:"dev_server"`
 }
 
-// DatabaseConfig holds PostgreSQL connection settings.
-// The Password field is a secret — set it via DATABASE_PASSWORD in .env.
+// DatabaseConfig holds SQLite connection settings.
 type DatabaseConfig struct {
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
-	User     string `mapstructure:"user"`
-	Password string `mapstructure:"password" env:"DATABASE_PASSWORD"`
-	Name     string `mapstructure:"name"`
-	SSLMode  string `mapstructure:"sslmode"`
-}
-
-// DSN returns a libpq-style connection string.
-func (d DatabaseConfig) DSN() string {
-	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
-		d.User, d.Password, d.Host, d.Port, d.Name, d.SSLMode)
+	Path string `mapstructure:"path"`
 }
 
 // crank:config-structs
@@ -128,7 +115,6 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("app.host", "0.0.0.0")
 	v.SetDefault("app.port", 8080)
 	v.SetDefault("app.env", "development")
-	v.SetDefault("app.cors_origins", []string{"*"})
 	v.SetDefault("jwt.secret", "change-me-in-production")
 	v.SetDefault("jwt.expiration", "24h")
 	v.SetDefault("jwt.refresh_expiration", "168h")
@@ -140,12 +126,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("views.enabled", false)
 	v.SetDefault("views.dev_server", "")
 
-	v.SetDefault("database.host", "localhost")
-	v.SetDefault("database.port", 5432)
-	v.SetDefault("database.user", "postgres")
-	v.SetDefault("database.password", "postgres")
-	v.SetDefault("database.name", "agni")
-	v.SetDefault("database.sslmode", "disable")
+	v.SetDefault("database.path", "data/agni.db")
 
 	// crank:config-defaults
 	v.SetDefault("logging.level", "info")

@@ -1,19 +1,21 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   build: {
-    // Output to ../static/dist/ so Go's embed can pick it up.
-    // The dist/ subdirectory is git-ignored while static/embed.go is tracked.
     outDir: '../static/dist',
     emptyOutDir: true,
   },
   server: {
     port: 5173,
     proxy: {
-      // Proxy API and Swagger requests to the Go backend in dev mode.
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,

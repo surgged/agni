@@ -105,11 +105,11 @@ func main() {
 	e.Use(middleware.RequestLogger())
 
 	e.Use(echomw.CORSWithConfig(echomw.CORSConfig{
-		AllowOrigins:     cfg.App.CORSOrigins,
-		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions},
-		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
-		AllowCredentials: true,
-		MaxAge:           300,
+		UnsafeAllowOriginFunc: func(c *echo.Context, origin string) (string, bool, error) { return origin, true, nil },
+		AllowMethods:          []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions},
+		AllowHeaders:          []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		AllowCredentials:      true,
+		MaxAge:                300,
 	}))
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
