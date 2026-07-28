@@ -1,0 +1,97 @@
+# agni
+
+Production-ready Go backend scaffolded by [crank](https://github.com/anurag925/crank). The project follows a
+Domain-Driven layout: a pure-Go domain layer, application command/query
+handlers, and adapter implementations for HTTP and persistence.
+
+## Stack
+
+| Layer | Technology | Docs |
+|-------|-----------|------|
+| HTTP | [Echo v5](https://echo.labstack.com) | [echo.labstack.com](https://echo.labstack.com) |
+| Config | [Viper](https://github.com/spf13/viper) (YAML) + [caarlos0/env](https://github.com/caarlos0/env) | [spf13/viper](https://github.com/spf13/viper) |
+| Logging | `log/slog` | [pkg.go.dev/log/slog](https://pkg.go.dev/log/slog) |
+| Validation | [go-playground/validator](https://github.com/go-playground/validator) | [pkg.go.dev](https://pkg.go.dev/github.com/go-playground/validator/v10) |
+| Docs | [swaggo/swag](https://github.com/swaggo/swag) | [github.com/swaggo/swag](https://github.com/swaggo/swag) |
+| Auth | JWT + bcrypt | [golang-jwt](https://github.com/golang-jwt/jwt) |
+| ORM | GORM | [gorm.io/docs](https://gorm.io/docs) |
+| Migrations | golang-migrate | [github.com/golang-migrate/migrate](https://github.com/golang-migrate/migrate) |
+| Seed data | golang-migrate | [github.com/golang-migrate/migrate](https://github.com/golang-migrate/migrate) |
+
+## Quick start
+
+```bash
+crank tidy                    # fetch dependencies
+cp .env.example .env          # configure local environment
+crank dev                     # run with live reload
+```
+
+Health check: `GET http://localhost:8080/health`
+Before running, ensure PostgreSQL is available and run `crank migrate up`.
+To seed data, run `crank seed up` after migrations are applied.
+
+## Layout
+
+```
+.
+├── cmd/server              entry point (composition root)
+├── configs                 config defaults
+├── internal
+│   ├── adapters            HTTP handlers, persistence, event bus
+│   │   ├── http/web        Echo handlers + middleware
+│   │   └── persistence     memory, gorm, repositories
+│   ├── application         use cases (CQRS)
+│   ├── config              config loading (Viper + env)
+│   ├── domain              pure Go aggregates, ports, events
+│   ├── model               shared DTOs
+│   ├── ports               cross-cutting interfaces
+│   └── validator           request validation
+├── pkg/logging             slog helpers
+├── db/migrations           SQL migrations
+├── db/seeds                seed data SQL files
+├── .env.example
+├── .crank.yaml             project manifest (do not delete)
+├── Dockerfile
+└── Makefile                project-specific targets
+```
+
+## Understanding the generated code
+
+For a deep dive into the architecture — how layers connect, request lifecycle,
+testing patterns, and how each feature module works — see the
+[crank documentation](https://anurag925.github.io/crank/generated-app).
+
+## Commands
+
+| Command | Purpose |
+| ------- | ------- |
+| `crank build` | Compile to `bin/agni` |
+| `crank run` | Start the server |
+| `crank dev` | Run with live reload (air) |
+| `crank test` | Run all tests |
+| `crank gofmt` | Format Go files |
+| `crank vet` | Run `go vet` |
+| `crank tidy` | Sync `go.mod` / `go.sum` |
+| `crank swag` | Generate Swagger docs into `docs/` |
+| `crank migrate up` | Apply pending migrations |
+| `crank make migration <name>` | Create a migration pair |
+| `crank seed up` | Apply pending seed files |
+| `crank seed generate <Name>` | Generate seed SQL with fake data for a domain model |
+| `crank seed generate` | Generate an empty seed file |
+| `crank make scaffold <Name> <field:type>` | Generate a full CRUD resource |
+
+Run `crank tools` to list everything available.
+
+## Makefile
+
+The `Makefile` holds only targets that `crank` doesn't provide natively (e.g.
+`make clean`). Any target you add can also be run via `crank <target>` — crank
+transparently delegates unknown commands to `make`.
+
+```bash
+make clean              # remove build artifacts
+crank clean               # same thing
+crank your-custom-target  # any Makefile target
+```
+
+> Native crank commands always take precedence over Makefile targets.

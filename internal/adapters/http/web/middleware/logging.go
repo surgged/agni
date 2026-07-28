@@ -1,0 +1,91 @@
+package middleware
+
+import (
+	"crypto/rand"
+	"encoding/hex"
+	"log/slog"
+	"time"
+
+	"github.com/labstack/echo/v5"
+
+	"github.com/surgged/agni/pkg/logging"
+)
+
+const (
+	// RequestIDHeader is the HTTP header used to propagate request IDs.
+	RequestIDHeader = "X-Request-ID"
+)
+
+// RequestLogger returns Echo middleware that:
+//   - Generates a unique request ID (or uses the one from X-Request-ID)
+//   - Stores the request ID in context via logging.WithRequestID
+//   - Adds the request ID as a response header
+//   - Logs a structured "request completed" entry at the end with:
+//     request_id, method, path, status, latency, client_ip, bytes_out
+//
+// The request_id is automatically injected into every log call made with
+// the request context thanks to the ContextHandler in the logger stack.
+// Handlers can just use slog.InfoContext, slog.WarnContext, etc.
+func RequestLogger() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			start := time.Now()
+			req := c.Request()
+			res := c.Response()
+
+			id := req.Header.Get(RequestIDHeader)
+			if id == "" {
+				id = generateID()
+			}
+
+			ctx := logging.WithRequestID(req.Context(), id)
+			c.SetRequest(req.WithContext(ctx))
+			res.Header().Set(RequestIDHeader, id)
+
+			err := next(c)
+			if err != nil {
+				c.Echo().HTTPErrorHandler(c, err)
+			}
+
+			rw, _ := echo.UnwrapResponse(res)
+			status := 0
+			size := int64(0)
+			if rw != nil {
+				status = rw.Status
+				size = rw.Size
+			}
+
+			latency := time.Since(start)
+			attrs := []slog.Attr{
+				slog.String("method", req.Method),
+				slog.String("path", req.URL.Path),
+				slog.Int("status", status),
+				slog.String("latency", latency.String()),
+				slog.Int64("latency_ms", latency.Milliseconds()),
+				slog.String("client_ip", c.RealIP()),
+				slog.Int64("bytes_out", size),
+			}
+			if query := req.URL.RawQuery; query != "" {
+				attrs = append(attrs, slog.String("query", query))
+			}
+
+			level := slog.LevelInfo
+			msg := "request completed"
+			if status >= 500 {
+				level = slog.LevelError
+				msg = "request completed with server error"
+			} else if status >= 400 {
+				level = slog.LevelWarn
+				msg = "request completed with client error"
+			}
+			slog.LogAttrs(ctx, level, msg, attrs...)
+			return nil
+		}
+	}
+}
+
+func generateID() string {
+	b := make([]byte, 16)
+	_, _ = rand.Read(b)
+	return hex.EncodeToString(b)
+}

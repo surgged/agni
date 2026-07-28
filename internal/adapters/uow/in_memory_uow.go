@@ -1,0 +1,77 @@
+// Package uow provides UnitOfWork implementations. The in-memory variant
+// runs save and publish sequentially with no transactional boundary. It is
+// the default for projects that do not need strict atomicity between the
+// aggregate write and event publication.
+package uow
+
+import (
+	"context"
+	"log/slog"
+
+	"github.com/surgged/agni/internal/application/uow"
+	"github.com/surgged/agni/internal/domain/shared"
+	"github.com/surgged/agni/internal/domain/user"
+	// crank:tx-repo-imports (do not remove — `crank make scaffold` splices new domain imports here)
+	"github.com/surgged/agni/internal/ports"
+)
+
+// inMemoryTxRepositories implements uow.TxRepositories by returning the
+// in-memory repositories passed at construction time. There is no real
+// transaction — the repos are just shared references.
+type inMemoryTxRepositories struct {
+	userRepo user.Repository
+	// crank:tx-repo-fields (do not remove — `crank make scaffold` splices new repo fields here)
+}
+
+func (r *inMemoryTxRepositories) Users() user.Repository { return r.userRepo }
+
+// crank:tx-repo-methods (do not remove — `crank make scaffold` splices new repo accessor methods here)
+
+// Option configures the set of repositories an InMemoryUoW hands to save
+// closures. Generated resources contribute a With<Resource>Repo option so
+// their repository is reachable via repos.<Plural>() inside SaveAndPublish.
+type Option func(*inMemoryTxRepositories)
+
+func WithUserRepo(r user.Repository) Option {
+	return func(repos *inMemoryTxRepositories) { repos.userRepo = r }
+}
+
+// crank:inmem-options (do not remove — `crank make scaffold` splices new WithXxxRepo options here)
+
+// InMemoryUoW is a non-transactional UnitOfWork. It calls the save closure
+// first; if that succeeds it publishes the events. A failure in save
+// short-circuits the publish step. A failure in publish is logged but does
+// not unwind the save.
+type InMemoryUoW struct {
+	bus   ports.EventBus
+	repos *inMemoryTxRepositories
+}
+
+// NewInMemoryUoW returns a UnitOfWork backed by in-memory repositories. The
+// user repository is always required; additional repositories are supplied
+// through With<Resource>Repo options so read-your-writes semantics hold (the
+// same repository instance is shared with the composition root).
+func NewInMemoryUoW(bus ports.EventBus, userRepo user.Repository, opts ...Option) *InMemoryUoW {
+	repos := &inMemoryTxRepositories{userRepo: userRepo}
+	for _, opt := range opts {
+		opt(repos)
+	}
+	return &InMemoryUoW{bus: bus, repos: repos}
+}
+
+// SaveAndPublish runs the save closure with the shared inMemoryTxRepositories,
+// then publishes events if save succeeded.
+func (u *InMemoryUoW) SaveAndPublish(ctx context.Context, save func(ctx context.Context, repos uow.TxRepositories) error, events []shared.DomainEvent) error {
+	if err := save(ctx, u.repos); err != nil {
+		return err
+	}
+	if u.bus != nil && len(events) > 0 {
+		if err := u.bus.Publish(ctx, events...); err != nil {
+			slog.ErrorContext(ctx, "failed to publish domain events", "error", err)
+		}
+	}
+	return nil
+}
+
+// Compile-time assertion that InMemoryUoW satisfies the UnitOfWork port.
+var _ uow.UnitOfWork = (*InMemoryUoW)(nil)

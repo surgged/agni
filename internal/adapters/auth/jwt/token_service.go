@@ -1,0 +1,144 @@
+package jwt
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+
+	"github.com/surgged/agni/internal/config"
+	"github.com/surgged/agni/internal/ports"
+)
+
+// TokenService is a ports.TokenService implementation backed by
+// golang-jwt. It issues and validates HS256-signed access and refresh
+// tokens. When a TokenDenylist is configured, revoking a refresh token
+// adds its JTI to the denylist and Refresh checks the denylist before
+// reissuing.
+type TokenService struct {
+	secret   string
+	expiry   time.Duration
+	refresh  time.Duration
+	denylist ports.TokenDenylist
+}
+
+// NewTokenService builds a token service from the application config.
+func NewTokenService(cfg config.JWTConfig, denylist ports.TokenDenylist) *TokenService {
+	return &TokenService{
+		secret:   cfg.Secret,
+		expiry:   cfg.Expiration,
+		refresh:  cfg.RefreshExpiration,
+		denylist: denylist,
+	}
+}
+
+type jwtClaims struct {
+	jwt.RegisteredClaims
+	Type string `json:"typ"`
+}
+
+// Issue produces a fresh access+refresh token pair for the given subject.
+func (s *TokenService) Issue(subject string) (*ports.TokenPair, error) {
+	now := time.Now()
+	access, accessExp, err := s.signToken(subject, "access", now, s.expiry)
+	if err != nil {
+		return nil, err
+	}
+	refresh, _, err := s.signToken(subject, "refresh", now, s.refresh)
+	if err != nil {
+		return nil, err
+	}
+	return &ports.TokenPair{
+		AccessToken:  access,
+		RefreshToken: refresh,
+		ExpiresAt:    accessExp.Unix(),
+	}, nil
+}
+
+// Refresh exchanges a valid refresh token for a new pair. If a denylist is
+// configured, the token's JTI is checked before reissuing.
+func (s *TokenService) Refresh(refreshToken string) (*ports.TokenPair, error) {
+	claims, err := s.parse(refreshToken)
+	if err != nil {
+		return nil, err
+	}
+	if claims.Type != "refresh" {
+		return nil, errors.New("token is not a refresh token")
+	}
+	if s.denylist != nil {
+		if exists, err := s.denylist.Exists(context.Background(), claims.ID); err != nil {
+			return nil, fmt.Errorf("check denylist: %w", err)
+		} else if exists {
+			return nil, errors.New("token is revoked")
+		}
+	}
+	return s.Issue(claims.Subject)
+}
+
+// Subject returns the subject claim encoded in a valid access token.
+func (s *TokenService) Subject(accessToken string) (string, error) {
+	claims, err := s.parse(accessToken)
+	if err != nil {
+		return "", err
+	}
+	if claims.Type != "access" {
+		return "", errors.New("token is not an access token")
+	}
+	return claims.Subject, nil
+}
+
+// Revoke denylists a valid refresh token to prevent its reuse.
+func (s *TokenService) Revoke(refreshToken string) error {
+	claims, err := s.parse(refreshToken)
+	if err != nil {
+		return err
+	}
+	if claims.Type != "refresh" {
+		return errors.New("token is not a refresh token")
+	}
+	if s.denylist != nil {
+		return s.denylist.Add(context.Background(), claims.ID, claims.ExpiresAt.Time)
+	}
+	return nil
+}
+
+func (s *TokenService) signToken(subject, typ string, now time.Time, ttl time.Duration) (string, time.Time, error) {
+	exp := now.Add(ttl)
+	claims := jwtClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   subject,
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(exp),
+			ID:        uuid.NewString(),
+		},
+		Type: typ,
+	}
+	tok := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signed, err := tok.SignedString([]byte(s.secret))
+	if err != nil {
+		return "", time.Time{}, fmt.Errorf("sign token: %w", err)
+	}
+	return signed, exp, nil
+}
+
+func (s *TokenService) parse(token string) (*jwtClaims, error) {
+	parsed, err := jwt.ParseWithClaims(token, &jwtClaims{}, func(t *jwt.Token) (any, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrTokenSignatureInvalid
+		}
+		return []byte(s.secret), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	claims, ok := parsed.Claims.(*jwtClaims)
+	if !ok || !parsed.Valid {
+		return nil, errors.New("invalid token")
+	}
+	return claims, nil
+}
+
+var _ ports.TokenService = (*TokenService)(nil)

@@ -1,0 +1,75 @@
+package web
+
+import (
+	"log/slog"
+	"net/http"
+	"time"
+
+	"github.com/labstack/echo/v5"
+
+	"github.com/surgged/agni/internal/adapters/http/web/api"
+	"github.com/surgged/agni/internal/validator"
+)
+
+// NewServer constructs an Echo instance wired with the standard binder
+// (which runs struct validation automatically after Bind), and returns it
+// ready for the composition root to register middleware and routes.
+//
+// The composition root in cmd/server/main.go is responsible for mounting
+// routes, attaching middleware, and starting the listener.
+func NewServer(logger *slog.Logger) *echo.Echo {
+	if logger == nil {
+		logger = slog.Default()
+	}
+	e := echo.New()
+	e.Binder = &EchoBinder{DefaultBinder: new(echo.DefaultBinder), Logger: logger}
+
+	e.HTTPErrorHandler = func(c *echo.Context, err error) {
+		if resp, _ := echo.UnwrapResponse(c.Response()); resp != nil && resp.Committed {
+			return
+		}
+		ctx := c.Request().Context()
+
+		if ve, ok := err.(*validator.ValidationError); ok {
+			logger.WarnContext(ctx, "validation failed", "errors", ve.Errors)
+			_ = c.JSON(ve.HTTPStatus, api.Error{Error: ve.Message, Details: ve.Errors})
+			return
+		}
+		if he, ok := err.(*echo.HTTPError); ok {
+			_ = c.JSON(he.Code, api.Error{Error: he.Message})
+			return
+		}
+		logger.ErrorContext(ctx, "unhandled error", "error", err)
+		_ = c.JSON(http.StatusInternalServerError, api.Error{Error: "internal server error"})
+	}
+
+	return e
+}
+
+// Health is a simple liveness probe. It returns 200 OK and the current UTC
+// time, suitable for Kubernetes or load balancer health checks.
+func Health(c *echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"status": "ok",
+		"time":   time.Now().UTC().Format(time.RFC3339),
+	})
+}
+
+// EchoBinder wraps the default Echo binder so that struct validation is
+// applied automatically on every Bind() call. Handlers no longer need to
+// call the validator manually — if Bind() returns nil the input is
+// guaranteed valid.
+type EchoBinder struct {
+	DefaultBinder *echo.DefaultBinder
+	Logger        *slog.Logger
+}
+
+func (b *EchoBinder) Bind(c *echo.Context, target any) error {
+	if err := b.DefaultBinder.Bind(c, target); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	if err := validator.Struct(target); err != nil {
+		return err
+	}
+	return nil
+}

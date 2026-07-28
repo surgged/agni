@@ -1,0 +1,10 @@
+project_name: agni
+module_path: github.com/surgged/agni
+crank_version: v0.10.0
+makefile_override: false
+features:
+  - base
+  - auth
+  - redis
+  - views
+  - gorm

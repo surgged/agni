@@ -1,0 +1,36 @@
+package crypto
+
+import (
+	"errors"
+
+	"golang.org/x/crypto/bcrypt"
+
+	"github.com/surgged/agni/internal/ports"
+)
+
+// BCryptHasher is a ports.Hasher implementation backed by bcrypt.
+type BCryptHasher struct{}
+
+// NewBCryptHasher constructs a BCryptHasher.
+func NewBCryptHasher() *BCryptHasher {
+	return &BCryptHasher{}
+}
+
+// Hash returns a bcrypt hash of plaintext.
+func (BCryptHasher) Hash(plaintext string) (string, error) {
+	if plaintext == "" {
+		return "", errors.New("crypto: empty plaintext")
+	}
+	h, err := bcrypt.GenerateFromPassword([]byte(plaintext), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(h), nil
+}
+
+// Verify reports whether plaintext matches hash.
+func (BCryptHasher) Verify(hash, plaintext string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(plaintext)) == nil
+}
+
+var _ ports.Hasher = BCryptHasher{}

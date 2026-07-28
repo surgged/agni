@@ -1,0 +1,192 @@
+package web
+
+import (
+	"log/slog"
+	"net/http"
+
+	"github.com/labstack/echo/v5"
+
+	"github.com/surgged/agni/internal/adapters/http/web/api"
+	"github.com/surgged/agni/internal/adapters/http/web/middleware"
+	"github.com/surgged/agni/internal/application/user"
+	"github.com/surgged/agni/internal/ports"
+)
+
+// AuthHandler wires the /auth/* endpoints and the JWT-protected /me sample
+// route. It depends only on the user application service and the token
+// service port.
+type AuthHandler struct {
+	cmd    *user.CommandHandler
+	qry    *user.QueryHandler
+	tokens ports.TokenService
+}
+
+// NewAuthHandler builds an AuthHandler from application services and a
+// token service implementation.
+func NewAuthHandler(cmd *user.CommandHandler, qry *user.QueryHandler, tokens ports.TokenService) *AuthHandler {
+	return &AuthHandler{cmd: cmd, qry: qry, tokens: tokens}
+}
+
+// Register attaches /auth routes and the /me protected route to e.
+func (h *AuthHandler) Register(e *echo.Echo) {
+	g := e.Group("/auth")
+	g.POST("/register", h.RegisterUser)
+	g.POST("/login", h.Login)
+	g.POST("/refresh", h.Refresh)
+	g.POST("/logout", h.Logout, middleware.JWTAuth(h.tokens))
+
+	e.GET("/me", h.Me, middleware.JWTAuth(h.tokens))
+}
+
+type credentials struct {
+	Email    string `json:"email"    validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8"`
+	Name     string `json:"name"     validate:"omitempty,min=2,max=100"`
+}
+
+type refreshRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+type tokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresAt    int64  `json:"expires_at"`
+}
+
+// RegisterUser godoc
+//
+//	@Summary      Register a new user
+//	@Description  Creates a user account and returns an access/refresh token pair.
+//	@Tags         auth
+//	@Accept       json
+//	@Produce      json
+//	@Param        credentials  body      credentials  true  "Registration payload"
+//	@Success      201          {object}  tokenResponse
+//	@Failure      422          {object}  api.Error
+//	@Router       /auth/register [post]
+func (h *AuthHandler) RegisterUser(c *echo.Context) error {
+	var in credentials
+	if err := c.Bind(&in); err != nil {
+		return err
+	}
+	ctx := c.Request().Context()
+	out, err := h.cmd.HandleCreate(ctx, user.CreateUserCommand{
+		Name:     in.Name,
+		Email:    in.Email,
+		Password: in.Password,
+	})
+	if err != nil {
+		return c.JSON(http.StatusUnprocessableEntity, api.Error{Error: err.Error()})
+	}
+	tokens, err := h.tokens.Issue(out.ID.String())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, api.Error{Error: err.Error()})
+	}
+	return c.JSON(http.StatusCreated, tokenResponse{
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+		ExpiresAt:    tokens.ExpiresAt,
+	})
+}
+
+// Login godoc
+//
+//	@Summary      Log in
+//	@Description  Authenticates a user by email and password and returns a token pair.
+//	@Tags         auth
+//	@Accept       json
+//	@Produce      json
+//	@Param        credentials  body      credentials  true  "Login credentials"
+//	@Success      200          {object}  tokenResponse
+//	@Failure      401          {object}  api.Error
+//	@Router       /auth/login [post]
+func (h *AuthHandler) Login(c *echo.Context) error {
+	var in credentials
+	if err := c.Bind(&in); err != nil {
+		return err
+	}
+	ctx := c.Request().Context()
+	u, err := h.cmd.HandleAuthenticate(ctx, user.AuthenticateUserCommand{
+		Email:    in.Email,
+		Password: in.Password,
+	})
+	if err != nil {
+		slog.WarnContext(ctx, "login failed", "email", in.Email)
+		return c.JSON(http.StatusUnauthorized, api.Error{Error: "invalid credentials"})
+	}
+	tokens, err := h.tokens.Issue(u.ID.String())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, api.Error{Error: err.Error()})
+	}
+	return c.JSON(http.StatusOK, tokenResponse{
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+		ExpiresAt:    tokens.ExpiresAt,
+	})
+}
+
+// Refresh godoc
+//
+//	@Summary      Refresh tokens
+//	@Description  Exchanges a valid refresh token for a new access/refresh token pair.
+//	@Tags         auth
+//	@Accept       json
+//	@Produce      json
+//	@Param        body  body      refreshRequest  true  "Refresh token"
+//	@Success      200   {object}  tokenResponse
+//	@Failure      401   {object}  api.Error
+//	@Router       /auth/refresh [post]
+func (h *AuthHandler) Refresh(c *echo.Context) error {
+	var in refreshRequest
+	if err := c.Bind(&in); err != nil {
+		return err
+	}
+	pair, err := h.tokens.Refresh(in.RefreshToken)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, api.Error{Error: err.Error()})
+	}
+	return c.JSON(http.StatusOK, tokenResponse{
+		AccessToken:  pair.AccessToken,
+		RefreshToken: pair.RefreshToken,
+		ExpiresAt:    pair.ExpiresAt,
+	})
+}
+
+// Logout godoc
+//
+//	@Summary      Log out
+//	@Description  Revokes the supplied refresh token to prevent further refreshes.
+//	@Tags         auth
+//	@Accept       json
+//	@Produce      json
+//	@Param        body  body      refreshRequest  true  "Refresh token to revoke"
+//	@Success      204   "No Content"
+//	@Failure      401   {object}  api.Error
+//	@Security     BearerAuth
+//	@Router       /auth/logout [post]
+func (h *AuthHandler) Logout(c *echo.Context) error {
+	var in refreshRequest
+	if err := c.Bind(&in); err != nil {
+		return err
+	}
+	if err := h.tokens.Revoke(in.RefreshToken); err != nil {
+		return c.JSON(http.StatusUnauthorized, api.Error{Error: err.Error()})
+	}
+	return c.NoContent(http.StatusNoContent)
+}
+
+// Me godoc
+//
+//	@Summary      Current user
+//	@Description  Returns the authenticated user's id from the JWT subject claim.
+//	@Tags         auth
+//	@Produce      json
+//	@Security     BearerAuth
+//	@Success      200  {object}  map[string]string
+//	@Failure      401  {object}  api.Error
+//	@Router       /me [get]
+func (h *AuthHandler) Me(c *echo.Context) error {
+	uid, _ := c.Get("user_id").(string)
+	return c.JSON(http.StatusOK, map[string]interface{}{"user_id": uid})
+}

@@ -1,0 +1,18 @@
+# Binaries
+/bin/
+/tmp/
+
+# Local config
+.env
+*.local.yaml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Build artifacts
+/dist/
+/out/
+# Local DB volume
+data/
