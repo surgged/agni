@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agni-api
+  namespace: agni
+  labels:
+    app: agni-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agni-api
+  template:
+    metadata:
+      labels:
+        app: agni-api
+    spec:
+      containers:
+      - name: api
+        image: registry.agni.svc:5000/agni-api:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: agni-secrets
+              key: jwt-secret
+        - name: RESEND_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: agni-secrets
+              key: resend-api-key
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: agni-secrets
+              key: redis-password
+        volumeMounts:
+        - name: config
+          mountPath: /app/configs
+        - name: data
+          mountPath: /app/data
+      volumes:
+      - name: config
+        configMap:
+          name: agni-config
+      - name: data
+        persistentVolumeClaim:
+          claimName: agni-data
