@@ -1,4 +1,4 @@
-fpackage v1
+package v1
 
 import "github.com/labstack/echo/v5"
 
