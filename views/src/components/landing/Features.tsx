@@ -25,84 +25,84 @@ const FEATURES: FeatureItem[] = [
   {
     id: 'firecracker',
     icon: ShieldCheck,
-    title: 'Kata + Firecracker MicroVM Isolation',
-    badge: 'Hardware Virtualization',
+    title: 'Private Micro-Sandboxes',
+    badge: 'Super Safe Isolation',
     description:
-      'Container isolation is not enough for untrusted AI agent code. Agni launches every container inside a lightweight Linux microVM powered by AWS Firecracker and Kata Containers.',
+      'Your app runs inside a dedicated, ultra-private micro-computer sandbox. This guarantees your code stays 100% secure and isolated from everyone else.',
     bullets: [
-      'Sub-500ms cold boot times',
-      'Hardware-level KVM boundary prevents container breakout',
-      'Strict memory & vCPU cgroup allocation',
+      'Sub-second 420ms cold boot times',
+      'Hardware-level security protection',
+      'Dedicated CPU & memory allocation',
     ],
     gradient: 'from-orange-500 to-amber-500',
   },
   {
     id: 'k3s',
     icon: Server,
-    title: 'k3s Multi-Machine Core',
-    badge: 'Cluster Orchestration',
+    title: 'Zero Server Headaches',
+    badge: 'Automated Hosting',
     description:
-      'Lightweight Kubernetes core stripped of legacy overhead. Orchestrates microVM Pods across single bare-metal nodes or multi-cloud machine pools seamlessly.',
+      'Forget configuring cloud servers, Docker containers, or web hosting settings. Agni handles the entire infrastructure automatically behind the scenes.',
     bullets: [
-      'Zero Kubernetes YAML generated for agents',
-      'Automated health checks & self-healing Pods',
-      'Scales smoothly from 1 node to multi-region',
+      'Zero server configuration needed',
+      'Automatic app health monitoring & self-healing',
+      'Keeps your web apps online 24/7',
     ],
     gradient: 'from-amber-500 to-yellow-500',
   },
   {
     id: 'tls',
     icon: Lock,
-    title: 'Zero-Config Let\'s Encrypt TLS',
-    badge: 'Automated Security',
+    title: 'Instant Secure HTTPS Links',
+    badge: 'Automatic Security Lock',
     description:
-      'Every agent deployment is instantly provisioned with a secure HTTPS subdomain, wildcard certificates, and automated cert-manager renewals.',
+      'Every app you deploy receives a free, secure web address with an automatic HTTPS security lock icon, protecting your visitors and data.',
     bullets: [
-      'Automatic DNS-01 / HTTP-01 challenge resolution',
-      '256-bit ECDSA encryption by default',
-      'Custom domain mapping ready',
+      'Free SSL security certificate included',
+      '256-bit encryption out of the box',
+      'Shareable custom subdomains',
     ],
     gradient: 'from-emerald-500 to-teal-500',
   },
   {
     id: 'magic-link',
     icon: Sparkles,
-    title: 'Magic Link & Auth Gates',
-    badge: 'Access Control',
+    title: '1-Click Magic Share Links',
+    badge: 'Instant Sharing',
     description:
-      'Generate instant temporary reviewer links right from your agent prompt. Protect live staging apps with magic link JWT authentication before public release.',
+      'Want a friend or client to review your app? Generate a private magic link right from your AI prompt with optional expiration timers.',
     bullets: [
-      'One-click agent link generation',
-      'Granular expiration times (1h, 24h, 7d)',
-      'Built-in session revocation',
+      '1-click link creation from AI chat',
+      'Custom expiration timers (1 hour, 24 hours, 7 days)',
+      'Revoke access anytime from your dashboard',
     ],
     gradient: 'from-purple-500 to-indigo-500',
   },
   {
     id: 'mcp-engine',
     icon: Layers,
-    title: 'Native MCP Protocol Engine',
-    badge: 'Standardized Interface',
+    title: 'Native AI Assistant Connection',
+    badge: 'MCP Standard',
     description:
-      'Agni implements the official Model Context Protocol (MCP). Agents query available deployment resources, retrieve live tail logs, and trigger builds natively.',
+      'Agni speaks the standard Model Context Protocol (MCP). Your AI coding helpers can deploy, inspect, and update apps directly from your code editor.',
     bullets: [
-      'Compatible with Cursor, Claude Code, Windsurf & custom LLMs',
-      'Structured JSON-RPC tool definitions',
-      'Real-time SSE event stream for logs',
+      'Works with Cursor, Claude Code, Windsurf & custom AI',
+      'AI assistant receives live build & error logs',
+      'Deploy without ever leaving your code editor',
     ],
     gradient: 'from-orange-500 to-red-500',
   },
   {
     id: 'nerdctl',
     icon: Cpu,
-    title: 'Rootless containerd & nerdctl Pipeline',
-    badge: 'Daemonless Build',
+    title: 'Lightning Fast Packaging',
+    badge: 'Sub-Second Builds',
     description:
-      'Direct OCI container image builds with rootless containerd and nerdctl. No Docker daemon dependency, lower memory overhead, and enhanced host safety.',
+      'Agni packages your code files using ultra-fast caching so updates launch almost instantaneously when you or your AI assistant make changes.',
     bullets: [
-      'Rootless execution mode',
-      'Fast layer caching for sub-second rebuilds',
-      'Direct integration with internal OCI registry',
+      'Super-fast file bundling',
+      'Smart caching for instant updates',
+      'Zero heavy local downloads or background daemons',
     ],
     gradient: 'from-blue-500 to-cyan-500',
   },
@@ -112,22 +112,22 @@ export function Features() {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   return (
-    <section id="features" className="py-24 bg-[#060a12] relative overflow-hidden">
+    <section id="features" className="py-24 bg-background text-foreground relative overflow-hidden">
       {/* Background ambient lighting */}
-      <div className="absolute top-1/4 left-1/3 w-[500px] h-[500px] bg-orange-600/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/3 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[140px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-mono mb-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-xs font-mono mb-4">
             <Flame className="w-3.5 h-3.5" />
-            <span>Platform Capabilities</span>
+            <span>Why Choose Agni</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">
-            Everything AI Agents Need to <span className="bg-gradient-to-r from-orange-400 via-amber-300 to-yellow-400 bg-clip-text text-transparent">Ship Code</span>
+          <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight mb-4">
+            Everything You Need to <span className="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 bg-clip-text text-transparent">Share Your Apps</span>
           </h2>
-          <p className="text-zinc-400 text-base sm:text-lg">
-            Built from scratch to eliminate deployment friction for autonomous coding assistants and human developers alike.
+          <p className="text-muted-foreground text-base sm:text-lg">
+            Designed to eliminate all technical hosting friction so you can focus on building amazing things with AI.
           </p>
         </div>
 
@@ -142,10 +142,10 @@ export function Features() {
                 key={feat.id}
                 onMouseEnter={() => setHoveredId(feat.id)}
                 onMouseLeave={() => setHoveredId(null)}
-                className={`relative bg-[#090d16] border rounded-2xl p-6 transition-all duration-300 flex flex-col justify-between group ${
+                className={`relative bg-card border rounded-2xl p-6 transition-all duration-300 flex flex-col justify-between group ${
                   isHovered
-                    ? 'border-orange-500/50 shadow-2xl shadow-orange-950/30 -translate-y-1.5'
-                    : 'border-white/10 hover:border-white/20'
+                    ? 'border-orange-500/50 shadow-xl -translate-y-1.5'
+                    : 'border-border'
                 }`}
               >
                 {/* Glow border overlay on hover */}
@@ -159,32 +159,32 @@ export function Features() {
                     <div
                       className={`p-3 rounded-xl bg-gradient-to-br ${feat.gradient} p-[1px] shadow-lg`}
                     >
-                      <div className="w-full h-full bg-[#090d16] p-2.5 rounded-[11px]">
-                        <IconComponent className="w-5 h-5 text-orange-400" />
+                      <div className="w-full h-full bg-card p-2.5 rounded-[11px]">
+                        <IconComponent className="w-5 h-5 text-orange-500" />
                       </div>
                     </div>
 
-                    <span className="text-[10px] font-mono font-semibold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-zinc-300">
+                    <span className="text-[10px] font-mono font-semibold px-2.5 py-1 rounded-full bg-muted text-muted-foreground border border-border">
                       {feat.badge}
                     </span>
                   </div>
 
                   {/* Title & Description */}
-                  <h3 className="text-lg font-bold text-white mb-2 group-hover:text-orange-300 transition-colors flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-orange-500 transition-colors flex items-center justify-between">
                     <span>{feat.title}</span>
-                    <ArrowUpRight className="w-4 h-4 text-zinc-500 group-hover:text-orange-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                    <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                   </h3>
 
-                  <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed mb-6">
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-6">
                     {feat.description}
                   </p>
                 </div>
 
                 {/* Bullet Points */}
-                <div className="pt-4 border-t border-white/5 space-y-2">
+                <div className="pt-4 border-t border-border space-y-2">
                   {feat.bullets.map((bullet, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-xs text-zinc-300">
-                      <CheckCircle className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+                    <div key={idx} className="flex items-center gap-2 text-xs text-foreground">
+                      <CheckCircle className="w-3.5 h-3.5 text-orange-500 shrink-0" />
                       <span>{bullet}</span>
                     </div>
                   ))}

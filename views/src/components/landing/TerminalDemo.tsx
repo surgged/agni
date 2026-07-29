@@ -27,43 +27,43 @@ interface DeployStep {
 const DEPLOY_STEPS: DeployStep[] = [
   {
     id: 1,
-    label: 'Tarballing Workspace',
-    detail: 'Compressing ./my-app (3.4 MB tarball created)...',
+    label: 'Preparing Workspace',
+    detail: 'Gathering app files from ./my-app (3.4 MB bundle)...',
     icon: Box,
     durationMs: 800,
   },
   {
     id: 2,
-    label: 'nerdctl OCI Image Build',
-    detail: 'Executing nerdctl build --namespace k8s.io -t registry.agni.internal/app-8f92a...',
+    label: 'Building App Package',
+    detail: 'Packaging web application into a clean runtime container...',
     icon: Cpu,
     durationMs: 1100,
   },
   {
     id: 3,
-    label: 'containerd Push',
-    detail: 'Pushing OCI container image to internal containerd registry...',
+    label: 'Sending To Cloud',
+    detail: 'Transferring app package to internal Agni cloud vault...',
     icon: Zap,
     durationMs: 900,
   },
   {
     id: 4,
-    label: 'k3s Kata Pod Provisioning',
-    detail: 'Provisioning k3s Pod with Kata Containers (Firecracker microVM runtime)...',
+    label: 'Starting Micro-Sandbox',
+    detail: 'Launching private micro-computer sandbox (Firecracker engine)...',
     icon: Shield,
     durationMs: 1200,
   },
   {
     id: 5,
-    label: 'cert-manager TLS Issuance',
-    detail: 'Requesting cert-manager Let\'s Encrypt TLS certificate for my-app.agni.dev...',
+    label: 'Securing Web Address',
+    detail: 'Issuing free SSL security lock for my-app.agni.dev...',
     icon: Key,
     durationMs: 900,
   },
   {
     id: 6,
-    label: 'Ingress & Magic Link Gate',
-    detail: 'Synchronized Nginx ingress route & active magic-link token security layer.',
+    label: 'Generating Share Link',
+    detail: 'App is online! Private magic-link protection active.',
     icon: Globe,
     durationMs: 700,
   },
@@ -83,40 +83,26 @@ export function TerminalDemo() {
 
   const snippets: Record<AgentTab, { title: string; prompt: string; code: string }> = {
     cursor: {
-      title: 'Cursor Agent (MCP Protocol)',
-      prompt: 'Deploy my current Vite frontend project to Agni with microVM isolation and HTTPS.',
-      code: `// Agent tool call execution inside Cursor
-const result = await mcp.callTool("agni_deploy_app", {
+      title: 'Cursor Agent',
+      prompt: 'Deploy my web app so I can share it with my team.',
+      code: `// Tell Cursor: "Deploy my app to Agni"
+await mcp.callTool("agni_deploy_app", {
   path: "./my-app",
-  runtime: "node20",
-  port: 3000,
-  isolation: "firecracker",
-  enable_tls: true,
-  magic_link_auth: true
-});
-
-console.log(\`Live URL: \${result.url}\`);`,
+  secure_link: true
+});`,
     },
     claude: {
-      title: 'Claude Code CLI Agent',
-      prompt: 'claude> /deploy --path ./my-app --isolation firecracker',
-      code: `# Invoking Agni MCP server from Claude Code terminal
-$ claude mcp call agni agni_deploy_app \\
-    --arg path="./my-app" \\
-    --arg port=3000 \\
-    --arg runtime="kata-fc" \\
-    --arg domain="my-app.agni.dev"`,
+      title: 'Claude Code Assistant',
+      prompt: 'claude> /deploy my app to a secure web address',
+      code: `# Command inside Claude Code
+$ claude mcp call agni agni_deploy_app --arg path="./my-app"`,
     },
     windsurf: {
-      title: 'Windsurf Cascade Agent',
-      prompt: 'Cascade: Ship this workspace to a zero-trust Firecracker VM with a magic link.',
-      code: `// Windsurf agent calling Agni MCP Server via JSON-RPC
+      title: 'Windsurf Cascade',
+      prompt: 'Cascade: Put this app on the web with a private share link.',
+      code: `// Tell Windsurf: "Ship this project"
 windsurf.mcp.call("agni_deploy_app", {
-  project_root: "./my-app",
-  build_command: "bun run build",
-  firecracker_mem_mb: 512,
-  firecracker_vcpus: 1,
-  tls_provider: "cert-manager"
+  project_root: "./my-app"
 });`,
     },
   };
@@ -128,8 +114,8 @@ windsurf.mcp.call("agni_deploy_app", {
     setCompletedSteps([]);
     setLiveUrl(null);
     setLogs([
-      `[00:00.00] 🚀 Initializing Agni MCP tool call from ${snippets[activeTab].title}...`,
-      `[00:00.05] 📡 Connected to Agni Local Daemon (unix:///var/run/agni.sock)...`,
+      `[00:00.00] 🚀 Asking Agni to deploy app from ${snippets[activeTab].title}...`,
+      `[00:00.05] 📡 Connected to Agni cloud engine...`,
     ]);
   };
 
@@ -150,8 +136,8 @@ windsurf.mcp.call("agni_deploy_app", {
       setLiveUrl(finalUrl);
       setLogs((prev) => [
         ...prev,
-        `[00:05.62] ✨ DEPLOYMENT COMPLETE! App live at: ${finalUrl}`,
-        `[00:05.65] 🔒 Magic Link Access Token: agni_ml_8f92a3b91c`,
+        `[00:05.62] ✨ DEPLOYMENT COMPLETE! Your app is live at: ${finalUrl}`,
+        `[00:05.65] 🔒 Private Magic Link: agni_ml_8f92a3b91c`,
       ]);
       return;
     }
@@ -181,28 +167,28 @@ windsurf.mcp.call("agni_deploy_app", {
   };
 
   return (
-    <section id="demo" className="py-20 bg-[#060a12] relative overflow-hidden border-t border-b border-white/10">
+    <section id="demo" className="py-20 bg-background text-foreground relative overflow-hidden border-t border-b border-border">
       {/* Background radial glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-orange-600/10 rounded-full blur-[160px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-orange-500/10 rounded-full blur-[160px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-mono mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-xs font-mono mb-4">
             <TerminalIcon className="w-3.5 h-3.5" />
-            <span>Interactive Simulator</span>
+            <span>Interactive Demo</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">
-            Watch AI Agents Deploy in <span className="text-orange-400">Real-Time</span>
+          <h2 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight mb-4">
+            Try A Simulated <span className="text-orange-500">Live Launch</span>
           </h2>
-          <p className="text-zinc-400 text-base sm:text-lg">
-            See how Cursor, Claude Code, and Windsurf invoke Agni's single-call MCP deploy tool to launch Firecracker microVMs.
+          <p className="text-muted-foreground text-base sm:text-lg">
+            Click "Run Live Deploy" below to watch how an AI assistant launches an app in real-time.
           </p>
         </div>
 
         {/* Tab Switcher */}
         <div className="flex justify-center mb-6">
-          <div className="bg-[#090d16] p-1.5 rounded-xl border border-white/10 flex items-center gap-2 shadow-xl">
+          <div className="bg-card p-1.5 rounded-xl border border-border flex items-center gap-2 shadow-md">
             {(['cursor', 'claude', 'windsurf'] as AgentTab[]).map((tab) => (
               <button
                 key={tab}
@@ -212,12 +198,12 @@ windsurf.mcp.call("agni_deploy_app", {
                 }}
                 className={`px-4 py-2 rounded-lg text-xs font-semibold font-mono transition-all duration-200 ${
                   activeTab === tab
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-md shadow-orange-500/20'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-md'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                 }`}
               >
                 {tab === 'cursor' && 'Cursor Agent'}
-                {tab === 'claude' && 'Claude Code CLI'}
+                {tab === 'claude' && 'Claude Assistant'}
                 {tab === 'windsurf' && 'Windsurf Cascade'}
               </button>
             ))}
@@ -225,61 +211,61 @@ windsurf.mcp.call("agni_deploy_app", {
         </div>
 
         {/* Terminal Card Container */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-[#090d16]/90 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-card border border-border rounded-2xl p-6 shadow-xl backdrop-blur-xl">
           {/* Left Column: Code Prompt & Tool Call (5 cols) */}
           <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-mono font-semibold text-orange-400 flex items-center gap-2">
+                <span className="text-xs font-mono font-semibold text-orange-500 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
                   {snippets[activeTab].title}
                 </span>
                 <button
                   onClick={copyCode}
-                  className="p-1.5 text-zinc-400 hover:text-white bg-zinc-800/80 rounded-md border border-zinc-700 transition-colors"
+                  className="p-1.5 text-muted-foreground hover:text-foreground bg-muted rounded-md border border-border transition-colors"
                   title="Copy code"
                 >
-                  {copiedCode ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedCode ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
               </div>
 
               {/* Agent User Prompt Box */}
-              <div className="mb-4 bg-zinc-900/90 border border-zinc-800 rounded-xl p-3">
-                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-1">
-                  User Prompt
+              <div className="mb-4 bg-muted/60 border border-border rounded-xl p-3">
+                <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider block mb-1">
+                  What You Say To Your AI
                 </span>
-                <p className="text-xs text-zinc-200 font-mono italic">
+                <p className="text-xs text-foreground font-mono italic">
                   "{snippets[activeTab].prompt}"
                 </p>
               </div>
 
               {/* Tool Call Code Display */}
-              <div className="bg-[#030712] border border-white/10 rounded-xl p-4 font-mono text-xs text-zinc-300 overflow-x-auto">
-                <pre className="text-orange-300/90 leading-relaxed whitespace-pre-wrap">
+              <div className="bg-background border border-border rounded-xl p-4 font-mono text-xs text-foreground overflow-x-auto">
+                <pre className="text-orange-500/90 leading-relaxed whitespace-pre-wrap">
                   {snippets[activeTab].code}
                 </pre>
               </div>
             </div>
 
             {/* Controls & Action Button */}
-            <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-3">
+            <div className="pt-4 border-t border-border flex items-center justify-between gap-3">
               <button
                 onClick={startSimulation}
                 disabled={isRunning}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold transition-all shadow-lg ${
+                className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold transition-all shadow-md ${
                   isRunning
-                    ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
-                    : 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black shadow-orange-500/25 active:scale-95'
+                    ? 'bg-muted text-muted-foreground cursor-not-allowed border border-border'
+                    : 'bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white shadow-orange-500/20 active:scale-95'
                 }`}
               >
                 {isRunning ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin text-orange-400" />
-                    <span>Deploying MicroVM...</span>
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <span>Launching App...</span>
                   </>
                 ) : (
                   <>
-                    <Play className="w-4 h-4 fill-black" />
+                    <Play className="w-4 h-4 fill-white" />
                     <span>Run Live Deploy</span>
                   </>
                 )}
@@ -287,7 +273,7 @@ windsurf.mcp.call("agni_deploy_app", {
 
               <button
                 onClick={resetSimulation}
-                className="p-3 text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl transition-all"
+                className="p-3 text-muted-foreground hover:text-foreground bg-muted border border-border rounded-xl transition-all"
                 title="Reset simulation"
               >
                 <RotateCcw className="w-4 h-4" />
@@ -309,26 +295,26 @@ windsurf.mcp.call("agni_deploy_app", {
                     key={step.id}
                     className={`p-2.5 rounded-xl border text-left transition-all duration-300 flex items-center gap-2 ${
                       isCompleted
-                        ? 'bg-orange-500/10 border-orange-500/40 text-orange-300'
+                        ? 'bg-orange-500/10 border-orange-500/40 text-orange-500'
                         : isCurrent
-                        ? 'bg-amber-500/20 border-amber-400 text-amber-200 animate-pulse'
-                        : 'bg-zinc-900/60 border-zinc-800 text-zinc-500'
+                        ? 'bg-amber-500/20 border-amber-500 text-amber-600 animate-pulse'
+                        : 'bg-muted/40 border-border text-muted-foreground'
                     }`}
                   >
                     <div className="shrink-0">
                       {isCompleted ? (
-                        <CheckCircle2 className="w-4 h-4 text-orange-400" />
+                        <CheckCircle2 className="w-4 h-4 text-orange-500" />
                       ) : isCurrent ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                        <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
                       ) : (
-                        <IconComponent className="w-4 h-4 text-zinc-600" />
+                        <IconComponent className="w-4 h-4 text-muted-foreground" />
                       )}
                     </div>
                     <div className="min-w-0">
                       <p className="text-[11px] font-semibold truncate leading-tight">
                         {step.label}
                       </p>
-                      <p className="text-[9px] font-mono text-zinc-400 truncate">
+                      <p className="text-[9px] font-mono text-muted-foreground truncate">
                         {isCompleted ? 'Done' : isCurrent ? 'Running...' : 'Queued'}
                       </p>
                     </div>
@@ -338,31 +324,31 @@ windsurf.mcp.call("agni_deploy_app", {
             </div>
 
             {/* Terminal Console Output Window */}
-            <div className="flex-1 bg-[#030712] border border-white/10 rounded-xl overflow-hidden flex flex-col min-h-[260px]">
+            <div className="flex-1 bg-background border border-border rounded-xl overflow-hidden flex flex-col min-h-[260px]">
               {/* Terminal Window Header */}
-              <div className="bg-[#090d16] px-4 py-2.5 border-b border-white/10 flex items-center justify-between">
+              <div className="bg-muted px-4 py-2.5 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
                   <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
                   <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
-                  <span className="text-[11px] font-mono text-zinc-400 ml-2">
-                    agni-mcp-daemon.log
+                  <span className="text-[11px] font-mono text-muted-foreground ml-2">
+                    live-deployment-status.log
                   </span>
                 </div>
-                <span className="text-[10px] font-mono text-zinc-500">
-                  Kata + Firecracker Engine
+                <span className="text-[10px] font-mono text-muted-foreground">
+                  Agni Engine
                 </span>
               </div>
 
               {/* Logs Content */}
               <div
                 ref={logContainerRef}
-                className="p-4 font-mono text-xs space-y-1.5 overflow-y-auto max-h-[240px] text-zinc-300 scrollbar-thin scrollbar-thumb-zinc-800"
+                className="p-4 font-mono text-xs space-y-1.5 overflow-y-auto max-h-[240px] text-foreground"
               >
                 {logs.length === 0 ? (
-                  <div className="h-40 flex flex-col items-center justify-center text-zinc-600 space-y-2">
+                  <div className="h-40 flex flex-col items-center justify-center text-muted-foreground space-y-2">
                     <TerminalIcon className="w-8 h-8 opacity-40 text-orange-500" />
-                    <p className="text-xs">Click "Run Live Deploy" to start simulated agent deploy</p>
+                    <p className="text-xs">Click "Run Live Deploy" to watch simulated launch</p>
                   </div>
                 ) : (
                   logs.map((log, i) => (
@@ -370,10 +356,10 @@ windsurf.mcp.call("agni_deploy_app", {
                       key={i}
                       className={`leading-relaxed ${
                         log.includes('DEPLOYMENT COMPLETE')
-                          ? 'text-orange-400 font-bold bg-orange-950/30 p-2 rounded border border-orange-500/30'
+                          ? 'text-orange-500 font-bold bg-orange-500/10 p-2 rounded border border-orange-500/30'
                           : log.includes('Step')
-                          ? 'text-amber-200'
-                          : 'text-zinc-400'
+                          ? 'text-amber-500'
+                          : 'text-muted-foreground'
                       }`}
                     >
                       {log}
@@ -385,20 +371,20 @@ windsurf.mcp.call("agni_deploy_app", {
 
             {/* Live Result Preview Bar */}
             {liveUrl && (
-              <div className="bg-gradient-to-r from-orange-950/60 via-amber-950/40 to-zinc-900 border border-orange-500/50 rounded-xl p-4 flex items-center justify-between shadow-xl animate-fade-in">
+              <div className="bg-card border border-orange-500/50 rounded-xl p-4 flex items-center justify-between shadow-lg animate-fade-in">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-orange-500/20 text-orange-400">
+                  <div className="p-2 rounded-lg bg-orange-500/20 text-orange-500">
                     <Globe className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-mono uppercase text-orange-400 tracking-wider">
-                      MicroVM Online & Auth-Protected
+                    <span className="text-[10px] font-mono uppercase text-orange-500 tracking-wider">
+                      App Is Online & Protected
                     </span>
                     <a
                       href={liveUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm font-bold text-white hover:text-orange-300 flex items-center gap-1 font-mono"
+                      className="text-sm font-bold text-foreground hover:text-orange-500 flex items-center gap-1 font-mono"
                     >
                       {liveUrl}
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -410,7 +396,7 @@ windsurf.mcp.call("agni_deploy_app", {
                   href={liveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 rounded-lg bg-orange-500 text-black font-bold text-xs hover:bg-orange-400 transition-colors shadow-md"
+                  className="px-4 py-2 rounded-lg bg-orange-500 text-white font-bold text-xs hover:bg-orange-600 transition-colors shadow-md"
                 >
                   Visit Live App
                 </a>

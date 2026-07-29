@@ -9,10 +9,9 @@ import {
   Lock,
   ArrowRight,
   Sparkles,
-  Server,
-  Cpu,
   Flame,
   Globe,
+  Play,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -27,62 +26,59 @@ export function Hero() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleScrollToArch = () => {
-    const el = document.querySelector('#architecture');
+  const handleScrollToHowItWorks = () => {
+    const el = document.querySelector('#how-it-works');
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden bg-[#030712] text-white">
+    <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden bg-background text-foreground">
       {/* Glow background effects */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-orange-600/20 via-amber-500/15 to-purple-600/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-orange-500/15 via-amber-500/10 to-purple-500/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute top-1/3 right-10 w-96 h-96 bg-orange-500/10 rounded-full blur-[120px] pointer-events-none" />
-      
-      {/* Background grid pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
         {/* Badge Pill */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/10 border border-orange-500/30 text-orange-400 text-xs font-semibold tracking-wide backdrop-blur-md shadow-lg shadow-orange-950/30 mb-8 animate-fade-in">
+        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-500 text-xs font-semibold tracking-wide backdrop-blur-md shadow-sm mb-8 animate-fade-in">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
           </span>
-          <Flame className="w-3.5 h-3.5 text-orange-400 fill-orange-400/30" />
-          <span>MCP-Native App Hosting Platform</span>
+          <Flame className="w-3.5 h-3.5 text-orange-500 fill-orange-500/30" />
+          <span>The Instant Home for AI-Built Apps</span>
         </div>
 
         {/* Main Headline */}
         <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight max-w-5xl mx-auto leading-[1.1] mb-6">
-          The Neutral Deploy Target for{' '}
-          <span className="bg-gradient-to-r from-orange-400 via-amber-300 to-yellow-400 bg-clip-text text-transparent drop-shadow-sm">
-            AI Agents
+          Where AI-Built Apps Go{' '}
+          <span className="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 bg-clip-text text-transparent drop-shadow-sm">
+            Live Instantly
           </span>
         </h1>
 
         {/* Subheadline */}
-        <p className="text-base sm:text-xl text-zinc-300 max-w-3xl mx-auto font-normal leading-relaxed mb-10">
-          One MCP call deploys your app with TLS, magic-link auth, and Firecracker microVM isolation on any cloud. Built specifically for Cursor, Claude Code, and Windsurf workflows.
+        <p className="text-base sm:text-xl text-muted-foreground max-w-3xl mx-auto font-normal leading-relaxed mb-10">
+          When your AI assistant finishes writing an app, Agni gives it a safe, instant home on the web. No servers to set up, no complicated cloud settings—just tell your AI <span className="text-foreground font-semibold">"Deploy my app"</span> and get a shareable link.
         </p>
 
         {/* Interactive CLI Installation Pill */}
         <div className="max-w-md mx-auto mb-10">
-          <div className="flex items-center justify-between bg-[#090d16]/90 border border-orange-500/30 rounded-xl p-2 pl-4 backdrop-blur-lg shadow-xl shadow-orange-950/30 group hover:border-orange-500/60 transition-all duration-300">
-            <div className="flex items-center gap-3 font-mono text-xs text-zinc-200">
-              <Terminal className="w-4 h-4 text-orange-400 shrink-0" />
+          <div className="flex items-center justify-between bg-card border border-orange-500/30 rounded-xl p-2 pl-4 backdrop-blur-lg shadow-xl group hover:border-orange-500/60 transition-all duration-300">
+            <div className="flex items-center gap-3 font-mono text-xs text-foreground">
+              <Terminal className="w-4 h-4 text-orange-500 shrink-0" />
               <span className="text-orange-500 select-none">$</span>
-              <span className="text-zinc-100 font-semibold">{cliCommand}</span>
+              <span className="font-semibold">{cliCommand}</span>
             </div>
 
             <button
               onClick={copyToClipboard}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-medium rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 transition-all active:scale-95 shrink-0"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-medium rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 border border-orange-500/30 transition-all active:scale-95 shrink-0"
               title="Copy to clipboard"
             >
               {copied ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-green-400" />
-                  <span className="text-green-400">Copied</span>
+                  <Check className="w-3.5 h-3.5 text-green-500" />
+                  <span className="text-green-500">Copied</span>
                 </>
               ) : (
                 <>
@@ -92,8 +88,8 @@ export function Hero() {
               )}
             </button>
           </div>
-          <p className="text-[11px] text-zinc-500 mt-2 font-mono">
-            Zero configuration required &bull; Auto-detects local Agni daemon or cloud API
+          <p className="text-[11px] text-muted-foreground mt-2 font-mono">
+            Zero setup required &bull; Connects automatically to Cursor, Claude & Windsurf
           </p>
         </div>
 
@@ -101,54 +97,54 @@ export function Hero() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
           <Link
             to="/register"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 text-sm font-bold text-black bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 hover:from-orange-300 hover:to-amber-300 rounded-xl shadow-lg shadow-orange-500/25 transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 text-sm font-bold text-white bg-gradient-to-r from-orange-500 via-amber-600 to-red-600 hover:from-orange-600 hover:to-red-700 rounded-xl shadow-lg shadow-orange-500/25 transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
           >
-            <Sparkles className="w-4 h-4 fill-black/20" />
-            <span>Deploy First App</span>
+            <Sparkles className="w-4 h-4 fill-white/20" />
+            <span>Deploy Your First App</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
 
           <button
-            onClick={handleScrollToArch}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900/80 hover:bg-zinc-800 border border-white/10 hover:border-white/20 rounded-xl backdrop-blur-md transition-all duration-200"
+            onClick={handleScrollToHowItWorks}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 text-sm font-semibold text-foreground bg-secondary hover:bg-secondary/80 border border-border rounded-xl backdrop-blur-md transition-all duration-200"
           >
-            <Server className="w-4 h-4 text-orange-400" />
-            <span>Explore Architecture</span>
+            <Play className="w-4 h-4 text-orange-500 fill-orange-500/20" />
+            <span>See How It Works</span>
           </button>
         </div>
 
         {/* Feature / Stats Ribbon */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto pt-6 border-t border-white/10">
-          <div className="flex flex-col items-center p-3 rounded-xl bg-white/[0.02] border border-white/5">
-            <div className="flex items-center gap-1.5 text-orange-400 text-sm font-bold font-mono">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto pt-6 border-t border-border">
+          <div className="flex flex-col items-center p-3.5 rounded-xl bg-card border border-border">
+            <div className="flex items-center gap-1.5 text-orange-500 text-sm font-bold font-mono">
               <Zap className="w-4 h-4" />
-              <span>420ms</span>
+              <span>Sub-Second Launch</span>
             </div>
-            <span className="text-xs text-zinc-400 mt-1">MicroVM Cold Start</span>
+            <span className="text-xs text-muted-foreground mt-1">Apps wake up in 420ms</span>
           </div>
 
-          <div className="flex flex-col items-center p-3 rounded-xl bg-white/[0.02] border border-white/5">
-            <div className="flex items-center gap-1.5 text-amber-400 text-sm font-bold font-mono">
+          <div className="flex flex-col items-center p-3.5 rounded-xl bg-card border border-border">
+            <div className="flex items-center gap-1.5 text-amber-500 text-sm font-bold font-mono">
               <ShieldCheck className="w-4 h-4" />
-              <span>Kata + Firecracker</span>
+              <span>Super Safe Sandbox</span>
             </div>
-            <span className="text-xs text-zinc-400 mt-1">Hardware Isolation</span>
+            <span className="text-xs text-muted-foreground mt-1">Private micro-computer isolation</span>
           </div>
 
-          <div className="flex flex-col items-center p-3 rounded-xl bg-white/[0.02] border border-white/5">
-            <div className="flex items-center gap-1.5 text-emerald-400 text-sm font-bold font-mono">
+          <div className="flex flex-col items-center p-3.5 rounded-xl bg-card border border-border">
+            <div className="flex items-center gap-1.5 text-emerald-500 text-sm font-bold font-mono">
               <Lock className="w-4 h-4" />
-              <span>cert-manager TLS</span>
+              <span>Instant HTTPS Lock</span>
             </div>
-            <span className="text-xs text-zinc-400 mt-1">Zero-Config HTTPS</span>
+            <span className="text-xs text-muted-foreground mt-1">Automatic web security icons</span>
           </div>
 
-          <div className="flex flex-col items-center p-3 rounded-xl bg-white/[0.02] border border-white/5">
-            <div className="flex items-center gap-1.5 text-purple-400 text-sm font-bold font-mono">
+          <div className="flex flex-col items-center p-3.5 rounded-xl bg-card border border-border">
+            <div className="flex items-center gap-1.5 text-purple-500 text-sm font-bold font-mono">
               <Globe className="w-4 h-4" />
-              <span>Magic Link Auth</span>
+              <span>Magic Link Share</span>
             </div>
-            <span className="text-xs text-zinc-400 mt-1">Instant Reviewer Auth</span>
+            <span className="text-xs text-muted-foreground mt-1">Send a private link with 1 click</span>
           </div>
         </div>
       </div>

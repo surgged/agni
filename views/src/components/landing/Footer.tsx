@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Flame, ArrowUp, Terminal, Shield, ExternalLink, Heart } from 'lucide-react';
-import { GithubIcon as Github } from '@/components/icons/GithubIcon';
+import { Flame, ArrowUp, ExternalLink, ShieldCheck } from 'lucide-react';
 
 export function Footer() {
   const scrollToTop = () => {
@@ -8,64 +7,65 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-[#030712] border-t border-white/10 text-zinc-400 relative overflow-hidden">
+    <footer className="bg-card border-t border-border text-muted-foreground relative overflow-hidden">
       {/* Footer Top Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* Brand Info Column (2 cols) */}
           <div className="lg:col-span-2 space-y-4">
-            <Link to="/" className="flex items-center gap-3 group inline-flex">
+            <Link to="/" className="flex items-center gap-3 group">
               <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 via-amber-600 to-red-600 p-[1px] shadow-lg shadow-orange-500/20">
-                <div className="w-full h-full bg-[#090d16] rounded-[11px] flex items-center justify-center">
+                <div className="w-full h-full bg-card rounded-[11px] flex items-center justify-center">
                   <Flame className="w-4 h-4 text-orange-500 fill-orange-500/20" />
                 </div>
               </div>
-              <span className="font-extrabold text-xl tracking-tight text-white font-mono">
+              <span className="font-extrabold text-xl tracking-tight text-foreground font-mono">
                 AGNI
               </span>
-              <span className="px-1.5 py-0.5 text-[10px] font-mono font-semibold rounded bg-orange-500/10 text-orange-400 border border-orange-500/30">
+              <span className="px-1.5 py-0.5 text-[10px] font-mono font-semibold rounded bg-orange-500/10 text-orange-500 border border-orange-500/30">
                 MCP
               </span>
             </Link>
 
-            <p className="text-xs sm:text-sm text-zinc-400 max-w-sm leading-relaxed">
-              The neutral, high-performance deploy target built for AI coding assistants. Deploy apps with hardware-isolated Firecracker microVMs in sub-seconds using a single MCP call.
+            <p className="text-xs sm:text-sm text-muted-foreground max-w-sm leading-relaxed">
+              The instant home for AI-built apps. Turn code written by Cursor, Claude, or Windsurf into secure live web links with zero server setup.
             </p>
 
-            {/* Open Source Status Pill */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-300">
+            {/* Status Pill */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted border border-border text-xs text-foreground">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span>100% Open Source &bull; Apache 2.0</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+              <span>All Systems Operational &bull; Global Edge Active</span>
             </div>
           </div>
 
           {/* Column 1: Product */}
           <div className="space-y-3">
-            <h4 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+            <h4 className="text-xs font-mono font-bold text-foreground uppercase tracking-wider">
               Product
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <a href="#features" className="hover:text-orange-400 transition-colors">
-                  Features Overview
+                <a href="#how-it-works" className="hover:text-orange-500 transition-colors">
+                  How It Works
                 </a>
               </li>
               <li>
-                <a href="#architecture" className="hover:text-orange-400 transition-colors">
-                  Firecracker Architecture
+                <a href="#features" className="hover:text-orange-500 transition-colors">
+                  Capabilities & Features
                 </a>
               </li>
               <li>
-                <a href="#demo" className="hover:text-orange-400 transition-colors">
-                  Interactive Agent Simulator
+                <a href="#demo" className="hover:text-orange-500 transition-colors">
+                  Interactive Demo
                 </a>
               </li>
               <li>
-                <a href="#mcp-standard" className="hover:text-orange-400 transition-colors">
-                  MCP Protocol Specs
+                <a href="#ai-connect" className="hover:text-orange-500 transition-colors">
+                  AI Connect
                 </a>
               </li>
             </ul>
@@ -73,8 +73,8 @@ export function Footer() {
 
           {/* Column 2: Integrations */}
           <div className="space-y-3">
-            <h4 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
-              Integrations
+            <h4 className="text-xs font-mono font-bold text-foreground uppercase tracking-wider">
+              AI Integrations
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
@@ -82,10 +82,10 @@ export function Footer() {
                   href="https://cursor.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-orange-400 transition-colors inline-flex items-center gap-1"
+                  className="hover:text-orange-500 transition-colors inline-flex items-center gap-1"
                 >
-                  <span>Cursor Extension</span>
-                  <ExternalLink className="w-3 h-3 text-zinc-600" />
+                  <span>Cursor Agent</span>
+                  <ExternalLink className="w-3 h-3 text-muted-foreground" />
                 </a>
               </li>
               <li>
@@ -93,10 +93,10 @@ export function Footer() {
                   href="https://claude.ai"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-orange-400 transition-colors inline-flex items-center gap-1"
+                  className="hover:text-orange-500 transition-colors inline-flex items-center gap-1"
                 >
-                  <span>Claude Code Plugin</span>
-                  <ExternalLink className="w-3 h-3 text-zinc-600" />
+                  <span>Claude Code</span>
+                  <ExternalLink className="w-3 h-3 text-muted-foreground" />
                 </a>
               </li>
               <li>
@@ -104,10 +104,10 @@ export function Footer() {
                   href="https://codeium.com/windsurf"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-orange-400 transition-colors inline-flex items-center gap-1"
+                  className="hover:text-orange-500 transition-colors inline-flex items-center gap-1"
                 >
                   <span>Windsurf Cascade</span>
-                  <ExternalLink className="w-3 h-3 text-zinc-600" />
+                  <ExternalLink className="w-3 h-3 text-muted-foreground" />
                 </a>
               </li>
               <li>
@@ -115,44 +115,38 @@ export function Footer() {
                   href="https://modelcontextprotocol.io"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-orange-400 transition-colors inline-flex items-center gap-1"
+                  className="hover:text-orange-500 transition-colors inline-flex items-center gap-1"
                 >
-                  <span>Official MCP Standard</span>
-                  <ExternalLink className="w-3 h-3 text-zinc-600" />
+                  <span>MCP Standard</span>
+                  <ExternalLink className="w-3 h-3 text-muted-foreground" />
                 </a>
               </li>
             </ul>
           </div>
 
-          {/* Column 3: Ecosystem */}
+          {/* Column 3: Platform */}
           <div className="space-y-3">
-            <h4 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
-              Ecosystem
+            <h4 className="text-xs font-mono font-bold text-foreground uppercase tracking-wider">
+              Platform
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <a
-                  href="https://github.com/indralab/agni"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-orange-400 transition-colors inline-flex items-center gap-1.5"
-                >
-                  <Github className="w-3.5 h-3.5" />
-                  <span>GitHub Repository</span>
-                </a>
-              </li>
-              <li>
-                <Link to="/login" className="hover:text-orange-400 transition-colors">
+                <Link to="/login" className="hover:text-orange-500 transition-colors">
                   Developer Dashboard
                 </Link>
               </li>
               <li>
-                <Link to="/register" className="hover:text-orange-400 transition-colors">
+                <Link to="/register" className="hover:text-orange-500 transition-colors">
                   Create Account
                 </Link>
               </li>
               <li>
-                <span className="text-zinc-500 font-mono text-[11px]">
+                <a href="https://docs.agni.dev" target="_blank" rel="noopener noreferrer" className="hover:text-orange-500 transition-colors">
+                  Documentation
+                </a>
+              </li>
+              <li>
+                <span className="text-muted-foreground font-mono text-[11px]">
                   Version v0.1.0-beta
                 </span>
               </li>
@@ -162,19 +156,19 @@ export function Footer() {
       </div>
 
       {/* Bottom Legal & Scroll Top Bar */}
-      <div className="border-t border-white/10 bg-[#060a12] py-6">
+      <div className="border-t border-border bg-background py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-zinc-500 font-mono">
+          <p className="text-xs text-muted-foreground font-mono">
             &copy; {new Date().getFullYear()} Agni Platform. Built for the AI-Native developer ecosystem.
           </p>
 
           <div className="flex items-center gap-4">
             <button
               onClick={scrollToTop}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs text-zinc-300 transition-all hover:text-white"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 border border-border text-xs text-foreground transition-all"
             >
               <span>Back to top</span>
-              <ArrowUp className="w-3.5 h-3.5 text-orange-400" />
+              <ArrowUp className="w-3.5 h-3.5 text-orange-500" />
             </button>
           </div>
         </div>
