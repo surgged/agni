@@ -1,3 +1,5 @@
+export * from '@/lib/generated/api';
+
 const BASE = '';
 
 export interface AppItem {
@@ -105,7 +107,6 @@ const INITIAL_MOCK_SHARES: ShareItem[] = [
   },
 ];
 
-// Helper to get / set mock localStorage
 function getStoredMockApps(): AppItem[] {
   try {
     const raw = localStorage.getItem('agni_mock_apps');
@@ -164,15 +165,13 @@ async function request<T = unknown>(method: HttpMethod, path: string, body?: unk
     }
     return (await res.json()) as T;
   } catch (error) {
-    // Offline Mock Data Handler
-    console.warn(`[Agni API Offline Fallback] Using mock handler for ${method} ${path}`, error);
+    console.warn(`[Agni API Offline Fallback] Using fallback handler for ${method} ${path}`, error);
     return handleMockRoute<T>(method, path, body);
   }
 }
 
 function handleMockRoute<T>(method: HttpMethod, path: string, body?: unknown): T {
-  // Auth endpoints
-  if (path === '/me' || path.startsWith('/me?')) {
+  if (path === '/api/v1/me' || path.startsWith('/api/v1/me?') || path === '/me') {
     const mockUser: UserProfile = {
       user_id: 'usr_agni_dev_01',
       name: 'Agni Developer',
@@ -192,22 +191,10 @@ function handleMockRoute<T>(method: HttpMethod, path: string, body?: unknown): T
     } as unknown as T;
   }
 
-  if (path === '/auth/magic-link') {
+  if (path === '/auth/magic' || path === '/auth/magic-link') {
     return {
       success: true,
       message: 'Magic link dispatched successfully to your email inbox.',
-    } as unknown as T;
-  }
-
-  if (path === '/auth/verify') {
-    return {
-      access_token: 'demo_jwt_token_agni_2026',
-      user: {
-        user_id: 'usr_agni_dev_01',
-        name: 'Agni Developer',
-        email: (body as { email?: string })?.email || 'dev@agni.io',
-        role: 'Cluster Admin',
-      },
     } as unknown as T;
   }
 
@@ -220,12 +207,11 @@ function handleMockRoute<T>(method: HttpMethod, path: string, body?: unknown): T
     } as unknown as T;
   }
 
-  // Apps Endpoints
-  if (path === '/apps' && method === 'GET') {
+  if ((path === '/api/v1/apps' || path === '/apps') && method === 'GET') {
     return getStoredMockApps() as unknown as T;
   }
 
-  if (path === '/apps' && method === 'POST') {
+  if ((path === '/api/v1/apps' || path === '/apps') && method === 'POST') {
     const apps = getStoredMockApps();
     const newAppData = body as Partial<AppItem>;
     const newApp: AppItem = {
@@ -245,20 +231,19 @@ function handleMockRoute<T>(method: HttpMethod, path: string, body?: unknown): T
     return newApp as unknown as T;
   }
 
-  if (path.startsWith('/apps/') && method === 'DELETE') {
-    const appId = path.replace('/apps/', '');
+  if ((path.startsWith('/api/v1/apps/') || path.startsWith('/apps/')) && method === 'DELETE') {
+    const appId = path.replace('/api/v1/apps/', '').replace('/apps/', '');
     let apps = getStoredMockApps();
     apps = apps.filter((a) => a.id !== appId);
     saveStoredMockApps(apps);
     return { success: true, id: appId } as unknown as T;
   }
 
-  // Shares Endpoints
-  if (path === '/shares' && method === 'GET') {
+  if ((path === '/api/v1/shares' || path === '/shares') && method === 'GET') {
     return getStoredMockShares() as unknown as T;
   }
 
-  if (path === '/shares' && method === 'POST') {
+  if ((path === '/api/v1/shares' || path === '/shares') && method === 'POST') {
     const shares = getStoredMockShares();
     const reqBody = body as { appId?: string; access?: 'read-only' | 'read-write' | 'admin' };
     const apps = getStoredMockApps();
@@ -277,14 +262,6 @@ function handleMockRoute<T>(method: HttpMethod, path: string, body?: unknown): T
     return newShare as unknown as T;
   }
 
-  if (path.startsWith('/shares/') && method === 'DELETE') {
-    const shareId = path.replace('/shares/', '');
-    let shares = getStoredMockShares();
-    shares = shares.filter((s) => s.id !== shareId);
-    saveStoredMockShares(shares);
-    return { success: true, id: shareId } as unknown as T;
-  }
-
   return {} as T;
 }
 
@@ -294,10 +271,9 @@ export const api = {
   put: <T = unknown>(path: string, body?: unknown) => request<T>('PUT', path, body),
   delete: <T = unknown>(path: string) => request<T>('DELETE', path),
 
-  // High-level App & Share API helper methods
-  getApps: () => request<AppItem[]>('GET', '/apps'),
-  createApp: (data: Partial<AppItem>) => request<AppItem>('POST', '/apps', data),
-  deleteApp: (id: string) => request<{ success: boolean }>('DELETE', `/apps/${id}`),
+  getApps: () => request<AppItem[]>('GET', '/api/v1/apps'),
+  createApp: (data: Partial<AppItem>) => request<AppItem>('POST', '/api/v1/apps', data),
+  deleteApp: (id: string) => request<{ success: boolean }>('DELETE', `/api/v1/apps/${id}`),
 
   getShares: () => request<ShareItem[]>('GET', '/shares'),
   createShare: (appId: string, access?: 'read-only' | 'read-write' | 'admin') =>
@@ -305,11 +281,10 @@ export const api = {
   revokeShare: (shareId: string) => request<{ success: boolean }>('DELETE', `/shares/${shareId}`),
 
   requestMagicLink: (email: string) =>
-    request<{ success: boolean; message: string }>('POST', '/auth/magic-link', { email }),
+    request<{ success: boolean; message: string }>('POST', '/auth/magic', { email }),
   verifyMagicToken: (token: string) =>
     request<{ access_token: string; user: UserProfile }>('POST', '/auth/verify', { token }),
   generateAgentToken: (name?: string) =>
     request<{ token: string; agentId: string }>('POST', '/auth/agent-token', { name }),
-  getMe: () => request<UserProfile>('GET', '/me'),
+  getMe: () => request<UserProfile>('GET', '/api/v1/me'),
 };
-
