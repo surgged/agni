@@ -43,7 +43,7 @@ export function Logo({
   const content = (
     <div className={`flex items-center gap-3 group ${className}`}>
       {/* Original Agni Flame Gradient Badge */}
-      <div className={`relative flex items-center justify-center ${containerSizes[size]} bg-gradient-to-br from-orange-500 via-amber-600 to-red-600 p-[1px] shadow-lg shadow-orange-500/20 group-hover:shadow-orange-500/40 transition-all duration-300`}>
+      <div className={`relative flex items-center justify-center ${containerSizes[size]} bg-gradient-to-br from-orange-500 via-amber-600 to-orange-700 p-[1px] shadow-lg shadow-orange-500/20 group-hover:shadow-orange-500/40 transition-all duration-300`}>
         <div className={`w-full h-full bg-card ${innerRadius[size]} flex items-center justify-center transition-colors group-hover:bg-muted`}>
           <Flame className={`${flameSizes[size]} text-orange-500 fill-orange-500/20 group-hover:scale-110 transition-transform duration-300`} />
         </div>

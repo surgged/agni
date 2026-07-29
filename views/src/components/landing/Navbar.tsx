@@ -91,7 +91,7 @@ export function Navbar() {
 
               <Link
                 to="/register"
-                className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-orange-500 via-amber-600 to-red-600 hover:from-orange-600 hover:to-red-700 rounded-lg shadow-lg shadow-orange-500/20 transition-all duration-200 hover:scale-[1.02]"
+                className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-orange-500 via-amber-600 to-amber-600 hover:from-orange-600 hover:to-amber-700 rounded-lg shadow-lg shadow-orange-500/20 transition-all duration-200 hover:scale-[1.02]"
               >
                 <Sparkles className="w-3.5 h-3.5 fill-white/20" />
                 <span>Deploy Now</span>

@@ -1,6 +1,6 @@
 # Todo Tracker: Agni — MCP-First App Hosting Platform (v1)
 
-- Status: In progress
+- Status: Done
 - Slug: `edge-mcp-v1`
 - Linked engineering doc: `./02-engineering-doc.md`
 - Last updated: 2026-07-29
@@ -20,6 +20,12 @@ Derived from the Phase 2 Execution Strategy. Update continuously during implemen
 | 7 | HTTP API endpoints & Ingress session validator | backend-agent | `internal/adapters/http/web/v1/*`, `cmd/server/main.go` | done | Completed |
 | 8 | Swagger API docs & BE/FE integration | main-agent | `docs/*`, `cmd/server/main.go`, `views/*` | done | Verified `crank build` & `crank make swag` |
 | 9 | Orval React Query + Axios generation | main-agent | `views/orval.config.ts`, `views/src/lib/mutator.ts`, `views/src/lib/generated/*` | done | Verified `bun run generate` & `bun run build` |
+| 10 | Go dependencies: Add `client-go` and `k8s.io/api` | backend-agent | `go.mod`, `go.sum` | done | Verified `go get` & `go mod tidy` |
+| 11 | Resend Email HTTP API adapter | backend-agent | `internal/adapters/email/resend/client.go` | done | Completed & tested |
+| 12 | Real k3s Kubernetes provider via `client-go` | backend-agent | `internal/adapters/provider/k3s/provider.go` | done | Completed & tested |
+| 13 | Tarball build (`nerdctl`/`docker`) & push deploy pipeline | backend-agent | `internal/application/deploy/pipeline.go` | done | Completed |
+| 14 | Pod container log streaming SSE handler | backend-agent | `internal/adapters/http/web/v1/app_handler.go` | done | Completed |
+| 15 | Verification: `crank test` and `crank build` | main-agent | project root | done | Verified `crank test` & `crank build` |
 
 ## Done Log
 
@@ -30,3 +36,6 @@ Derived from the Phase 2 Execution Strategy. Update continuously during implemen
 - 2026-07-29 — Executed `crank make swag` to generate OpenAPI / Swagger documentation (`docs/docs.go`, `docs/swagger.json`, `docs/swagger.yaml`).
 - 2026-07-29 — Integrated Go Echo backend & React Vite frontend (`web.ServeViews`, embedded dist, proxy configuration) and verified with `crank build` & `crank test`.
 - 2026-07-29 — Integrated Orval with Bun (`bun add axios @tanstack/react-query -D orval`), configured `orval.config.ts` and `src/lib/mutator.ts`, generated API hooks into `src/lib/generated/api.ts`, and wrapped app with `QueryClientProvider`.
+- 2026-07-29 — Implemented real backend functionality: added `client-go`, `k8s.io/api`, and `apimachinery` dependencies, implemented real Resend HTTP API client, built real k3s provider with fake/simulated fallback, tarball OCI build/push pipeline, safe async upload handling, k3s pod log SSE streaming, and verified clean build with `crank test` and `crank build`.
+
+

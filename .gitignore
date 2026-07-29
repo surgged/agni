@@ -16,8 +16,5 @@
 /out/
 /static/
 
-# Local DB volume
-data/
-
 # ai
 .commandcode/

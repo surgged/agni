@@ -146,7 +146,7 @@ export default function LandingPage() {
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 to="/register"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-orange-500 via-amber-600 to-red-600 hover:from-orange-600 hover:to-red-700 rounded-xl shadow-xl shadow-orange-500/25 transition-all hover:scale-[1.03]"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-orange-500 via-amber-600 to-amber-600 hover:from-orange-600 hover:to-amber-700 rounded-xl shadow-xl shadow-orange-500/25 transition-all hover:scale-[1.03]"
               >
                 <Sparkles className="w-5 h-5 fill-white/20" />
                 <span>Get Started Free</span>

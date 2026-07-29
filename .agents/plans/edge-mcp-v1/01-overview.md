@@ -1,6 +1,6 @@
 # Overview Plan: Agni — MCP-First App Hosting Platform (v1)
 
-- Status: Approved
+- Status: Done
 - Slug: `edge-mcp-v1`
 - Form: Full
 - Author: Gemini 3.6 Flash / 2026-07-29

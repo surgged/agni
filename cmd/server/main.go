@@ -126,9 +126,8 @@ func main() {
 
 	// ---- Deploy pipeline ----
 	deployPipe := deploy.NewPipeline(k3sProvider, appCmd, appQry)
-	_ = deployPipe // wired into app handler or background worker in v2
 
-	appHandler := v1.NewAppHandler(appCmd, appQry, deployPipe, agentTokens)
+	appHandler := v1.NewAppHandler(appCmd, appQry, deployPipe, agentTokens, k3sProvider)
 	shareHandler := v1.NewShareHandler(sharelinkCmd, sharelinkQry)
 	magicHandler := v1.NewMagicHandler(cfg.Share, agentTokens, emailClient, userCmd, userQry)
 	sessionHandler := v1.NewSessionHandler(agentTokens, sharelinkRepo)

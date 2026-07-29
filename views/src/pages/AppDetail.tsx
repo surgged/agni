@@ -75,7 +75,7 @@ export default function AppDetail() {
   const [createdShareUrl, setCreatedShareUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const foundApp = INITIAL_MOCK_APPS.find((a) => a.id === id) || INITIAL_MOCK_APPS[0];
+    const foundApp = INITIAL_MOCK_APPS.find((a: App) => a.id === id) || INITIAL_MOCK_APPS[0];
     setApp(foundApp);
     setEnvVars(foundApp.envVars || {});
     setShareLinks(INITIAL_MOCK_SHARE_LINKS[foundApp.id] || []);

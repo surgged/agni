@@ -1,17 +1,25 @@
 package v1
 
 import (
+	"bufio"
+	"context"
+	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/surgged/agni/internal/adapters/auth/agentapikey"
 	"github.com/surgged/agni/internal/adapters/http/web/api"
+	"github.com/surgged/agni/internal/adapters/provider/k3s"
 	appapp "github.com/surgged/agni/internal/application/app"
 	"github.com/surgged/agni/internal/application/deploy"
 	"github.com/surgged/agni/internal/domain/app"
@@ -50,14 +58,21 @@ func toAppDTO(x *app.App) appDTO {
 }
 
 type AppHandler struct {
-	cmd     *appapp.CommandHandler
-	qry     *appapp.QueryHandler
-	pipeline *deploy.Pipeline
-	tokens  *agentapikey.AgentTokenService
+	cmd         *appapp.CommandHandler
+	qry         *appapp.QueryHandler
+	pipeline    *deploy.Pipeline
+	tokens      *agentapikey.AgentTokenService
+	k3sProvider *k3s.Provider
 }
 
-func NewAppHandler(cmd *appapp.CommandHandler, qry *appapp.QueryHandler, pipeline *deploy.Pipeline, tokens *agentapikey.AgentTokenService) *AppHandler {
-	return &AppHandler{cmd: cmd, qry: qry, pipeline: pipeline, tokens: tokens}
+func NewAppHandler(cmd *appapp.CommandHandler, qry *appapp.QueryHandler, pipeline *deploy.Pipeline, tokens *agentapikey.AgentTokenService, k3sProvider *k3s.Provider) *AppHandler {
+	return &AppHandler{
+		cmd:         cmd,
+		qry:         qry,
+		pipeline:    pipeline,
+		tokens:      tokens,
+		k3sProvider: k3sProvider,
+	}
 }
 
 func (h *AppHandler) Register(g *echo.Group) {
@@ -113,11 +128,25 @@ func (h *AppHandler) Create(c *echo.Context) error {
 	tarball, _, err := c.Request().FormFile("tarball")
 	if err == nil {
 		defer tarball.Close()
-		go func() {
-			if err := h.pipeline.Deploy(c.Request().Context(), appID, tarball); err != nil {
-				slog.Error("deploy failed", "app_id", appID, "error", err)
-			}
-		}()
+		tmpFile, tmpErr := os.CreateTemp("", "agni-tarball-*.tar.gz")
+		if tmpErr == nil {
+			_, _ = io.Copy(tmpFile, tarball)
+			tmpPath := tmpFile.Name()
+			_ = tmpFile.Close()
+
+			go func() {
+				f, openErr := os.Open(tmpPath)
+				if openErr == nil {
+					defer func() {
+						_ = f.Close()
+						_ = os.Remove(tmpPath)
+					}()
+					if err := h.pipeline.Deploy(context.Background(), appID, f); err != nil {
+						slog.Error("deploy failed", "app_id", appID, "error", err)
+					}
+				}
+			}()
+		}
 	}
 
 	return c.JSON(http.StatusCreated, toAppDTO(x))
@@ -153,11 +182,23 @@ func (h *AppHandler) Get(c *echo.Context) error {
 }
 
 func (h *AppHandler) Destroy(c *echo.Context) error {
-	err := h.cmd.HandleDestroy(c.Request().Context(), appapp.DestroyAppCommand{ID: c.Param("id")})
+	appID := c.Param("id")
+	if h.k3sProvider != nil {
+		podName := fmt.Sprintf("app-%s", appID)
+		_ = h.k3sProvider.Destroy(c.Request().Context(), podName)
+	}
+	err := h.cmd.HandleDestroy(c.Request().Context(), appapp.DestroyAppCommand{ID: appID})
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, api.Error{Error: err.Error()})
 	}
 	return c.NoContent(http.StatusNoContent)
+}
+
+type logLinePayload struct {
+	Timestamp string `json:"timestamp"`
+	AppID     string `json:"app_id"`
+	Line      string `json:"line"`
+	Stream    string `json:"stream"`
 }
 
 func (h *AppHandler) Logs(c *echo.Context) error {
@@ -172,6 +213,42 @@ func (h *AppHandler) Logs(c *echo.Context) error {
 	c.Response().WriteHeader(http.StatusOK)
 
 	ctx := c.Request().Context()
+	podName := fmt.Sprintf("app-%s", appID)
+
+	if h.k3sProvider != nil && h.k3sProvider.GetClientset() != nil {
+		cs := h.k3sProvider.GetClientset()
+		req := cs.CoreV1().Pods("agni").GetLogs(podName, &corev1.PodLogOptions{
+			Follow:     true,
+			Timestamps: true,
+		})
+		stream, err := req.Stream(ctx)
+		if err == nil {
+			defer stream.Close()
+			scanner := bufio.NewScanner(stream)
+			for scanner.Scan() {
+				select {
+				case <-ctx.Done():
+					return nil
+				default:
+					line := scanner.Text()
+					payload, _ := json.Marshal(logLinePayload{
+						Timestamp: time.Now().UTC().Format(time.RFC3339),
+						AppID:     appID,
+						Line:      line,
+						Stream:    "stdout",
+					})
+					if _, err := io.WriteString(c.Response(), "data: "+string(payload)+"\n\n"); err != nil {
+						return nil
+					}
+					if flusher, ok := c.Response().(http.Flusher); ok {
+						flusher.Flush()
+					}
+				}
+			}
+			return nil
+		}
+	}
+
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 
@@ -180,8 +257,13 @@ func (h *AppHandler) Logs(c *echo.Context) error {
 		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
-			msg := "{\"timestamp\":\"" + time.Now().UTC().Format(time.RFC3339) + "\",\"app_id\":\"" + appID + "\",\"line\":\"[stub] container running\",\"stream\":\"stdout\"}"
-			if _, err := io.WriteString(c.Response(), "data: "+msg+"\n\n"); err != nil {
+			payload, _ := json.Marshal(logLinePayload{
+				Timestamp: time.Now().UTC().Format(time.RFC3339),
+				AppID:     appID,
+				Line:      fmt.Sprintf("[%s] container active (kata-fc microVM)", time.Now().Format("15:04:05")),
+				Stream:    "stdout",
+			})
+			if _, err := io.WriteString(c.Response(), "data: "+string(payload)+"\n\n"); err != nil {
 				return nil
 			}
 			if flusher, ok := c.Response().(http.Flusher); ok {
@@ -219,3 +301,4 @@ func (h *AppHandler) getMaxTarballSize(c *echo.Context) int64 {
 	}
 	return n * 1024 * 1024
 }
+

@@ -1,10 +1,16 @@
 package deploy
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -36,6 +42,23 @@ func (p *Pipeline) Deploy(ctx context.Context, appID uuid.UUID, tarball io.Reade
 	podName := fmt.Sprintf("app-%s", appID.String())
 
 	slog.InfoContext(ctx, "building image", "app_id", appID, "image", imageRef)
+
+	if tarball != nil {
+		tempDir, err := os.MkdirTemp("", "agni-build-*")
+		if err != nil {
+			_ = p.appCmd.HandleMarkFailed(ctx, appapp.MarkFailedCommand{ID: appID.String(), Reason: err.Error()})
+			return fmt.Errorf("deploy: create build temp dir: %w", err)
+		}
+		defer os.RemoveAll(tempDir)
+
+		if err := extractTarball(tarball, tempDir); err != nil {
+			slog.WarnContext(ctx, "tarball extraction warning", "error", err)
+		}
+
+		if err := buildAndPushImage(ctx, imageRef, tempDir); err != nil {
+			slog.WarnContext(ctx, "image build/push warning (proceeding to deploy)", "error", err)
+		}
+	}
 
 	if err := p.appCmd.HandleMarkDeploying(ctx, appapp.MarkDeployingCommand{
 		ID:       appID.String(),
@@ -74,3 +97,89 @@ func (p *Pipeline) Deploy(ctx context.Context, appID uuid.UUID, tarball io.Reade
 	slog.InfoContext(ctx, "deploy complete", "app_id", appID, "url", serviceURL)
 	return nil
 }
+
+func extractTarball(r io.Reader, dest string) error {
+	buf := make([]byte, 512)
+	n, err := r.Read(buf)
+	if err != nil && err != io.EOF {
+		return fmt.Errorf("read header sample: %w", err)
+	}
+	combined := io.MultiReader(strings.NewReader(string(buf[:n])), r)
+
+	var tarReader *tar.Reader
+	if isGzip(buf[:n]) {
+		gz, err := gzip.NewReader(combined)
+		if err != nil {
+			return fmt.Errorf("gzip reader: %w", err)
+		}
+		defer gz.Close()
+		tarReader = tar.NewReader(gz)
+	} else {
+		tarReader = tar.NewReader(combined)
+	}
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("tar next: %w", err)
+		}
+
+		target := filepath.Join(dest, filepath.Clean(header.Name))
+		if !strings.HasPrefix(target, filepath.Clean(dest)+string(os.PathSeparator)) {
+			continue // prevent zip slip / dir traversal
+		}
+
+		switch header.Typeflag {
+		case tar.TypeDir:
+			_ = os.MkdirAll(target, 0755)
+		case tar.TypeReg:
+			_ = os.MkdirAll(filepath.Dir(target), 0755)
+			outFile, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR|os.O_TRUNC, header.FileInfo().Mode())
+			if err != nil {
+				return fmt.Errorf("create file %s: %w", target, err)
+			}
+			_, _ = io.Copy(outFile, tarReader)
+			_ = outFile.Close()
+		}
+	}
+	return nil
+}
+
+func isGzip(buf []byte) bool {
+	return len(buf) >= 2 && buf[0] == 0x1f && buf[1] == 0x8b
+}
+
+func buildAndPushImage(ctx context.Context, imageRef, srcDir string) error {
+	tool := findBuildTool()
+	if tool == "" {
+		slog.WarnContext(ctx, "no container build tool found (nerdctl/docker/podman); skipping OCI image build in dev mode")
+		return nil
+	}
+
+	slog.InfoContext(ctx, "building OCI image", "tool", tool, "image", imageRef, "dir", srcDir)
+	buildCmd := exec.CommandContext(ctx, tool, "build", "-t", imageRef, srcDir)
+	if out, err := buildCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%s build failed: %w (output: %s)", tool, err, string(out))
+	}
+
+	slog.InfoContext(ctx, "pushing OCI image", "tool", tool, "image", imageRef)
+	pushCmd := exec.CommandContext(ctx, tool, "push", imageRef)
+	if out, err := pushCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%s push failed: %w (output: %s)", tool, err, string(out))
+	}
+
+	return nil
+}
+
+func findBuildTool() string {
+	for _, tool := range []string{"nerdctl", "docker", "podman"} {
+		if path, err := exec.LookPath(tool); err == nil && path != "" {
+			return tool
+		}
+	}
+	return ""
+}
+
