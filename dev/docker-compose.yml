@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: agni
+      POSTGRES_PASSWORD: agni
+      POSTGRES_DB: agni
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agni"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://agni:agni@db:5432/agni?sslmode=disable
+      REDIS_ADDR: redis:6379
+    depends_on:
+      db:
+        condition: service_healthy
+
+  redis:
+    image: redis:8-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata:

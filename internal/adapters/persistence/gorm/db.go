@@ -3,7 +3,7 @@ package gorm
 import (
 	"fmt"
 
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"github.com/surgged/agni/internal/config"
@@ -11,22 +11,19 @@ import (
 	domainsharelink "github.com/surgged/agni/internal/domain/sharelink"
 )
 
-// NewDB opens a connection to SQLite using the supplied configuration
-// and returns a configured *gorm.DB ready to use. The caller is responsible
-// for closing the underlying *sql.DB at shutdown.
 func NewDB(cfg config.DatabaseConfig) (*gorm.DB, error) {
-	db, err := gorm.Open(sqlite.Open(cfg.Path), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(cfg.DSN), &gorm.Config{})
 	if err != nil {
-		return nil, fmt.Errorf("connect to sqlite at %s: %w", cfg.Path, err)
+		return nil, fmt.Errorf("connect to postgres: %w", err)
 	}
 
 	sqlDB, err := db.DB()
 	if err != nil {
 		return nil, fmt.Errorf("get underlying *sql.DB: %w", err)
 	}
-	sqlDB.SetMaxOpenConns(1) // SQLite only supports a single writer.
+	sqlDB.SetMaxOpenConns(25)
+	sqlDB.SetMaxIdleConns(10)
 
-	// Auto-migrate domain models
 	if err := db.AutoMigrate(
 		&domainapp.App{},
 		&domainsharelink.ShareLink{},

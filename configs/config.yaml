@@ -7,7 +7,7 @@ app:
     - "*"
 
 database:
-  path: "data/agni.db"
+  dsn: "postgres://agni:agni@localhost:5432/agni?sslmode=disable"
 
 jwt:
   secret: "change-me-in-production"

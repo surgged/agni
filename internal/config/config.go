@@ -53,7 +53,7 @@ type JWTConfig struct {
 
 // RedisConfig holds the Redis connection settings.
 type RedisConfig struct {
-	Addr     string `mapstructure:"addr"`
+	Addr     string `mapstructure:"addr" env:"REDIS_ADDR"`
 	Password string `mapstructure:"password" env:"REDIS_PASSWORD"`
 	DB       int    `mapstructure:"db"`
 }
@@ -67,9 +67,9 @@ type ViewsConfig struct {
 	DevServer string `mapstructure:"dev_server"`
 }
 
-// DatabaseConfig holds SQLite connection settings.
+// DatabaseConfig holds PostgreSQL connection settings.
 type DatabaseConfig struct {
-	Path string `mapstructure:"path"`
+	DSN string `mapstructure:"dsn" env:"DATABASE_URL"`
 }
 
 // crank:config-structs
@@ -168,7 +168,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("views.enabled", false)
 	v.SetDefault("views.dev_server", "")
 
-	v.SetDefault("database.path", "data/agni.db")
+	v.SetDefault("database.dsn", "postgres://agni:agni@localhost:5432/agni?sslmode=disable")
 
 	// crank:config-defaults
 	v.SetDefault("logging.level", "info")
