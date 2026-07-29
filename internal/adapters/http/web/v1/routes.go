@@ -26,6 +26,8 @@ func Mount(e *echo.Echo, cfg MountConfig) {
 	cfg.MagicHandler.Register(magicGroup)
 	e.GET("/auth/session", cfg.SessionHandler.Validate)
 	e.POST("/auth/agent-token", cfg.AppHandler.IssueAgentToken)
+	e.GET("/preview/:id", cfg.AppHandler.Preview)
+	e.GET("/preview/:id/*", cfg.AppHandler.Preview)
 	e.GET("/api/v1/me", cfg.MeHandler.Get)
 	e.GET("/api/v1/cluster/health", cfg.ClusterHealthHandler.Get)
 }

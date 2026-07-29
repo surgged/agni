@@ -39,7 +39,7 @@ email:
   from_address: "agni@agni.dev"
 
 share:
-  domain: "agni.dev"
+  domain: "inlb.site"
   magic_link_ttl: 24h
   session_ttl: 168h
 

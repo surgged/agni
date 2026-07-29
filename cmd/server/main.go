@@ -112,7 +112,7 @@ func main() {
 	emailClient := resendadapter.NewClient(cfg.Email.ResendAPIKey, cfg.Email.FromAddress, cfg.Share.Domain)
 
 	// ---- k3s provider ----
-	k3sProvider := k3s.NewProvider(cfg.K3s.Namespace, cfg.K3s.RegistryAddr)
+	k3sProvider := k3s.NewProvider(cfg.K3s.Namespace, cfg.K3s.RegistryAddr, cfg.Share.Domain)
 
 	userCmd := userapp.NewCommandHandler(userRepo, uow, hasher)
 	userQry := userapp.NewQueryHandler(userRepo)
@@ -125,7 +125,7 @@ func main() {
 	sharelinkQry := shareapp.NewQueryHandler(sharelinkRepo)
 
 	// ---- Deploy pipeline ----
-	deployPipe := deploy.NewPipeline(k3sProvider, appCmd, appQry)
+	deployPipe := deploy.NewPipeline(k3sProvider, appCmd, appQry, cfg.Share.Domain)
 
 	appHandler := v1.NewAppHandler(appCmd, appQry, deployPipe, agentTokens, k3sProvider)
 	shareHandler := v1.NewShareHandler(sharelinkCmd, sharelinkQry)
@@ -138,6 +138,7 @@ func main() {
 	e := web.NewServer(logger)
 	e.Use(echomw.Recover())
 	e.Use(middleware.RequestLogger())
+	e.Use(middleware.HostRouter(cfg.Share.Domain))
 
 	e.Use(echomw.CORSWithConfig(echomw.CORSConfig{
 		UnsafeAllowOriginFunc: func(c *echo.Context, origin string) (string, bool, error) { return origin, true, nil },

@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	corev1 "k8s.io/api/core/v1"
@@ -29,18 +30,23 @@ type Provider struct {
 	registryAddr string
 	certIssuer   string
 	ingressClass string
+	domain       string
 
 	mu             sync.RWMutex
 	devStatusStore map[string]ports.PodStatus
 }
 
-func NewProvider(namespace, registryAddr string) *Provider {
+func NewProvider(namespace, registryAddr, domain string) *Provider {
 	if namespace == "" {
 		namespace = "agni"
+	}
+	if domain == "" {
+		domain = "inlb.site"
 	}
 	p := &Provider{
 		namespace:      namespace,
 		registryAddr:   registryAddr,
+		domain:         domain,
 		certIssuer:     "letsencrypt-prod",
 		ingressClass:   "nginx",
 		devStatusStore: make(map[string]ports.PodStatus),
@@ -57,14 +63,18 @@ func NewProvider(namespace, registryAddr string) *Provider {
 	return p
 }
 
-func NewProviderWithClientset(cs kubernetes.Interface, namespace, registryAddr string) *Provider {
+func NewProviderWithClientset(cs kubernetes.Interface, namespace, registryAddr, domain string) *Provider {
 	if namespace == "" {
 		namespace = "agni"
+	}
+	if domain == "" {
+		domain = "inlb.site"
 	}
 	return &Provider{
 		clientset:      cs,
 		namespace:      namespace,
 		registryAddr:   registryAddr,
+		domain:         domain,
 		certIssuer:     "letsencrypt-prod",
 		ingressClass:   "nginx",
 		devStatusStore: make(map[string]ports.PodStatus),
@@ -95,7 +105,16 @@ func buildClientset() (kubernetes.Interface, error) {
 		return nil, fmt.Errorf("failed to build kubeconfig from %s: %w", kubeconfig, err)
 	}
 
-	return kubernetes.NewForConfig(config)
+	cs, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create kubernetes clientset: %w", err)
+	}
+
+	if _, err := cs.Discovery().ServerVersion(); err != nil {
+		return nil, fmt.Errorf("kubernetes cluster unreachable at %s: %w", config.Host, err)
+	}
+
+	return cs, nil
 }
 
 type templateParams struct {
@@ -106,6 +125,7 @@ type templateParams struct {
 	Port         int32
 	CertIssuer   string
 	IngressClass string
+	Domain       string
 }
 
 func (p *Provider) Deploy(ctx context.Context, spec ports.PodSpec) error {
@@ -121,14 +141,16 @@ func (p *Provider) Deploy(ctx context.Context, spec ports.PodSpec) error {
 		return fmt.Errorf("k3s: parse manifest template: %w", err)
 	}
 
+	ownerEmailLabel := strings.ReplaceAll(strings.ReplaceAll(spec.OwnerEmail, "@", "_at_"), "+", "_")
 	params := templateParams{
 		ID:           spec.AppID,
 		Namespace:    p.namespace,
-		OwnerEmail:   spec.OwnerEmail,
+		OwnerEmail:   ownerEmailLabel,
 		ImageRef:     spec.ImageRef,
 		Port:         spec.Port,
 		CertIssuer:   p.certIssuer,
 		IngressClass: p.ingressClass,
+		Domain:       p.domain,
 	}
 
 	var buf bytes.Buffer
@@ -140,11 +162,17 @@ func (p *Provider) Deploy(ctx context.Context, spec ports.PodSpec) error {
 		p.mu.Lock()
 		p.devStatusStore[spec.Name] = ports.PodStatus{
 			Phase: "Running",
-			URL:   fmt.Sprintf("https://%s.agni.dev", spec.AppID),
+			URL:   fmt.Sprintf("http://localhost:8080/preview/%s", spec.AppID),
 		}
 		p.mu.Unlock()
 		slog.WarnContext(ctx, "k3s deploy simulated (dev mode)", "name", spec.Name)
 		return nil
+	}
+
+	if _, err := p.clientset.CoreV1().Namespaces().Get(ctx, p.namespace, metav1.GetOptions{}); err != nil {
+		_, _ = p.clientset.CoreV1().Namespaces().Create(ctx, &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{Name: p.namespace},
+		}, metav1.CreateOptions{})
 	}
 
 	decoder := utilyaml.NewYAMLOrJSONDecoder(&buf, 4096)

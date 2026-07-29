@@ -56,15 +56,15 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: "{{.CertIssuer}}"
     nginx.ingress.kubernetes.io/auth-url: "http://agni-api.{{.Namespace}}.svc:8080/auth/session?app={{.ID}}"
-    nginx.ingress.kubernetes.io/auth-signin: "https://agni.dev/login?app={{.ID}}"
+    nginx.ingress.kubernetes.io/auth-signin: "https://{{.Domain}}/login?app={{.ID}}"
 spec:
   ingressClassName: {{.IngressClass}}
   tls:
   - hosts:
-    - "{{.ID}}.agni.dev"
+    - "{{.ID}}.{{.Domain}}"
     secretName: app-{{.ID}}-tls
   rules:
-  - host: "{{.ID}}.agni.dev"
+  - host: "{{.ID}}.{{.Domain}}"
     http:
       paths:
       - path: /

@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -245,6 +246,9 @@ func (h *AppHandler) Logs(c *echo.Context) error {
 					}
 				}
 			}
+			if err := scanner.Err(); err != nil {
+				return err
+			}
 			return nil
 		}
 	}
@@ -252,7 +256,7 @@ func (h *AppHandler) Logs(c *echo.Context) error {
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 
-	for i := 0; i < 30; i++ {
+	for range 30 {
 		select {
 		case <-ctx.Done():
 			return nil
@@ -302,3 +306,26 @@ func (h *AppHandler) getMaxTarballSize(c *echo.Context) int64 {
 	return n * 1024 * 1024
 }
 
+func (h *AppHandler) Preview(c *echo.Context) error {
+	appID := c.Param("id")
+	dir := filepath.Join(".", "data", "apps", appID)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		return c.JSON(http.StatusNotFound, api.Error{Error: "app preview data not found"})
+	}
+
+	subPath := c.Param("*")
+	if subPath == "" || subPath == "/" {
+		subPath = "index.html"
+	}
+
+	targetFile := filepath.Join(dir, filepath.Clean(subPath))
+	if info, err := os.Stat(targetFile); err == nil && info.IsDir() {
+		targetFile = filepath.Join(targetFile, "index.html")
+	}
+
+	if _, err := os.Stat(targetFile); os.IsNotExist(err) {
+		targetFile = filepath.Join(dir, "index.html")
+	}
+
+	return c.File(targetFile)
+}

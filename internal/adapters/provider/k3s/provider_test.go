@@ -13,7 +13,7 @@ import (
 
 func TestK3sProvider_WithFakeClientset(t *testing.T) {
 	fakeClient := fake.NewSimpleClientset()
-	provider := NewProviderWithClientset(fakeClient, "agni-test", "registry.agni.svc:5000")
+	provider := NewProviderWithClientset(fakeClient, "agni-test", "registry.agni.svc:5000", "inlb.site")
 	require.NotNil(t, provider)
 
 	spec := ports.PodSpec{
@@ -36,7 +36,7 @@ func TestK3sProvider_WithFakeClientset(t *testing.T) {
 }
 
 func TestK3sProvider_SimulatedDevMode(t *testing.T) {
-	provider := NewProviderWithClientset(nil, "agni-test", "registry.agni.svc:5000")
+	provider := NewProviderWithClientset(nil, "agni-test", "registry.agni.svc:5000", "inlb.site")
 	require.NotNil(t, provider)
 
 	spec := ports.PodSpec{

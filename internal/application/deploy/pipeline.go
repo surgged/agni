@@ -22,10 +22,14 @@ type Pipeline struct {
 	provider ports.ContainerProvider
 	appCmd   *appapp.CommandHandler
 	appQry   *appapp.QueryHandler
+	domain   string
 }
 
-func NewPipeline(provider ports.ContainerProvider, appCmd *appapp.CommandHandler, appQry *appapp.QueryHandler) *Pipeline {
-	return &Pipeline{provider: provider, appCmd: appCmd, appQry: appQry}
+func NewPipeline(provider ports.ContainerProvider, appCmd *appapp.CommandHandler, appQry *appapp.QueryHandler, domain string) *Pipeline {
+	if domain == "" {
+		domain = "agni.dev"
+	}
+	return &Pipeline{provider: provider, appCmd: appCmd, appQry: appQry, domain: domain}
 }
 
 func (p *Pipeline) Deploy(ctx context.Context, appID uuid.UUID, tarball io.Reader) error {
@@ -53,6 +57,18 @@ func (p *Pipeline) Deploy(ctx context.Context, appID uuid.UUID, tarball io.Reade
 
 		if err := extractTarball(tarball, tempDir); err != nil {
 			slog.WarnContext(ctx, "tarball extraction warning", "error", err)
+		}
+
+		dataDir := filepath.Join(".", "data", "apps", appID.String())
+		_ = os.MkdirAll(dataDir, 0755)
+		_ = copyDir(tempDir, dataDir)
+
+		appNameClean := strings.ToLower(strings.TrimSpace(app.Name))
+		appNameClean = strings.ReplaceAll(appNameClean, " ", "-")
+		if appNameClean != "" && appNameClean != appID.String() {
+			nameDir := filepath.Join(".", "data", "apps", appNameClean)
+			_ = os.MkdirAll(nameDir, 0755)
+			_ = copyDir(tempDir, nameDir)
 		}
 
 		if err := buildAndPushImage(ctx, imageRef, tempDir); err != nil {
@@ -83,8 +99,8 @@ func (p *Pipeline) Deploy(ctx context.Context, appID uuid.UUID, tarball io.Reade
 		return fmt.Errorf("deploy: k3s deploy: %w", err)
 	}
 
-	serviceURL := fmt.Sprintf("https://%s.agni.dev", appID.String())
-	shareURL := fmt.Sprintf("https://agni.dev/app/%s", appID.String())
+	serviceURL := fmt.Sprintf("https://%s.%s", appID.String(), p.domain)
+	shareURL := fmt.Sprintf("https://%s/app/%s", p.domain, appID.String())
 
 	if err := p.appCmd.HandleMarkLive(ctx, appapp.MarkLiveCommand{
 		ID:         appID.String(),
@@ -125,6 +141,11 @@ func extractTarball(r io.Reader, dest string) error {
 		}
 		if err != nil {
 			return fmt.Errorf("tar next: %w", err)
+		}
+
+		baseName := filepath.Base(header.Name)
+		if strings.HasPrefix(baseName, "._") || baseName == ".DS_Store" || strings.HasPrefix(header.Name, "__MACOSX") {
+			continue
 		}
 
 		target := filepath.Join(dest, filepath.Clean(header.Name))
@@ -181,5 +202,37 @@ func findBuildTool() string {
 		}
 	}
 	return ""
+}
+
+func copyDir(src string, dst string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		baseName := filepath.Base(path)
+		if strings.HasPrefix(baseName, "._") || baseName == ".DS_Store" || strings.HasPrefix(rel, "__MACOSX") {
+			return nil
+		}
+		target := filepath.Join(dst, rel)
+		if info.IsDir() {
+			return os.MkdirAll(target, info.Mode())
+		}
+		r, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer r.Close()
+		w, err := os.OpenFile(target, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, info.Mode())
+		if err != nil {
+			return err
+		}
+		defer w.Close()
+		_, err = io.Copy(w, r)
+		return err
+	})
 }
 
