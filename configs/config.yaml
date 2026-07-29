@@ -20,9 +20,7 @@ redis:
   db: 0
 
 views:
-  # Set enabled to true to serve the embedded React SPA.
-  # For local frontend dev, set dev_server to your Vite URL (e.g. "http://localhost:5173").
-  enabled: false
+  enabled: true
   dev_server: ""
 # crank:config-section
 logging:
