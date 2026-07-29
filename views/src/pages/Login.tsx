@@ -23,6 +23,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/components/theme-provider';
 import { useAuth } from '@/contexts/auth';
+import { Logo } from '@/components/ui/Logo';
 import { toast } from 'sonner';
 
 export default function Login() {
@@ -140,11 +141,7 @@ export default function Login() {
       <div className="w-full max-w-xl z-10 flex flex-col gap-6">
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="size-14 rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600 p-0.5 shadow-xl shadow-orange-500/20">
-            <div className="size-full bg-card rounded-[14px] flex items-center justify-center">
-              <Flame className="size-8 text-amber-500 animate-pulse" />
-            </div>
-          </div>
+          <Logo size="lg" showText={false} />
           <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 bg-clip-text text-transparent">
             Agni Cloud Platform
           </h1>

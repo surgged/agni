@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Flame, ArrowUp, ExternalLink, ShieldCheck } from 'lucide-react';
+import { ArrowUp, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Logo } from '@/components/ui/Logo';
 
 export function Footer() {
   const scrollToTop = () => {
@@ -13,19 +14,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* Brand Info Column (2 cols) */}
           <div className="lg:col-span-2 space-y-4">
-            <Link to="/" className="flex items-center gap-3 group">
-              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 via-amber-600 to-red-600 p-[1px] shadow-lg shadow-orange-500/20">
-                <div className="w-full h-full bg-card rounded-[11px] flex items-center justify-center">
-                  <Flame className="w-4 h-4 text-orange-500 fill-orange-500/20" />
-                </div>
-              </div>
-              <span className="font-extrabold text-xl tracking-tight text-foreground font-mono">
-                AGNI
-              </span>
-              <span className="px-1.5 py-0.5 text-[10px] font-mono font-semibold rounded bg-orange-500/10 text-orange-500 border border-orange-500/30">
-                MCP
-              </span>
-            </Link>
+            <Logo />
 
             <p className="text-xs sm:text-sm text-muted-foreground max-w-sm leading-relaxed">
               The instant home for AI-built apps. Turn code written by Cursor, Claude, or Windsurf into secure live web links with zero server setup.

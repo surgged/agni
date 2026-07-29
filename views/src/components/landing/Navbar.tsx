@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Flame, Menu, X, ArrowRight, LayoutDashboard, LogIn, Sparkles, BookOpen } from 'lucide-react';
+import { Menu, X, ArrowRight, LayoutDashboard, LogIn, Sparkles, BookOpen } from 'lucide-react';
+import { Logo } from '@/components/ui/Logo';
 import { useAuth } from '@/contexts/auth';
 
 export function Navbar() {
@@ -42,26 +43,7 @@ export function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Brand Logo */}
-        <Link to="/" className="flex items-center gap-3 group">
-          <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 via-amber-600 to-red-600 p-[1px] shadow-lg shadow-orange-500/20 group-hover:shadow-orange-500/40 transition-all duration-300">
-            <div className="w-full h-full bg-card rounded-[11px] flex items-center justify-center transition-colors group-hover:bg-muted">
-              <Flame className="w-5 h-5 text-orange-500 fill-orange-500/20 group-hover:scale-110 transition-transform duration-300" />
-            </div>
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-xl tracking-tight text-foreground font-mono">
-                AGNI
-              </span>
-              <span className="px-1.5 py-0.5 text-[10px] font-mono font-semibold rounded bg-orange-500/10 text-orange-500 border border-orange-500/30">
-                MCP
-              </span>
-            </div>
-            <span className="text-[10px] text-muted-foreground font-mono hidden sm:inline-block -mt-1">
-              v0.1.0-beta
-            </span>
-          </div>
-        </Link>
+        <Logo />
 
         {/* Desktop Navigation Links */}
         <nav className="hidden md:flex items-center gap-1 bg-card/80 p-1.5 rounded-full border border-border backdrop-blur-md shadow-sm">
