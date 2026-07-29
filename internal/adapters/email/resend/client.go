@@ -8,7 +8,10 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/surgged/agni/internal/adapters/email/templates"
 )
 
 type Client struct {
@@ -49,7 +52,7 @@ func (c *Client) SendMagicLink(ctx context.Context, recipientEmail string, token
 		From:    c.fromAddr,
 		To:      []string{recipientEmail},
 		Subject: "Your Agni Magic Login Link",
-		HTML:    fmt.Sprintf("<p>Click the link below to log in to Agni:</p><p><a href=\"%s\">%s</a></p><p>This link expires in 24 hours.</p>", link, link),
+		HTML:    renderMagicLinkHTML(link, recipientEmail),
 	}
 
 	bodyBytes, err := json.Marshal(payload)
@@ -79,4 +82,15 @@ func (c *Client) SendMagicLink(ctx context.Context, recipientEmail string, token
 	slog.InfoContext(ctx, "magic link email sent via resend", "email", recipientEmail)
 	return nil
 }
+
+func renderMagicLinkHTML(link string, recipientEmail string) string {
+	r := strings.NewReplacer(
+		"{{MAGIC_LINK}}", link,
+		"{{RECIPIENT_EMAIL}}", recipientEmail,
+	)
+	return r.Replace(templates.MagicLinkHTML)
+}
+
+
+
 

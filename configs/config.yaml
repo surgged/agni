@@ -39,7 +39,7 @@ email:
   from_address: "agni@surgged.xyz"
 
 share:
-  domain: "inlb.site"
+  domain: "agni.indralab.xyz"
   magic_link_ttl: 24h
   session_ttl: 168h
 

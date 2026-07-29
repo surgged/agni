@@ -3,6 +3,7 @@ package v1
 import (
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,7 +13,6 @@ import (
 	"github.com/surgged/agni/internal/adapters/http/web/api"
 	userapp "github.com/surgged/agni/internal/application/user"
 	"github.com/surgged/agni/internal/config"
-	"github.com/surgged/agni/internal/domain/user"
 )
 
 type AgentTokenIssuer interface {
@@ -97,11 +97,12 @@ func (h *MagicHandler) VerifyMagicLink(c *echo.Context) error {
 	userID := uuid.NewSHA1(uuid.NameSpaceOID, []byte(email))
 	_, err = h.userQry.HandleGetByEmail(ctx, userapp.GetUserByEmailQuery{Email: email})
 	if err != nil {
+		dummyPassword := uuid.New().String()
 		_, createErr := h.userCmd.HandleCreate(ctx, userapp.CreateUserCommand{
 			ID:       userID.String(),
 			Name:     email,
 			Email:    email,
-			Password: "",
+			Password: dummyPassword,
 		})
 		if createErr != nil && !errIsDup(createErr) {
 			slog.ErrorContext(ctx, "failed to create user", "error", createErr)
@@ -144,5 +145,11 @@ func (h *MagicHandler) VerifyMagicLink(c *echo.Context) error {
 }
 
 func errIsDup(err error) bool {
-	return err != nil && (err == user.ErrUserNotFound || false)
+	if err == nil {
+		return false
+	}
+	errStr := strings.ToLower(err.Error())
+	return strings.Contains(errStr, "duplicate") ||
+		strings.Contains(errStr, "unique") ||
+		strings.Contains(errStr, "already exists")
 }
