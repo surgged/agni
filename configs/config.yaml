@@ -36,7 +36,7 @@ mcp:
 email:
   provider: "resend"
   resend_api_key: ""
-  from_address: "agni@agni.dev"
+  from_address: "agni@indralab.xyz"
 
 share:
   domain: "inlb.site"
