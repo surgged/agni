@@ -110,7 +110,7 @@ export default function AppDetail() {
         <p className="text-xs text-muted-foreground mb-4">
           The requested MicroVM application does not exist.
         </p>
-        <Button size="sm" onClick={() => navigate('/')}>
+        <Button size="sm" onClick={() => navigate('/dashboard')}>
           Return to Dashboard
         </Button>
       </div>
@@ -184,7 +184,7 @@ export default function AppDetail() {
     try {
       await api.deleteApp(app.id);
       toast.success(`Application ${app.name} destroyed successfully`);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err: any) {
       toast.error(err?.message || 'Failed to destroy application');
     }

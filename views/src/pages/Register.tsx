@@ -11,7 +11,7 @@ export default function Register() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) return null;
-  if (isAuthenticated) return <Navigate to="/" replace />;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row bg-background">

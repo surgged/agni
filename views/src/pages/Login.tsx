@@ -43,7 +43,7 @@ export default function Login() {
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   if (isLoading) return null;
-  if (isAuthenticated) return <Navigate to="/" replace />;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
   const handleMagicLinkSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -303,7 +303,7 @@ export default function Login() {
                           className="w-full rounded-xl text-xs h-9"
                           onClick={() => {
                             demoLogin();
-                            navigate('/');
+                            navigate('/dashboard');
                           }}
                         >
                           Instant Demo Login
@@ -332,7 +332,7 @@ export default function Login() {
                         onClick={() => {
                           demoLogin();
                           toast.success('Logged in with instant demo profile!');
-                          navigate('/');
+                          navigate('/dashboard');
                         }}
                       >
                         Launch Demo Session →
@@ -458,7 +458,7 @@ export default function Login() {
                           onClick={() => {
                             demoLogin();
                             toast.success('Authenticated as Agent workspace admin!');
-                            navigate('/');
+                            navigate('/dashboard');
                           }}
                         >
                           <ShieldCheck className="size-3.5 mr-1.5" />

@@ -49,7 +49,7 @@ export function LoginForm({ hideCard = false }: LoginFormProps) {
     setIsSubmitting(true);
     try {
       await login(values.email, values.password);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err: any) {
       const errMsg = err instanceof Error ? err.message : String(err);
       if (errMsg.includes('verify your email') || errMsg.includes('email_not_verified')) {
