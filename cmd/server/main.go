@@ -131,7 +131,7 @@ func main() {
 	shareHandler := v1.NewShareHandler(sharelinkCmd, sharelinkQry)
 	magicHandler := v1.NewMagicHandler(cfg.Share, agentTokens, emailClient, userCmd, userQry)
 	sessionHandler := v1.NewSessionHandler(agentTokens, sharelinkRepo)
-	meHandler := v1.NewMeHandler(userQry)
+	meHandler := v1.NewMeHandler(userQry, tokens, agentTokens)
 	clusterHealthHandler := v1.NewClusterHealthHandler()
 	// crank:composition-root (do not remove — `crank make handler` splices new cmd/qry/handler wiring here)
 
@@ -148,6 +148,9 @@ func main() {
 		MaxAge:                300,
 	}))
 
+	e.GET("/swagger", func(c *echo.Context) error {
+		return c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
+	})
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.GET("/health", web.Health)
 

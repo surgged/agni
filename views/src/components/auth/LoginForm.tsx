@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,7 @@ export interface LoginFormProps {
 
 export function LoginForm({ hideCard = false }: LoginFormProps) {
   const { login, resendVerification } = useAuth();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
@@ -48,6 +49,7 @@ export function LoginForm({ hideCard = false }: LoginFormProps) {
     setIsSubmitting(true);
     try {
       await login(values.email, values.password);
+      navigate('/');
     } catch (err: any) {
       const errMsg = err instanceof Error ? err.message : String(err);
       if (errMsg.includes('verify your email') || errMsg.includes('email_not_verified')) {

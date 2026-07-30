@@ -27,8 +27,8 @@ func ServeViews(e *echo.Echo, cfg config.ViewsConfig, logger *slog.Logger) {
 	}
 
 	if cfg.DevServer != "" {
-		logger.Info("views: proxying to Vite dev server", "dev_server", cfg.DevServer)
-		e.Any("/*", proxyToDevServer(cfg.DevServer, logger))
+		logger.Info("views: proxying non-API routes to Vite dev server", "dev_server", cfg.DevServer)
+		e.Use(proxyToDevServerMiddleware(cfg.DevServer, logger))
 		return
 	}
 
@@ -40,107 +40,103 @@ func ServeViews(e *echo.Echo, cfg config.ViewsConfig, logger *slog.Logger) {
 	}
 
 	// Serve the embedded SPA with index.html fallback for client-side routing.
+	// Skipper ensures API routes, health checks, and Swagger docs are never handled as SPA routes.
 	e.Use(echomw.StaticWithConfig(echomw.StaticConfig{
 		Root:       ".",
 		Index:      "index.html",
 		HTML5:      true,
 		Filesystem: dist,
+		Skipper: func(c *echo.Context) bool {
+			return isAPIPath(c.Request().URL.Path)
+		},
 	}))
 
 	logger.Info("views: serving embedded SPA")
 }
 
-// proxyToDevServer returns an Echo handler that proxies all requests to the
-// Vite dev server. This preserves HMR websocket connections and module
-// resolution during frontend development.
-func proxyToDevServer(target string, logger *slog.Logger) echo.HandlerFunc {
-	// Strip trailing slash.
+// proxyToDevServerMiddleware returns Echo middleware that proxies non-API
+// requests to the Vite dev server. API routes, health checks, and Swagger
+// pass through to Echo route handlers normally.
+func proxyToDevServerMiddleware(target string, logger *slog.Logger) echo.MiddlewareFunc {
 	target = strings.TrimRight(target, "/")
 
-	return func(c *echo.Context) error {
-		// If the request looks like an API call, skip proxying (let the
-		// Echo router handle it normally). The Vite dev server would have
-		// handled this via its own proxy config, but when the Go server
-		// proxies, we need to let API routes through.
-		path := c.Request().URL.Path
-		if isAPIPath(path) {
-			return echo.ErrNotFound
-		}
-
-		proxyURL := target + path
-		if c.Request().URL.RawQuery != "" {
-			proxyURL += "?" + c.Request().URL.RawQuery
-		}
-
-		req, err := http.NewRequestWithContext(
-			c.Request().Context(),
-			c.Request().Method,
-			proxyURL,
-			c.Request().Body,
-		)
-		if err != nil {
-			return err
-		}
-
-		// Copy headers.
-		for k, vv := range c.Request().Header {
-			for _, v := range vv {
-				req.Header.Add(k, v)
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			path := c.Request().URL.Path
+			if isAPIPath(path) {
+				return next(c)
 			}
-		}
 
-		// Forward the host header that Vite expects.
-		req.Header.Set("Host", strings.TrimPrefix(target, "http://"))
-
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			logger.Warn("views: proxy error", "error", err, "url", proxyURL)
-			return echo.NewHTTPError(http.StatusBadGateway, "dev server unreachable")
-		}
-		defer resp.Body.Close()
-
-		// Copy response headers.
-		for k, vv := range resp.Header {
-			for _, v := range vv {
-				c.Response().Header().Add(k, v)
+			proxyURL := target + path
+			if c.Request().URL.RawQuery != "" {
+				proxyURL += "?" + c.Request().URL.RawQuery
 			}
-		}
 
-		// Forward WebSocket upgrade if present (HMR uses WebSockets).
-		if resp.StatusCode == http.StatusSwitchingProtocols {
-			hijacker, ok := c.Response().(http.Hijacker)
-			if !ok {
-				return echo.NewHTTPError(http.StatusInternalServerError, "websocket not supported")
-			}
-			conn, _, err := hijacker.Hijack()
+			req, err := http.NewRequestWithContext(
+				c.Request().Context(),
+				c.Request().Method,
+				proxyURL,
+				c.Request().Body,
+			)
 			if err != nil {
 				return err
 			}
-			defer conn.Close()
 
-			// For a proper proxy we'd need a bidirectional copy. As a
-			// simpler fallback, return the status to let the client know
-			// that the dev server is available; HMR will reconnect directly
-			// to Vite's own WebSocket endpoint (ws://localhost:5173).
-			return c.NoContent(http.StatusOK)
+			// Copy headers.
+			for k, vv := range c.Request().Header {
+				for _, v := range vv {
+					req.Header.Add(k, v)
+				}
+			}
+
+			// Forward the host header that Vite expects.
+			req.Header.Set("Host", strings.TrimPrefix(target, "http://"))
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				logger.Warn("views: proxy error", "error", err, "url", proxyURL)
+				return echo.NewHTTPError(http.StatusBadGateway, "dev server unreachable")
+			}
+			defer resp.Body.Close()
+
+			// Copy response headers.
+			for k, vv := range resp.Header {
+				for _, v := range vv {
+					c.Response().Header().Add(k, v)
+				}
+			}
+
+			// Forward WebSocket upgrade if present (HMR uses WebSockets).
+			if resp.StatusCode == http.StatusSwitchingProtocols {
+				hijacker, ok := c.Response().(http.Hijacker)
+				if !ok {
+					return echo.NewHTTPError(http.StatusInternalServerError, "websocket not supported")
+				}
+				conn, _, err := hijacker.Hijack()
+				if err != nil {
+					return err
+				}
+				defer conn.Close()
+
+				return c.NoContent(http.StatusOK)
+			}
+
+			return c.Stream(resp.StatusCode, resp.Header.Get("Content-Type"), resp.Body)
 		}
-
-		return c.Stream(resp.StatusCode, resp.Header.Get("Content-Type"), resp.Body)
 	}
 }
 
-// isAPIPath returns true for paths that should NOT be proxied to the
-// Vite dev server (API routes, health checks, Swagger docs).
+// isAPIPath returns true for paths that should NOT be handled as SPA routes or
+// proxied to the Vite dev server (API routes, health checks, Swagger docs).
 func isAPIPath(path string) bool {
-	apiPrefixes := []string{"/api/", "/auth/", "/health", "/swagger/"}
-	// Also check for the .env VITE_PROXY_TARGET env var hint (common pattern).
+	apiPrefixes := []string{"/api/", "/api", "/auth/", "/auth", "/health", "/swagger/", "/swagger", "/preview/", "/preview"}
 	if v := os.Getenv("VIEWS_SKIP_PROXY"); v != "" {
 		for _, prefix := range strings.Split(v, ",") {
 			apiPrefixes = append(apiPrefixes, strings.TrimSpace(prefix))
 		}
 	}
 	for _, prefix := range apiPrefixes {
-		if strings.HasPrefix(path, prefix) {
+		if strings.HasPrefix(path, prefix) || path == prefix {
 			return true
 		}
 	}

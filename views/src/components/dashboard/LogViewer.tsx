@@ -30,79 +30,61 @@ interface LogViewerProps {
   height?: string;
 }
 
-const SAMPLE_LOG_MESSAGES = [
-  { level: 'INFO', stream: 'stdout', msg: 'Incoming request GET /api/v1/metrics HTTP/1.1 from 10.244.0.12' },
-  { level: 'INFO', stream: 'stdout', msg: 'Firecracker MicroVM memory balloon check: 218MB RSS' },
-  { level: 'DEBUG', stream: 'stdout', msg: 'virtio-net: RX buffer ring flush completed (14 pkts)' },
-  { level: 'INFO', stream: 'stdout', msg: 'POST /v1/telemetry 200 OK (duration: 3.4ms)' },
-  { level: 'WARN', stream: 'stderr', msg: 'Connection pool near max active limit (18/20 connections)' },
-  { level: 'INFO', stream: 'stdout', msg: 'gc: garbage collection cycle finished in 0.42ms (reclaimed 14MB)' },
-  { level: 'ERROR', stream: 'stderr', msg: 'Failed to reach upstream DNS resolver 1.1.1.1: timeout after 500ms (retrying...)' },
-  { level: 'INFO', stream: 'stdout', msg: 'Resolved upstream host successfully via fallback 8.8.8.8' },
-];
-
 export const LogViewer: React.FC<LogViewerProps> = ({
+  appId,
   appName = 'agni-app',
   initialLogs = [],
   height = 'h-[500px]',
 }) => {
-  const [logs, setLogs] = useState<LogEntry[]>(() => {
-    if (initialLogs.length > 0) return initialLogs;
-    const now = new Date();
-    return [
-      {
-        timestamp: new Date(now.getTime() - 15000).toISOString(),
-        level: 'INFO',
-        stream: 'stdout',
-        message: `Kata MicroVM pod initialized for app [${appName}]`,
-      },
-      {
-        timestamp: new Date(now.getTime() - 12000).toISOString(),
-        level: 'INFO',
-        stream: 'stdout',
-        message: 'Firecracker v1.6.0 hypervisor process started',
-      },
-      {
-        timestamp: new Date(now.getTime() - 8000).toISOString(),
-        level: 'INFO',
-        stream: 'stdout',
-        message: 'Container runtime sandbox mounted at /var/lib/agni/containers',
-      },
-      {
-        timestamp: new Date(now.getTime() - 3000).toISOString(),
-        level: 'INFO',
-        stream: 'stdout',
-        message: 'HTTP service listening on http://0.0.0.0:8080',
-      },
-    ];
-  });
-
+  const [logs, setLogs] = useState<LogEntry[]>(initialLogs);
   const [isStreaming, setIsStreaming] = useState(true);
   const [filterLevel, setFilterLevel] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Live log simulation generator
+  // Stream real logs from backend SSE endpoint /api/v1/apps/:id/logs
   useEffect(() => {
-    if (!isStreaming) return;
+    if (!isStreaming || !appId) return;
 
-    const interval = setInterval(() => {
-      const randomSample =
-        SAMPLE_LOG_MESSAGES[Math.floor(Math.random() * SAMPLE_LOG_MESSAGES.length)];
-      const newEntry: LogEntry = {
-        id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-        timestamp: new Date().toISOString(),
-        level: randomSample.level as LogLevel,
-        stream: randomSample.stream as 'stdout' | 'stderr',
-        message: randomSample.msg,
+    let eventSource: EventSource | null = null;
+    try {
+      eventSource = new EventSource(`/api/v1/apps/${appId}/logs`);
+      eventSource.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          const newEntry: LogEntry = {
+            id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            timestamp: payload.timestamp || new Date().toISOString(),
+            level: 'INFO',
+            stream: (payload.stream || 'stdout') as 'stdout' | 'stderr',
+            message: payload.line || event.data,
+          };
+          setLogs((prev) => [...prev.slice(-499), newEntry]);
+        } catch {
+          const newEntry: LogEntry = {
+            id: `log-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            level: 'INFO',
+            stream: 'stdout',
+            message: event.data,
+          };
+          setLogs((prev) => [...prev.slice(-499), newEntry]);
+        }
       };
+      eventSource.onerror = () => {
+        eventSource?.close();
+      };
+    } catch {
+      // EventSource failed or unsupported
+    }
 
-      setLogs((prev) => [...prev.slice(-499), newEntry]); // keep max 500 lines
-    }, 2500);
-
-    return () => clearInterval(interval);
-  }, [isStreaming]);
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
+  }, [isStreaming, appId]);
 
   // Auto scroll effect
   useEffect(() => {

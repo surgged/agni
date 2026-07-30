@@ -1,28 +1,32 @@
 export * from '@/lib/generated/api';
+import { App, AppStatus, ShareLink, SharePermission } from '@/types/app';
 
 const BASE = '';
 
 export interface AppItem {
   id: string;
+  owner_email?: string;
   name: string;
-  type: string;
-  status: 'running' | 'idle' | 'building' | 'stopped';
-  memory: string;
-  vcpu: number;
-  ip: string;
-  port: number;
-  uptime: string;
-  createdAt: string;
+  runtime?: string;
+  image_ref?: string;
+  pod_name?: string;
+  service_url?: string;
+  share_url?: string;
+  status?: string;
+  error_message?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ShareItem {
   id: string;
-  appId: string;
-  appName: string;
-  token: string;
-  access: 'read-only' | 'read-write' | 'admin';
-  createdAt: string;
-  expiresAt: string | null;
+  app_id: string;
+  recipient_email: string;
+  permission: string;
+  token?: string;
+  expires_at?: string | null;
+  accepted_at?: string | null;
+  revoked_at?: string | null;
 }
 
 export interface UserProfile {
@@ -34,107 +38,72 @@ export interface UserProfile {
   created_at?: string;
 }
 
-// Initial mock state for offline fallback
-const INITIAL_MOCK_APPS: AppItem[] = [
-  {
-    id: 'app_agni_01',
-    name: 'Agni MicroVM Cluster',
-    type: 'Kata MicroVM',
-    status: 'running',
-    memory: '512 MB',
-    vcpu: 2,
-    ip: '10.244.0.15',
-    port: 8080,
-    uptime: '4d 12h',
-    createdAt: new Date(Date.now() - 86400000 * 4).toISOString(),
-  },
-  {
-    id: 'app_agni_02',
-    name: 'PostgreSQL Sandbox',
-    type: 'Database Engine',
-    status: 'running',
-    memory: '1024 MB',
-    vcpu: 1,
-    ip: '10.244.0.18',
-    port: 5432,
-    uptime: '12d 6h',
-    createdAt: new Date(Date.now() - 86400000 * 12).toISOString(),
-  },
-  {
-    id: 'app_agni_03',
-    name: 'Redis Cache Node',
-    type: 'In-Memory Store',
-    status: 'idle',
-    memory: '256 MB',
-    vcpu: 1,
-    ip: '10.244.0.22',
-    port: 6379,
-    uptime: '1d 2h',
-    createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-  },
-  {
-    id: 'app_agni_04',
-    name: 'Next.js Web Runner',
-    type: 'Serverless App',
-    status: 'running',
-    memory: '512 MB',
-    vcpu: 2,
-    ip: '10.244.0.30',
-    port: 3000,
-    uptime: '6h 45m',
-    createdAt: new Date(Date.now() - 3600000 * 6).toISOString(),
-  },
-];
+export interface ClusterHealthResponse {
+  status: string;
+  nodes: number;
+  active_vms: number;
+  total_vms: number;
+  memory?: {
+    alloc_mb: number;
+    total_alloc_mb: number;
+    sys_mb: number;
+    num_gc: number;
+  };
+  go_version?: string;
+  goroutines?: number;
+  uptime_seconds?: number;
+}
 
-const INITIAL_MOCK_SHARES: ShareItem[] = [
-  {
-    id: 'share_01',
-    appId: 'app_agni_01',
-    appName: 'Agni MicroVM Cluster',
-    token: 'share_agni_k3s_9921',
-    access: 'read-only',
-    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    expiresAt: new Date(Date.now() + 86400000 * 30).toISOString(),
-  },
-  {
-    id: 'share_02',
-    appId: 'app_agni_02',
-    appName: 'PostgreSQL Sandbox',
-    token: 'share_agni_pg_4410',
-    access: 'read-write',
-    createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-    expiresAt: null,
-  },
-];
-
-function getStoredMockApps(): AppItem[] {
-  try {
-    const raw = localStorage.getItem('agni_mock_apps');
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fallback
+export function mapBackendAppToApp(dto: AppItem): App {
+  const rawStatus = (dto.status || 'LIVE').toUpperCase();
+  let status: AppStatus = 'LIVE';
+  if (rawStatus === 'BUILDING' || rawStatus === 'PENDING') {
+    status = 'BUILDING';
+  } else if (rawStatus === 'FAILED' || rawStatus === 'ERROR') {
+    status = 'FAILED';
+  } else if (rawStatus === 'DESTROYED' || rawStatus === 'STOPPED') {
+    status = 'DESTROYED';
+  } else {
+    status = 'LIVE';
   }
-  localStorage.setItem('agni_mock_apps', JSON.stringify(INITIAL_MOCK_APPS));
-  return INITIAL_MOCK_APPS;
+
+  const appName = dto.name || 'MicroVM App';
+  return {
+    id: dto.id || '',
+    name: appName,
+    ownerEmail: dto.owner_email || 'user@agni.io',
+    runtime: dto.runtime || 'kata-fc',
+    imageRef: dto.image_ref || 'ghcr.io/indralab/microvm:latest',
+    podName: dto.pod_name || `pod-${appName}`,
+    serviceUrl: dto.service_url || `https://${appName}.agni.dev`,
+    shareUrl: dto.share_url,
+    status,
+    errorMessage: dto.error_message,
+    createdAt: dto.created_at || new Date().toISOString(),
+    metrics: {
+      cpuPercent: 0,
+      memoryMB: 128,
+      memoryLimitMB: 512,
+      requestsPerSec: 0,
+      activePods: status === 'LIVE' ? 1 : 0,
+    },
+    envVars: {},
+    shareCount: 0,
+  };
 }
 
-function saveStoredMockApps(apps: AppItem[]) {
-  localStorage.setItem('agni_mock_apps', JSON.stringify(apps));
-}
-
-function getStoredMockShares(): ShareItem[] {
-  try {
-    const raw = localStorage.getItem('agni_mock_shares');
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fallback
-  }
-  localStorage.setItem('agni_mock_shares', JSON.stringify(INITIAL_MOCK_SHARES));
-  return INITIAL_MOCK_SHARES;
-}
-
-function saveStoredMockShares(shares: ShareItem[]) {
-  localStorage.setItem('agni_mock_shares', JSON.stringify(shares));
+export function mapBackendShareToShareLink(dto: ShareItem): ShareLink {
+  return {
+    id: dto.id || '',
+    appId: dto.app_id || '',
+    recipientEmail: dto.recipient_email || '',
+    permission: (dto.permission === 'admin' ? 'admin' : 'use') as SharePermission,
+    tokenHash: dto.token || `tok_${dto.id}`,
+    expiresAt: dto.expires_at || null,
+    revokedAt: dto.revoked_at || null,
+    acceptedAt: dto.accepted_at || null,
+    createdAt: new Date().toISOString(),
+  };
 }
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
@@ -153,136 +122,19 @@ async function request<T = unknown>(method: HttpMethod, path: string, body?: unk
   }
 
   const opts: RequestOptions = { method, headers };
-  if (body) {
+  if (body !== undefined) {
     opts.body = JSON.stringify(body);
   }
 
-  try {
-    const res = await fetch(BASE + path, opts);
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || res.statusText);
-    }
-    return (await res.json()) as T;
-  } catch (error) {
-    console.warn(`[Agni API Offline Fallback] Using fallback handler for ${method} ${path}`, error);
-    return handleMockRoute<T>(method, path, body);
+  const res = await fetch(BASE + path, opts);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || res.statusText || `Request failed with status ${res.status}`);
   }
-}
-
-function handleMockRoute<T>(method: HttpMethod, path: string, body?: unknown): T {
-  if (path === '/api/v1/me' || path.startsWith('/api/v1/me?') || path === '/me') {
-    const mockUser: UserProfile = {
-      user_id: 'usr_agni_dev_01',
-      name: 'Agni Developer',
-      email: 'dev@agni.io',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-      role: 'Cluster Admin',
-      created_at: new Date().toISOString(),
-    };
-    return mockUser as unknown as T;
+  if (res.status === 204) {
+    return {} as T;
   }
-
-  if (path === '/auth/login' || path === '/auth/register') {
-    return {
-      access_token: 'demo_jwt_token_agni_2026',
-      refresh_token: 'demo_refresh_token_agni_2026',
-      expires_at: Date.now() + 86400000,
-    } as unknown as T;
-  }
-
-  if (path.startsWith('/auth/verify-email')) {
-    return {
-      access_token: 'demo_jwt_token_agni_2026',
-      refresh_token: 'demo_refresh_token_agni_2026',
-      expires_at: Date.now() + 86400000,
-      user: {
-        user_id: 'usr_agni_verified_01',
-        name: 'Verified Agni User',
-        email: 'dev@agni.io',
-        role: 'Cluster Admin',
-      },
-    } as unknown as T;
-  }
-
-  if (path === '/auth/resend-verification') {
-    return {
-      message: 'If an unverified account exists with that email, a new verification link has been sent.',
-    } as unknown as T;
-  }
-
-  if (path === '/auth/magic' || path === '/auth/magic-link') {
-    return {
-      success: true,
-      message: 'Magic link dispatched successfully to your email inbox.',
-    } as unknown as T;
-  }
-
-  if (path === '/auth/agent-token') {
-    const agentName = (body as { name?: string })?.name || 'agni-mcp-agent-01';
-    const fakeJwt = `eyJhY2Nlc3NfdG9rZW4iOiJhd3Nfc2VjcmV0Iiwic3ViIjoiYWduaV9tY3BfYWdlbnQiLCJuYW1lIjoi${btoa(agentName)}.eyJyb2xlIjoiYWdlbnQiLCJjbHVzdGVyIjoiazNzLW5vZGUtMDEiLCJpYXQiOjE3NTM3NjQ4MDB9.AgniMcpSignature2026`;
-    return {
-      token: fakeJwt,
-      agentId: `agent_${Math.random().toString(36).substring(2, 9)}`,
-    } as unknown as T;
-  }
-
-  if ((path === '/api/v1/apps' || path === '/apps') && method === 'GET') {
-    return getStoredMockApps() as unknown as T;
-  }
-
-  if ((path === '/api/v1/apps' || path === '/apps') && method === 'POST') {
-    const apps = getStoredMockApps();
-    const newAppData = body as Partial<AppItem>;
-    const newApp: AppItem = {
-      id: `app_agni_${Math.random().toString(36).substring(2, 7)}`,
-      name: newAppData.name || 'New MicroVM App',
-      type: newAppData.type || 'Kata Container',
-      status: 'running',
-      memory: newAppData.memory || '512 MB',
-      vcpu: newAppData.vcpu || 1,
-      ip: `10.244.0.${Math.floor(Math.random() * 200) + 10}`,
-      port: newAppData.port || 8080,
-      uptime: 'Just created',
-      createdAt: new Date().toISOString(),
-    };
-    apps.unshift(newApp);
-    saveStoredMockApps(apps);
-    return newApp as unknown as T;
-  }
-
-  if ((path.startsWith('/api/v1/apps/') || path.startsWith('/apps/')) && method === 'DELETE') {
-    const appId = path.replace('/api/v1/apps/', '').replace('/apps/', '');
-    let apps = getStoredMockApps();
-    apps = apps.filter((a) => a.id !== appId);
-    saveStoredMockApps(apps);
-    return { success: true, id: appId } as unknown as T;
-  }
-
-  if ((path === '/api/v1/shares' || path === '/shares') && method === 'GET') {
-    return getStoredMockShares() as unknown as T;
-  }
-
-  if ((path === '/api/v1/shares' || path === '/shares') && method === 'POST') {
-    const shares = getStoredMockShares();
-    const reqBody = body as { appId?: string; access?: 'read-only' | 'read-write' | 'admin' };
-    const apps = getStoredMockApps();
-    const targetApp = apps.find((a) => a.id === reqBody.appId) || apps[0];
-    const newShare: ShareItem = {
-      id: `share_${Math.random().toString(36).substring(2, 8)}`,
-      appId: targetApp?.id || 'app_agni_01',
-      appName: targetApp?.name || 'Agni MicroVM Cluster',
-      token: `share_agni_${Math.random().toString(36).substring(2, 8)}`,
-      access: reqBody.access || 'read-only',
-      createdAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 86400000 * 30).toISOString(),
-    };
-    shares.unshift(newShare);
-    saveStoredMockShares(shares);
-    return newShare as unknown as T;
-  }
-
-  return {} as T;
+  return (await res.json()) as T;
 }
 
 export const api = {
@@ -292,13 +144,21 @@ export const api = {
   delete: <T = unknown>(path: string) => request<T>('DELETE', path),
 
   getApps: () => request<AppItem[]>('GET', '/api/v1/apps'),
-  createApp: (data: Partial<AppItem>) => request<AppItem>('POST', '/api/v1/apps', data),
-  deleteApp: (id: string) => request<{ success: boolean }>('DELETE', `/api/v1/apps/${id}`),
+  getApp: (id: string) => request<AppItem>('GET', `/api/v1/apps/${id}`),
+  createApp: (data: { name: string; runtime?: string; imageRef?: string }) =>
+    request<AppItem>('POST', '/api/v1/apps', data),
+  deleteApp: (id: string) => request<void>('DELETE', `/api/v1/apps/${id}`),
 
-  getShares: () => request<ShareItem[]>('GET', '/shares'),
-  createShare: (appId: string, access?: 'read-only' | 'read-write' | 'admin') =>
-    request<ShareItem>('POST', '/shares', { appId, access }),
-  revokeShare: (shareId: string) => request<{ success: boolean }>('DELETE', `/shares/${shareId}`),
+  getAppShares: (appId: string) => request<ShareItem[]>('GET', `/api/v1/apps/${appId}/shares`),
+  createAppShare: (appId: string, recipientEmail: string, permission?: string) =>
+    request<ShareItem>('POST', `/api/v1/apps/${appId}/share`, {
+      recipient_email: recipientEmail,
+      permission: permission || 'use',
+    }),
+  revokeAppShare: (appId: string, shareId: string) =>
+    request<void>('DELETE', `/api/v1/apps/${appId}/shares/${shareId}`),
+
+  getClusterHealth: () => request<ClusterHealthResponse>('GET', '/api/v1/cluster/health'),
 
   requestMagicLink: (email: string) =>
     request<{ success: boolean; message: string }>('POST', '/auth/magic', { email }),

@@ -12,6 +12,7 @@ import {
   Globe,
 } from 'lucide-react';
 import { App } from '@/types/app';
+import { api, mapBackendAppToApp } from '@/api';
 import {
   Dialog,
   DialogContent,
@@ -106,7 +107,7 @@ export const DeploySimulatorModal: React.FC<DeploySimulatorModalProps> = ({
     onClose();
   };
 
-  const startSimulation = () => {
+  const startSimulation = async () => {
     if (!appName.trim()) {
       toast.error('App name is required');
       return;
@@ -114,96 +115,34 @@ export const DeploySimulatorModal: React.FC<DeploySimulatorModalProps> = ({
 
     setIsDeploying(true);
     setCurrentStep(1);
-    setProgress(15);
-    setStepLogs(['[1/5] Archiving source tree tarball workspace...']);
-  };
+    setProgress(25);
+    setStepLogs([
+      `[1 text] Initiating MicroVM provision for app [${appName}]...`,
+      `[2 text] Sending API request POST /api/v1/apps ...`,
+    ]);
 
-  // Deployment timer pipeline simulation
-  useEffect(() => {
-    if (!isDeploying || currentStep === 0 || currentStep > 5) return;
+    try {
+      const res = await api.createApp({ name: appName.trim(), runtime, imageRef });
+      const liveApp = mapBackendAppToApp(res);
+      setCurrentStep(5);
+      setProgress(100);
+      setStepLogs((prev) => [
+        ...prev,
+        `[SUCCESS] Created MicroVM app [${liveApp.name}] (ID: ${liveApp.id})`,
+      ]);
+      setDeployedApp(liveApp);
 
-    const timer = setTimeout(() => {
-      if (currentStep === 1) {
-        setStepLogs((prev) => [
-          ...prev,
-          '[1/5] Tarball compressed successfully (4.2 MB)',
-          '[2/5] Invoking nerdctl build --namespace=agni ...',
-          ' -> STEP 1/4: FROM node:20-alpine',
-          ' -> STEP 2/4: COPY package.json ./',
-          ' -> STEP 3/4: RUN npm install --production',
-        ]);
-        setCurrentStep(2);
-        setProgress(35);
-      } else if (currentStep === 2) {
-        setStepLogs((prev) => [
-          ...prev,
-          ' -> STEP 4/4: CMD ["node", "server.js"]',
-          '[2/5] Image build complete: sha256:7f9a2b0e...',
-          '[3/5] Exporting layer snapshots to containerd socket...',
-          ' -> Unpacking overlayfs rootfs image into /var/lib/containerd/io.containerd.snapshotter.v1.devmapper',
-        ]);
-        setCurrentStep(3);
-        setProgress(60);
-      } else if (currentStep === 3) {
-        setStepLogs((prev) => [
-          ...prev,
-          '[3/5] containerd snapshotter ready',
-          '[4/5] Provisioning Kata Containers v3.2.0 MicroVM...',
-          ' -> Firecracker hypervisor jailer initialized',
-          ' -> Allocating 1 vCPU, 512MB RAM, guest vmlinux kernel v5.15-kata',
-          ' -> Guest agent online in 142ms',
-        ]);
-        setCurrentStep(4);
-        setProgress(85);
-      } else if (currentStep === 4) {
-        const generatedId = `app-sim-${Date.now().toString(36)}`;
-        const slug = appName.toLowerCase().replace(/[^a-z0-9-]/g, '-');
-        const liveApp: App = {
-          id: generatedId,
-          name: slug,
-          ownerEmail: 'user@indralab.io',
-          runtime,
-          imageRef,
-          podName: `pod-${slug}-vm${Math.floor(1000 + Math.random() * 9000)}`,
-          serviceUrl: `https://${slug}.agni.dev`,
-          shareUrl: `https://agni.dev/share/tok_${Math.random().toString(36).slice(2, 8)}`,
-          status: 'LIVE',
-          createdAt: new Date().toISOString(),
-          metrics: {
-            cpuPercent: 12.4,
-            memoryMB: 184,
-            memoryLimitMB: 512,
-            requestsPerSec: 24,
-            activePods: 1,
-            networkRxKbps: 640,
-            networkTxKbps: 1200,
-          },
-          envVars: {
-            NODE_ENV: 'production',
-            PORT: '8080',
-          },
-          shareCount: 0,
-        };
-
-        setStepLogs((prev) => [
-          ...prev,
-          '[5/5] Ingress proxy updated. HTTPS certificate provisioned',
-          `[SUCCESS] App [${slug}] is live at https://${slug}.agni.dev`,
-        ]);
-        setCurrentStep(5);
-        setProgress(100);
-        setIsDeploying(false);
-        setDeployedApp(liveApp);
-
-        if (onDeploySuccess) {
-          onDeploySuccess(liveApp);
-        }
-        toast.success(`MicroVM App ${slug} deployed successfully!`);
+      if (onDeploySuccess) {
+        onDeploySuccess(liveApp);
       }
-    }, 1800);
-
-    return () => clearTimeout(timer);
-  }, [isDeploying, currentStep, appName, imageRef, runtime, onDeploySuccess]);
+      toast.success(`MicroVM App ${liveApp.name} deployed successfully!`);
+    } catch (err: any) {
+      toast.error(err?.message || 'Deployment failed');
+      setStepLogs((prev) => [...prev, `[ERROR] ${err?.message || 'Deployment failed'}`]);
+    } finally {
+      setIsDeploying(false);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>

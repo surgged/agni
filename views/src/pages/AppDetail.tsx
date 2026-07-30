@@ -26,7 +26,7 @@ import {
   EyeOff,
 } from 'lucide-react';
 import { App, ShareLink, AppStatus, SharePermission } from '@/types/app';
-import { INITIAL_MOCK_APPS, INITIAL_MOCK_SHARE_LINKS } from '@/data/mockApps';
+import { api, mapBackendAppToApp, mapBackendShareToShareLink } from '@/api';
 import { LogViewer } from '@/components/dashboard/LogViewer';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,12 +74,33 @@ export default function AppDetail() {
   const [expiryOption, setExpiryOption] = useState('168');
   const [createdShareUrl, setCreatedShareUrl] = useState<string | null>(null);
 
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    const foundApp = INITIAL_MOCK_APPS.find((a: App) => a.id === id) || INITIAL_MOCK_APPS[0];
-    setApp(foundApp);
-    setEnvVars(foundApp.envVars || {});
-    setShareLinks(INITIAL_MOCK_SHARE_LINKS[foundApp.id] || []);
+    if (!id) return;
+    setIsLoading(true);
+    Promise.all([
+      api.getApp(id).then(mapBackendAppToApp).catch(() => null),
+      api.getAppShares(id).then((shares) => shares.map(mapBackendShareToShareLink)).catch(() => []),
+    ])
+      .then(([fetchedApp, fetchedShares]) => {
+        setApp(fetchedApp);
+        if (fetchedApp) {
+          setEnvVars(fetchedApp.envVars || {});
+        }
+        setShareLinks(fetchedShares);
+      })
+      .finally(() => setIsLoading(false));
   }, [id]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-16 text-center">
+        <RefreshCw className="h-8 w-8 text-amber-500 animate-spin mb-3" />
+        <p className="text-sm font-medium">Loading application details...</p>
+      </div>
+    );
+  }
 
   if (!app) {
     return (
@@ -127,53 +148,46 @@ export default function AppDetail() {
   };
 
   // Share Link Handlers
-  const handleCreateShareLink = (e: React.FormEvent) => {
+  const handleCreateShareLink = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!recipientEmail || !recipientEmail.includes('@')) {
+    if (!app || !recipientEmail || !recipientEmail.includes('@')) {
       toast.error('Valid email address required');
       return;
     }
 
-    const expHours = expiryOption === 'never' ? null : parseInt(expiryOption, 10);
-    const tokenHash = `tok_${Math.random().toString(36).substring(2, 10)}`;
-    const expiresAt = expHours
-      ? new Date(Date.now() + expHours * 3600 * 1000).toISOString()
-      : null;
-
-    const newLink: ShareLink = {
-      id: `sh-${Date.now()}`,
-      appId: app.id,
-      recipientEmail,
-      permission,
-      tokenHash,
-      expiresAt,
-      revokedAt: null,
-      acceptedAt: null,
-      createdAt: new Date().toISOString(),
-    };
-
-    setShareLinks((prev) => [newLink, ...prev]);
-    setCreatedShareUrl(`https://agni.dev/share/${tokenHash}`);
-    setRecipientEmail('');
-    toast.success(`Share link generated for ${recipientEmail}`);
+    try {
+      const res = await api.createAppShare(app.id, recipientEmail, permission);
+      const newShare = mapBackendShareToShareLink(res);
+      setShareLinks((prev) => [newShare, ...prev]);
+      setCreatedShareUrl(`https://agni.dev/share/${newShare.tokenHash}`);
+      setRecipientEmail('');
+      toast.success(`Share link generated for ${recipientEmail}`);
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to generate share link');
+    }
   };
 
-  const handleRevokeLink = (linkId: string) => {
-    setShareLinks((prev) =>
-      prev.map((l) =>
-        l.id === linkId ? { ...l, revokedAt: new Date().toISOString() } : l
-      )
-    );
-    toast.info('Share link revoked');
+  const handleRevokeLink = async (linkId: string) => {
+    if (!app) return;
+    try {
+      await api.revokeAppShare(app.id, linkId);
+      setShareLinks((prev) => prev.filter((l) => l.id !== linkId));
+      toast.info('Share link revoked');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to revoke link');
+    }
   };
 
   // App Destroy Handler
-  const handleDestroyApp = () => {
-    setApp((prev) =>
-      prev ? { ...prev, status: 'DESTROYED' as AppStatus } : null
-    );
-    toast.success(`Application ${app.name} destroyed successfully`);
-    setTimeout(() => navigate('/'), 1500);
+  const handleDestroyApp = async () => {
+    if (!app) return;
+    try {
+      await api.deleteApp(app.id);
+      toast.success(`Application ${app.name} destroyed successfully`);
+      navigate('/');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to destroy application');
+    }
   };
 
   const getStatusPill = () => {

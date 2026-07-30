@@ -19,16 +19,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const allFiles = [
-  { name: 'Konser Twice.Mp4', type: 'video', size: '700 MB', modified: '2 days ago' },
-  { name: 'Begitu Syulit Lupa...Mp3', type: 'audio', size: '7 MB', modified: '3 days ago' },
-  { name: 'project-notes.pdf', type: 'document', size: '2.4 MB', modified: '1 week ago' },
-  { name: 'hero-banner.png', type: 'image', size: '4.2 MB', modified: '1 week ago' },
-  { name: 'Ini Virus.Apk', type: 'archive', size: '120 MB', modified: '2 weeks ago' },
-  { name: 'sprint-retro.pptx', type: 'document', size: '8.1 MB', modified: '2 weeks ago' },
-  { name: 'cat-meme.gif', type: 'image', size: '1.1 MB', modified: '3 weeks ago' },
-  { name: 'backup-db.sql.zip', type: 'archive', size: '45 MB', modified: '1 month ago' },
-];
+export interface FileItem {
+  name: string;
+  type: string;
+  size: string;
+  modified: string;
+}
 
 const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   video: Video,
@@ -48,8 +44,9 @@ const typeColor: Record<string, string> = {
 
 export default function Files() {
   const [search, setSearch] = useState('');
+  const [files] = useState<FileItem[]>([]);
 
-  const filtered = allFiles.filter((f) =>
+  const filtered = files.filter((f) =>
     f.name.toLowerCase().includes(search.toLowerCase()),
   );
 
@@ -95,60 +92,60 @@ export default function Files() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((file) => {
-              const Icon = typeIcons[file.type] || File;
-              return (
-                <TableRow key={file.name} className="hover:bg-muted/50 transition-colors">
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`size-10 rounded-xl flex items-center justify-center ${typeColor[file.type] || 'text-muted-foreground bg-muted'}`}
-                      >
-                        <Icon className="size-5" />
-                      </div>
-                      <span className="font-medium text-sm truncate max-w-[280px]">
-                        {file.name}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="font-normal">
-                      {file.size}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm capitalize">
-                    {file.type}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
-                    {file.modified}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="size-8">
-                          <MoreHorizontal className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Download</DropdownMenuItem>
-                        <DropdownMenuItem>Share</DropdownMenuItem>
-                        <DropdownMenuItem>Rename</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-            {filtered.length === 0 && (
+            {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
-                  No files found.
+                <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                  No files uploaded yet.
                 </TableCell>
               </TableRow>
+            ) : (
+              filtered.map((file) => {
+                const Icon = typeIcons[file.type] || File;
+                return (
+                  <TableRow key={file.name} className="hover:bg-muted/50 transition-colors">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`size-10 rounded-xl flex items-center justify-center ${typeColor[file.type] || 'text-muted-foreground bg-muted'}`}
+                        >
+                          <Icon className="size-5" />
+                        </div>
+                        <span className="font-medium text-sm truncate max-w-[280px]">
+                          {file.name}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="font-normal">
+                        {file.size}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm capitalize">
+                      {file.type}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
+                      {file.modified}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="size-8">
+                            <MoreHorizontal className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>Download</DropdownMenuItem>
+                          <DropdownMenuItem>Rename</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive">
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
