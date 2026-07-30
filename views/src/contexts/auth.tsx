@@ -17,7 +17,9 @@ export interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password?: string) => Promise<void>;
-  register: (name: string, email: string, password?: string) => Promise<void>;
+  register: (name: string, email: string, password: string, confirmPassword: string) => Promise<{ success: boolean; message: string }>;
+  verifyEmail: (token: string) => Promise<boolean>;
+  resendVerification: (email: string) => Promise<{ message: string }>;
   magicLinkLogin: (email: string) => Promise<{ success: boolean; message: string }>;
   verifyMagicToken: (token: string) => Promise<boolean>;
   generateAgentToken: (name?: string) => Promise<{ token: string; agentId: string }>;
@@ -96,55 +98,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password?: string) => {
-      try {
-        const data = await api.post<TokenResponse>('/auth/login', { email, password: password || 'demo' });
-        const loggedUser: User = data.user || {
-          user_id: 'usr_agni_' + Math.random().toString(36).substring(2, 7),
-          name: email.split('@')[0] || 'Agni User',
-          email,
-          role: 'Developer',
-        };
-        if (data.refresh_token) {
-          localStorage.setItem(REFRESH_KEY, data.refresh_token);
-        }
-        setAuthSession(data.access_token || 'demo_jwt_token_agni_2026', loggedUser);
-      } catch {
-        // Fallback for offline demo login
-        const loggedUser: User = {
-          user_id: 'usr_agni_demo',
-          name: email.split('@')[0] || 'Agni User',
-          email,
-          role: 'Cluster Admin',
-        };
-        setAuthSession('demo_jwt_token_agni_2026', loggedUser);
+      const data = await api.post<TokenResponse>('/auth/login', { email, password: password || '' });
+      const loggedUser: User = data.user || {
+        user_id: 'usr_agni_' + Math.random().toString(36).substring(2, 7),
+        name: email.split('@')[0] || 'Agni User',
+        email,
+        role: 'Developer',
+      };
+      if (data.refresh_token) {
+        localStorage.setItem(REFRESH_KEY, data.refresh_token);
       }
+      setAuthSession(data.access_token || 'demo_jwt_token_agni_2026', loggedUser);
     },
     [setAuthSession]
   );
 
   const register = useCallback(
-    async (name: string, email: string, password?: string) => {
+    async (name: string, email: string, password: string, confirmPassword: string) => {
+      const res = await api.post<{ message: string }>('/auth/register', {
+        name,
+        email,
+        password,
+        confirm_password: confirmPassword,
+      });
+      return {
+        success: true,
+        message: res.message || 'Verification email sent. Please check your inbox.',
+      };
+    },
+    []
+  );
+
+  const verifyEmail = useCallback(
+    async (tok: string) => {
       try {
-        const data = await api.post<TokenResponse>('/auth/register', { name, email, password: password || 'demo' });
-        const newUser: User = {
-          user_id: 'usr_agni_' + Math.random().toString(36).substring(2, 7),
-          name,
-          email,
-          role: 'Cluster Admin',
+        const res = await api.verifyEmailToken(tok);
+        const verifiedUser: User = {
+          user_id: res.user?.user_id || 'usr_agni_verified',
+          name: res.user?.name || 'Agni User',
+          email: res.user?.email || '',
+          role: res.user?.role || 'Cluster Admin',
         };
-        setAuthSession(data.access_token || 'demo_jwt_token_agni_2026', newUser);
+        if (res.refresh_token) {
+          localStorage.setItem(REFRESH_KEY, res.refresh_token);
+        }
+        setAuthSession(res.access_token || 'demo_jwt_token_agni_2026', verifiedUser);
+        return true;
       } catch {
-        const newUser: User = {
-          user_id: 'usr_agni_new',
-          name,
-          email,
-          role: 'Cluster Admin',
-        };
-        setAuthSession('demo_jwt_token_agni_2026', newUser);
+        return false;
       }
     },
     [setAuthSession]
   );
+
+  const resendVerification = useCallback(async (email: string) => {
+    try {
+      const res = await api.resendVerification(email);
+      return res;
+    } catch {
+      return { message: 'Verification link sent if account exists.' };
+    }
+  }, []);
 
   const magicLinkLogin = useCallback(async (email: string) => {
     try {
@@ -214,6 +228,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!token,
         login,
         register,
+        verifyEmail,
+        resendVerification,
         magicLinkLogin,
         verifyMagicToken,
         generateAgentToken,

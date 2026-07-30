@@ -18,6 +18,9 @@ type Repository interface {
 	// GetByEmail returns a user aggregate by email address, or
 	// ErrUserNotFound.
 	GetByEmail(ctx context.Context, email string) (*User, error)
+	// GetByVerificationToken returns a user aggregate by email verification token,
+	// or ErrUserNotFound.
+	GetByVerificationToken(ctx context.Context, token string) (*User, error)
 	// List returns every user aggregate, in unspecified order.
 	List(ctx context.Context) ([]*User, error)
 	// Delete removes a user aggregate by id. Returns

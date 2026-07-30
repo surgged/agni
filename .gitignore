@@ -14,7 +14,8 @@
 # Build artifacts
 /dist/
 /out/
-/static/
+/static/dist/
+*.tsbuildinfo
 
 # ai
 .commandcode/

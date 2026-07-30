@@ -191,6 +191,26 @@ function handleMockRoute<T>(method: HttpMethod, path: string, body?: unknown): T
     } as unknown as T;
   }
 
+  if (path.startsWith('/auth/verify-email')) {
+    return {
+      access_token: 'demo_jwt_token_agni_2026',
+      refresh_token: 'demo_refresh_token_agni_2026',
+      expires_at: Date.now() + 86400000,
+      user: {
+        user_id: 'usr_agni_verified_01',
+        name: 'Verified Agni User',
+        email: 'dev@agni.io',
+        role: 'Cluster Admin',
+      },
+    } as unknown as T;
+  }
+
+  if (path === '/auth/resend-verification') {
+    return {
+      message: 'If an unverified account exists with that email, a new verification link has been sent.',
+    } as unknown as T;
+  }
+
   if (path === '/auth/magic' || path === '/auth/magic-link') {
     return {
       success: true,
@@ -284,6 +304,13 @@ export const api = {
     request<{ success: boolean; message: string }>('POST', '/auth/magic', { email }),
   verifyMagicToken: (token: string) =>
     request<{ access_token: string; user: UserProfile }>('POST', '/auth/verify', { token }),
+  verifyEmailToken: (token: string) =>
+    request<{ access_token: string; refresh_token?: string; expires_at?: number; user?: UserProfile }>(
+      'GET',
+      `/auth/verify-email?token=${encodeURIComponent(token)}`
+    ),
+  resendVerification: (email: string) =>
+    request<{ message: string }>('POST', '/auth/resend-verification', { email }),
   generateAgentToken: (name?: string) =>
     request<{ token: string; agentId: string }>('POST', '/auth/agent-token', { name }),
   getMe: () => request<UserProfile>('GET', '/api/v1/me'),

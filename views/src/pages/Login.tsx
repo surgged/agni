@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, Link } from 'react-router-dom';
 import {
   Mail,
+  Lock,
   KeyRound,
   CheckCircle2,
   Copy,
@@ -22,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/components/theme-provider';
 import { useAuth } from '@/contexts/auth';
 import { Logo } from '@/components/ui/Logo';
+import { LoginForm } from '@/components/auth/LoginForm';
 import { toast } from 'sonner';
 
 export default function Login() {
@@ -190,34 +192,49 @@ export default function Login() {
         {/* Login Card */}
         <div className="w-full max-w-md">
           <Card className="rounded-3xl shadow-sm border border-border overflow-hidden">
-            <Tabs defaultValue="magic-link" className="w-full">
+            <Tabs defaultValue="password" className="w-full">
               <CardHeader className="pb-2 pt-5 px-5 border-b border-border/40 bg-muted/20">
                 <div className="text-center mb-3">
                   <h2 className="text-xl font-bold">Sign In</h2>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Choose your authentication method
+                    Enter your email and password to access your account
                   </p>
                 </div>
-                <TabsList className="grid grid-cols-2 w-full bg-muted/60 p-1 rounded-xl">
+                {/* 
+                <TabsList className="grid grid-cols-3 w-full bg-muted/60 p-1 rounded-xl">
+                  <TabsTrigger
+                    value="password"
+                    className="rounded-lg text-xs font-semibold py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center justify-center gap-1.5"
+                  >
+                    <Lock className="size-3.5" />
+                    Password
+                  </TabsTrigger>
                   <TabsTrigger
                     value="magic-link"
-                    className="rounded-lg text-xs font-semibold py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center justify-center gap-2"
+                    className="rounded-lg text-xs font-semibold py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center justify-center gap-1.5"
                   >
                     <Mail className="size-3.5" />
                     Magic Link
                   </TabsTrigger>
                   <TabsTrigger
                     value="agent-key"
-                    className="rounded-lg text-xs font-semibold py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center justify-center gap-2"
+                    className="rounded-lg text-xs font-semibold py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center justify-center gap-1.5"
                   >
                     <KeyRound className="size-3.5" />
-                    Agent API Key
+                    Agent Key
                   </TabsTrigger>
                 </TabsList>
+                */}
               </CardHeader>
 
               <CardContent className="p-5">
-                {/* TAB 1: MAGIC LINK */}
+                {/* TAB 1: PASSWORD LOGIN */}
+                <TabsContent value="password" className="mt-0 space-y-4">
+                  <LoginForm hideCard />
+                </TabsContent>
+
+                {/* 
+                TAB 2: MAGIC LINK (COMMENTED OUT)
                 <TabsContent value="magic-link" className="mt-0 space-y-5">
                   {!magicLinkSent ? (
                     <form onSubmit={handleMagicLinkSubmit} className="space-y-4">
@@ -323,8 +340,10 @@ export default function Login() {
                     </div>
                   )}
                 </TabsContent>
+                */}
 
-                {/* TAB 2: AGENT API KEY AUTH */}
+                {/* 
+                TAB 3: AGENT API KEY AUTH (COMMENTED OUT)
                 <TabsContent value="agent-key" className="mt-0 space-y-5">
                   <div className="space-y-4">
                     <div className="space-y-2">
@@ -449,6 +468,7 @@ export default function Login() {
                     )}
                   </div>
                 </TabsContent>
+                */}
               </CardContent>
             </Tabs>
           </Card>
@@ -471,11 +491,11 @@ export default function Login() {
         </div>
 
         {/* Register link */}
-        <p className="mt-4 text-sm text-muted-foreground md:hidden">
+        <p className="mt-4 text-sm text-muted-foreground">
           Don&apos;t have an account?{' '}
-          <a href="/register" className="text-orange-500 hover:text-orange-600 font-medium">
+          <Link to="/register" className="text-orange-500 hover:text-orange-600 font-medium">
             Sign up
-          </a>
+          </Link>
         </p>
       </div>
     </div>

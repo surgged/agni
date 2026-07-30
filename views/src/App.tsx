@@ -7,6 +7,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AppShell } from '@/components/layout/AppShell';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
+import VerifyEmail from '@/pages/VerifyEmail';
 import AuthCallback from '@/pages/AuthCallback';
 import LandingPage from '@/pages/LandingPage';
 import Dashboard from '@/pages/Dashboard';
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route element={<ProtectedRoute />}>
               <Route element={<AppShell />}>

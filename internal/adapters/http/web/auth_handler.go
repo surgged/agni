@@ -1,6 +1,7 @@
 package web
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 
@@ -9,20 +10,18 @@ import (
 	"github.com/surgged/agni/internal/adapters/http/web/api"
 	"github.com/surgged/agni/internal/adapters/http/web/middleware"
 	"github.com/surgged/agni/internal/application/user"
+	domainUser "github.com/surgged/agni/internal/domain/user"
 	"github.com/surgged/agni/internal/ports"
 )
 
-// AuthHandler wires the /auth/* endpoints and the JWT-protected /me sample
-// route. It depends only on the user application service and the token
-// service port.
+// AuthHandler wires the /auth/* endpoints and the JWT-protected /me sample route.
 type AuthHandler struct {
 	cmd    *user.CommandHandler
 	qry    *user.QueryHandler
 	tokens ports.TokenService
 }
 
-// NewAuthHandler builds an AuthHandler from application services and a
-// token service implementation.
+// NewAuthHandler builds an AuthHandler from application services and a token service implementation.
 func NewAuthHandler(cmd *user.CommandHandler, qry *user.QueryHandler, tokens ports.TokenService) *AuthHandler {
 	return &AuthHandler{cmd: cmd, qry: qry, tokens: tokens}
 }
@@ -32,16 +31,29 @@ func (h *AuthHandler) Register(e *echo.Echo) {
 	g := e.Group("/auth")
 	g.POST("/register", h.RegisterUser)
 	g.POST("/login", h.Login)
+	g.GET("/verify-email", h.VerifyEmail)
+	g.POST("/resend-verification", h.ResendVerification)
 	g.POST("/refresh", h.Refresh)
 	g.POST("/logout", h.Logout, middleware.JWTAuth(h.tokens))
 
 	e.GET("/me", h.Me, middleware.JWTAuth(h.tokens))
 }
 
+type registerRequest struct {
+	Name            string `json:"name"             validate:"required,min=2,max=100"`
+	Email           string `json:"email"            validate:"required,email"`
+	Password        string `json:"password"         validate:"required,min=8"`
+	ConfirmPassword string `json:"confirm_password" validate:"required"`
+}
+
 type credentials struct {
 	Email    string `json:"email"    validate:"required,email"`
 	Password string `json:"password" validate:"required,min=8"`
 	Name     string `json:"name"     validate:"omitempty,min=2,max=100"`
+}
+
+type resendVerificationRequest struct {
+	Email string `json:"email" validate:"required,email"`
 }
 
 type refreshRequest struct {
@@ -55,23 +67,16 @@ type tokenResponse struct {
 }
 
 // RegisterUser godoc
-//
-//	@Summary      Register a new user
-//	@Description  Creates a user account and returns an access/refresh token pair.
-//	@Tags         auth
-//	@Accept       json
-//	@Produce      json
-//	@Param        credentials  body      credentials  true  "Registration payload"
-//	@Success      201          {object}  tokenResponse
-//	@Failure      422          {object}  api.Error
-//	@Router       /auth/register [post]
 func (h *AuthHandler) RegisterUser(c *echo.Context) error {
-	var in credentials
+	var in registerRequest
 	if err := c.Bind(&in); err != nil {
 		return err
 	}
+	if in.Password != in.ConfirmPassword {
+		return c.JSON(http.StatusBadRequest, api.Error{Error: "passwords do not match"})
+	}
 	ctx := c.Request().Context()
-	out, err := h.cmd.HandleCreate(ctx, user.CreateUserCommand{
+	_, err := h.cmd.HandleCreate(ctx, user.CreateUserCommand{
 		Name:     in.Name,
 		Email:    in.Email,
 		Password: in.Password,
@@ -79,28 +84,12 @@ func (h *AuthHandler) RegisterUser(c *echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusUnprocessableEntity, api.Error{Error: err.Error()})
 	}
-	tokens, err := h.tokens.Issue(out.ID.String())
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, api.Error{Error: err.Error()})
-	}
-	return c.JSON(http.StatusCreated, tokenResponse{
-		AccessToken:  tokens.AccessToken,
-		RefreshToken: tokens.RefreshToken,
-		ExpiresAt:    tokens.ExpiresAt,
+	return c.JSON(http.StatusCreated, map[string]string{
+		"message": "Verification email sent. Please check your email inbox to verify your account.",
 	})
 }
 
 // Login godoc
-//
-//	@Summary      Log in
-//	@Description  Authenticates a user by email and password and returns a token pair.
-//	@Tags         auth
-//	@Accept       json
-//	@Produce      json
-//	@Param        credentials  body      credentials  true  "Login credentials"
-//	@Success      200          {object}  tokenResponse
-//	@Failure      401          {object}  api.Error
-//	@Router       /auth/login [post]
 func (h *AuthHandler) Login(c *echo.Context) error {
 	var in credentials
 	if err := c.Bind(&in); err != nil {
@@ -112,6 +101,13 @@ func (h *AuthHandler) Login(c *echo.Context) error {
 		Password: in.Password,
 	})
 	if err != nil {
+		if errors.Is(err, domainUser.ErrEmailNotVerified) {
+			return c.JSON(http.StatusForbidden, map[string]interface{}{
+				"error":   "email_not_verified",
+				"message": "Please verify your email address before logging in.",
+				"email":   in.Email,
+			})
+		}
 		slog.WarnContext(ctx, "login failed", "email", in.Email)
 		return c.JSON(http.StatusUnauthorized, api.Error{Error: "invalid credentials"})
 	}
@@ -126,17 +122,47 @@ func (h *AuthHandler) Login(c *echo.Context) error {
 	})
 }
 
+// VerifyEmail verifies user email address by token.
+func (h *AuthHandler) VerifyEmail(c *echo.Context) error {
+	token := c.QueryParam("token")
+	if token == "" {
+		return c.JSON(http.StatusBadRequest, api.Error{Error: "verification token is required"})
+	}
+	ctx := c.Request().Context()
+	u, err := h.cmd.HandleVerifyEmail(ctx, user.VerifyEmailCommand{Token: token})
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, api.Error{Error: err.Error()})
+	}
+	tokens, err := h.tokens.Issue(u.ID.String())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, api.Error{Error: err.Error()})
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"access_token":  tokens.AccessToken,
+		"refresh_token": tokens.RefreshToken,
+		"expires_at":    tokens.ExpiresAt,
+		"user": map[string]interface{}{
+			"user_id": u.ID.String(),
+			"name":    u.Name,
+			"email":   u.Email,
+		},
+	})
+}
+
+// ResendVerification resends verification email to specified address.
+func (h *AuthHandler) ResendVerification(c *echo.Context) error {
+	var in resendVerificationRequest
+	if err := c.Bind(&in); err != nil {
+		return err
+	}
+	ctx := c.Request().Context()
+	_ = h.cmd.HandleResendVerification(ctx, user.ResendVerificationCommand{Email: in.Email})
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "If an unverified account exists with that email, a new verification link has been sent.",
+	})
+}
+
 // Refresh godoc
-//
-//	@Summary      Refresh tokens
-//	@Description  Exchanges a valid refresh token for a new access/refresh token pair.
-//	@Tags         auth
-//	@Accept       json
-//	@Produce      json
-//	@Param        body  body      refreshRequest  true  "Refresh token"
-//	@Success      200   {object}  tokenResponse
-//	@Failure      401   {object}  api.Error
-//	@Router       /auth/refresh [post]
 func (h *AuthHandler) Refresh(c *echo.Context) error {
 	var in refreshRequest
 	if err := c.Bind(&in); err != nil {
@@ -154,17 +180,6 @@ func (h *AuthHandler) Refresh(c *echo.Context) error {
 }
 
 // Logout godoc
-//
-//	@Summary      Log out
-//	@Description  Revokes the supplied refresh token to prevent further refreshes.
-//	@Tags         auth
-//	@Accept       json
-//	@Produce      json
-//	@Param        body  body      refreshRequest  true  "Refresh token to revoke"
-//	@Success      204   "No Content"
-//	@Failure      401   {object}  api.Error
-//	@Security     BearerAuth
-//	@Router       /auth/logout [post]
 func (h *AuthHandler) Logout(c *echo.Context) error {
 	var in refreshRequest
 	if err := c.Bind(&in); err != nil {
@@ -177,15 +192,6 @@ func (h *AuthHandler) Logout(c *echo.Context) error {
 }
 
 // Me godoc
-//
-//	@Summary      Current user
-//	@Description  Returns the authenticated user's id from the JWT subject claim.
-//	@Tags         auth
-//	@Produce      json
-//	@Security     BearerAuth
-//	@Success      200  {object}  map[string]string
-//	@Failure      401  {object}  api.Error
-//	@Router       /me [get]
 func (h *AuthHandler) Me(c *echo.Context) error {
 	uid, _ := c.Get("user_id").(string)
 	return c.JSON(http.StatusOK, map[string]interface{}{"user_id": uid})

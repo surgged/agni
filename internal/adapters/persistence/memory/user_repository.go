@@ -71,6 +71,22 @@ func (r *UserRepository) GetByEmail(_ context.Context, email string) (*user.User
 	return x, nil
 }
 
+// GetByVerificationToken returns a user aggregate by verification token, or
+// domain/user.ErrUserNotFound.
+func (r *UserRepository) GetByVerificationToken(_ context.Context, token string) (*user.User, error) {
+	if token == "" {
+		return nil, user.ErrUserNotFound
+	}
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for _, x := range r.items {
+		if x.VerificationToken == token {
+			return x, nil
+		}
+	}
+	return nil, user.ErrUserNotFound
+}
+
 // Delete removes a user aggregate by id, mapping a missing key to
 // domain/user.ErrUserNotFound.
 func (r *UserRepository) Delete(_ context.Context, id uuid.UUID) error {

@@ -114,7 +114,7 @@ func main() {
 	// ---- k3s provider ----
 	k3sProvider := k3s.NewProvider(cfg.K3s.Namespace, cfg.K3s.RegistryAddr, cfg.Share.Domain)
 
-	userCmd := userapp.NewCommandHandler(userRepo, uow, hasher)
+	userCmd := userapp.NewCommandHandler(userRepo, uow, hasher, emailClient)
 	userQry := userapp.NewQueryHandler(userRepo)
 	userHandler := v1.NewUserHandler(userCmd, userQry)
 

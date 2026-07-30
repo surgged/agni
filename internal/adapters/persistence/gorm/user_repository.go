@@ -56,6 +56,23 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*user.Us
 	return row, nil
 }
 
+// GetByVerificationToken returns a user aggregate by verification token, mapping
+// gorm.ErrRecordNotFound to domain/user.ErrUserNotFound.
+func (r *UserRepository) GetByVerificationToken(ctx context.Context, token string) (*user.User, error) {
+	if token == "" {
+		return nil, user.ErrUserNotFound
+	}
+	row := new(user.User)
+	err := r.db.WithContext(ctx).Where("verification_token = ?", token).First(row).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, user.ErrUserNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return row, nil
+}
+
 // List returns every user aggregate.
 func (r *UserRepository) List(ctx context.Context) ([]*user.User, error) {
 	var rows []user.User

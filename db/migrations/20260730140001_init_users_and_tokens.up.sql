@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE INDEX IF NOT EXISTS users_email_idx ON users (email);
 
--- revoked_tokens backs the JWT denylist (domain/token.RevokedToken).
 CREATE TABLE IF NOT EXISTS revoked_tokens (
     jti TEXT PRIMARY KEY,
     expires_at TIMESTAMPTZ NOT NULL

@@ -3,10 +3,11 @@ package config
 import (
 	"fmt"
 
+	"time"
+
 	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
-	"time"
 )
 
 // Config is the top-level application configuration.
@@ -69,7 +70,7 @@ type ViewsConfig struct {
 
 // DatabaseConfig holds PostgreSQL connection settings.
 type DatabaseConfig struct {
-	DSN string `mapstructure:"dsn" env:"DATABASE_URL"`
+	DSN string `mapstructure:"dsn" env:"DATABASE_DSN"`
 }
 
 // crank:config-structs

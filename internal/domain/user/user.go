@@ -14,24 +14,31 @@ import (
 // layer; persistence adapters use Rehydrate to bypass validation when loading
 // existing rows.
 type User struct {
-	ID        uuid.UUID            `gorm:"column:id;primaryKey;type:uuid"`
-	CreatedAt time.Time            `gorm:"column:created_at;not null"`
-	UpdatedAt time.Time            `gorm:"column:updated_at;not null"`
-	Name      string               `gorm:"column:name;not null;type:TEXT"`
-	Email     string               `gorm:"column:email;not null;type:TEXT"`
-	Password  string               `gorm:"column:password;not null;type:TEXT"`
-	events    []shared.DomainEvent `gorm:"-"`
+	ID                uuid.UUID            `gorm:"column:id;primaryKey;type:uuid"`
+	CreatedAt         time.Time            `gorm:"column:created_at;not null"`
+	UpdatedAt         time.Time            `gorm:"column:updated_at;not null"`
+	Name              string               `gorm:"column:name;not null;type:TEXT"`
+	Email             string               `gorm:"column:email;not null;type:TEXT"`
+	Password          string               `gorm:"column:password;not null;type:TEXT"`
+	EmailVerifiedAt   *time.Time           `gorm:"column:email_verified_at;type:TIMESTAMPTZ"`
+	VerificationToken string               `gorm:"column:verification_token;type:TEXT"`
+	events            []shared.DomainEvent `gorm:"-"`
 }
 
 func (o *User) TableName() string {
 	return "users"
 }
 
+// IsEmailVerified returns true if EmailVerifiedAt is set.
+func (o *User) IsEmailVerified() bool {
+	return o.EmailVerifiedAt != nil
+}
+
 // NewUser constructs a new User aggregate, validates its
 // invariants, and records a UserCreated event. Callers must persist
 // the aggregate (via Repository.Save) and then call PullEvents to dispatch
 // the recorded event through the application's event bus.
-func NewUser(id uuid.UUID, name string, email string, password string) (*User, error) {
+func NewUser(id uuid.UUID, name string, email string, password string, verificationToken string) (*User, error) {
 	if id == uuid.Nil {
 		return nil, ErrInvalidUserID
 	}
@@ -46,18 +53,38 @@ func NewUser(id uuid.UUID, name string, email string, password string) (*User, e
 	}
 	now := time.Now().UTC()
 	o := &User{
-		ID:        id,
-		CreatedAt: now,
-		UpdatedAt: now,
-		Name:      name,
-		Email:     email,
-		Password:  password,
+		ID:                id,
+		CreatedAt:         now,
+		UpdatedAt:         now,
+		Name:              name,
+		Email:             email,
+		Password:          password,
+		EmailVerifiedAt:   nil,
+		VerificationToken: verificationToken,
 	}
 	o.recordEvent(UserCreated{
 		ID:         id,
 		occurredAt: now,
 	})
 	return o, nil
+}
+
+// ConfirmEmail verifies the user's email address by setting EmailVerifiedAt to now and clearing the token.
+func (o *User) ConfirmEmail(token string) bool {
+	if o.VerificationToken != "" && o.VerificationToken == token {
+		now := time.Now().UTC()
+		o.EmailVerifiedAt = &now
+		o.VerificationToken = ""
+		o.UpdatedAt = now
+		return true
+	}
+	return false
+}
+
+// SetVerificationToken sets a new verification token for resending email verification.
+func (o *User) SetVerificationToken(token string) {
+	o.VerificationToken = token
+	o.UpdatedAt = time.Now().UTC()
 }
 
 // Update replaces the aggregate's mutable fields and records a
@@ -86,14 +113,16 @@ func (o *User) SetTimestamps(created, updated time.Time) {
 // Rehydrate reconstructs an aggregate from a persistence row, bypassing the
 // validation done by NewUser. It is intended for use by the GORM
 // and in-memory adapters only. Callers must guarantee that id is non-zero.
-func Rehydrate(id uuid.UUID, name string, email string, password string, created, updated time.Time) *User {
+func Rehydrate(id uuid.UUID, name string, email string, password string, emailVerifiedAt *time.Time, verificationToken string, created, updated time.Time) *User {
 	return &User{
-		ID:        id,
-		CreatedAt: created,
-		UpdatedAt: updated,
-		Name:      name,
-		Email:     email,
-		Password:  password,
+		ID:                id,
+		CreatedAt:         created,
+		UpdatedAt:         updated,
+		Name:              name,
+		Email:             email,
+		Password:          password,
+		EmailVerifiedAt:   emailVerifiedAt,
+		VerificationToken: verificationToken,
 	}
 }
 

@@ -32,3 +32,13 @@ type AuthenticateUserCommand struct {
 	Email    string
 	Password string
 }
+
+// VerifyEmailCommand is the application-layer request to confirm an email address token.
+type VerifyEmailCommand struct {
+	Token string
+}
+
+// ResendVerificationCommand is the application-layer request to resend verification email.
+type ResendVerificationCommand struct {
+	Email string
+}

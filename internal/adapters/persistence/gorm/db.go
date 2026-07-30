@@ -11,10 +11,6 @@ import (
 	"gorm.io/gorm/logger"
 
 	"github.com/surgged/agni/internal/config"
-	domainapp "github.com/surgged/agni/internal/domain/app"
-	domainsharelink "github.com/surgged/agni/internal/domain/sharelink"
-	domaintoken "github.com/surgged/agni/internal/domain/token"
-	domainuser "github.com/surgged/agni/internal/domain/user"
 )
 
 func NewDB(cfg config.DatabaseConfig) (*gorm.DB, error) {
@@ -42,15 +38,6 @@ func NewDB(cfg config.DatabaseConfig) (*gorm.DB, error) {
 	}
 	sqlDB.SetMaxOpenConns(25)
 	sqlDB.SetMaxIdleConns(10)
-
-	if err := db.AutoMigrate(
-		&domainuser.User{},
-		&domainapp.App{},
-		&domainsharelink.ShareLink{},
-		&domaintoken.RevokedToken{},
-	); err != nil {
-		return nil, fmt.Errorf("auto-migrate: %w", err)
-	}
 
 	return db, nil
 }

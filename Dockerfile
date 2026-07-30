@@ -19,9 +19,17 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /out/server ./cmd/server
 
 # Stage 3 — minimal runtime
 FROM alpine:3.21
+RUN apk add --no-cache ca-certificates curl && \
+    curl -L https://github.com/golang-migrate/migrate/releases/download/v4.18.2/migrate.linux-amd64.tar.gz | tar xvz -C /usr/local/bin migrate
+
 WORKDIR /app
 COPY --from=backend /out/server /app/server
 COPY --from=backend /src/configs/config.yaml /app/configs/config.yaml
 COPY --from=backend /src/db/migrations /app/db/migrations
+COPY --from=backend /src/scripts/docker-entrypoint.sh /app/entrypoint.sh
+
+RUN chmod +x /app/entrypoint.sh
+
 EXPOSE 8080
-ENTRYPOINT ["/app/server"]
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["/app/server"]
