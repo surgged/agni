@@ -57,6 +57,18 @@ type magicRequestDTO struct {
 	Email string `json:"email" validate:"required,email"`
 }
 
+// RequestMagicLink godoc
+//
+//	@Summary      Request magic link
+//	@Description  Sends a passwordless magic login link to the requested email address.
+//	@Tags         auth
+//	@Accept       json
+//	@Produce      json
+//	@Param        request  body      magicRequestDTO  true  "Magic link request"
+//	@Success      202      {object}  map[string]interface{}
+//	@Failure      400      {object}  api.Error
+//	@Failure      500      {object}  api.Error
+//	@Router       /auth/magic [post]
 func (h *MagicHandler) RequestMagicLink(c *echo.Context) error {
 	var in magicRequestDTO
 	if err := c.Bind(&in); err != nil {
@@ -81,6 +93,19 @@ func (h *MagicHandler) RequestMagicLink(c *echo.Context) error {
 	})
 }
 
+// VerifyMagicLink godoc
+//
+//	@Summary      Verify magic link token
+//	@Description  Validates a magic login link token and sets a session cookie.
+//	@Tags         auth
+//	@Produce      json
+//	@Param        token     query     string  true   "Magic link token"
+//	@Param        app       query     string  false  "Optional App ID target"
+//	@Param        redirect  query     string  false  "Set to false to return JSON instead of 303 redirect"
+//	@Success      200       {object}  map[string]string
+//	@Failure      400       {object}  api.Error
+//	@Failure      401       {object}  api.Error
+//	@Router       /auth/magic [get]
 func (h *MagicHandler) VerifyMagicLink(c *echo.Context) error {
 	tokenStr := c.QueryParam("token")
 	if tokenStr == "" {

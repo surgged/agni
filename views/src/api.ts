@@ -1,33 +1,26 @@
 export * from '@/lib/generated/api';
+import {
+  getApiV1Apps,
+  getApiV1AppsId,
+  deleteApiV1AppsId,
+  getApiV1AppsIdShares,
+  postApiV1AppsIdShare,
+  deleteApiV1AppsIdSharesSid,
+  getApiV1ClusterHealth,
+  getApiV1Me,
+  postAuthMagic,
+  getAuthMagic,
+  getAuthVerifyEmail,
+  postAuthResendVerification,
+  postAuthAgentToken,
+  V1AppDTO,
+  V1ShareResponseDTO,
+} from '@/lib/generated/api';
 import { App, AppStatus, ShareLink, SharePermission } from '@/types/app';
+import { customMutator } from '@/lib/mutator';
 
-const BASE = '';
-
-export interface AppItem {
-  id: string;
-  owner_email?: string;
-  name: string;
-  runtime?: string;
-  image_ref?: string;
-  pod_name?: string;
-  service_url?: string;
-  share_url?: string;
-  status?: string;
-  error_message?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface ShareItem {
-  id: string;
-  app_id: string;
-  recipient_email: string;
-  permission: string;
-  token?: string;
-  expires_at?: string | null;
-  accepted_at?: string | null;
-  revoked_at?: string | null;
-}
+export interface AppItem extends V1AppDTO {}
+export interface ShareItem extends V1ShareResponseDTO {}
 
 export interface UserProfile {
   user_id: string;
@@ -54,7 +47,7 @@ export interface ClusterHealthResponse {
   uptime_seconds?: number;
 }
 
-export function mapBackendAppToApp(dto: AppItem): App {
+export function mapBackendAppToApp(dto: V1AppDTO): App {
   const rawStatus = (dto.status || 'LIVE').toUpperCase();
   let status: AppStatus = 'LIVE';
   if (rawStatus === 'BUILDING' || rawStatus === 'PENDING') {
@@ -92,7 +85,7 @@ export function mapBackendAppToApp(dto: AppItem): App {
   };
 }
 
-export function mapBackendShareToShareLink(dto: ShareItem): ShareLink {
+export function mapBackendShareToShareLink(dto: V1ShareResponseDTO): ShareLink {
   return {
     id: dto.id || '',
     appId: dto.app_id || '',
@@ -106,72 +99,79 @@ export function mapBackendShareToShareLink(dto: ShareItem): ShareLink {
   };
 }
 
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
-
-interface RequestOptions {
-  method: HttpMethod;
-  headers: Record<string, string>;
-  body?: string;
-}
-
-async function request<T = unknown>(method: HttpMethod, path: string, body?: unknown): Promise<T> {
-  const token = localStorage.getItem('agni_token');
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const opts: RequestOptions = { method, headers };
-  if (body !== undefined) {
-    opts.body = JSON.stringify(body);
-  }
-
-  const res = await fetch(BASE + path, opts);
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || res.statusText || `Request failed with status ${res.status}`);
-  }
-  if (res.status === 204) {
-    return {} as T;
-  }
-  return (await res.json()) as T;
-}
-
 export const api = {
-  get: <T = unknown>(path: string) => request<T>('GET', path),
-  post: <T = unknown>(path: string, body?: unknown) => request<T>('POST', path, body),
-  put: <T = unknown>(path: string, body?: unknown) => request<T>('PUT', path, body),
-  delete: <T = unknown>(path: string) => request<T>('DELETE', path),
+  get: <T = unknown>(url: string) => customMutator<T>({ url, method: 'GET' }),
+  post: <T = unknown>(url: string, data?: unknown) =>
+    customMutator<T>({ url, method: 'POST', data, headers: { 'Content-Type': 'application/json' } }),
+  put: <T = unknown>(url: string, data?: unknown) =>
+    customMutator<T>({ url, method: 'PUT', data, headers: { 'Content-Type': 'application/json' } }),
+  delete: <T = unknown>(url: string) => customMutator<T>({ url, method: 'DELETE' }),
 
-  getApps: () => request<AppItem[]>('GET', '/api/v1/apps'),
-  getApp: (id: string) => request<AppItem>('GET', `/api/v1/apps/${id}`),
-  createApp: (data: { name: string; runtime?: string; imageRef?: string }) =>
-    request<AppItem>('POST', '/api/v1/apps', data),
-  deleteApp: (id: string) => request<void>('DELETE', `/api/v1/apps/${id}`),
+  getApps: async () => {
+    const res = await getApiV1Apps();
+    return (res || []) as AppItem[];
+  },
+  getApp: async (id: string) => {
+    const res = await getApiV1AppsId(id);
+    return res as AppItem;
+  },
+  createApp: async (data: { name: string; runtime?: string; imageRef?: string }) => {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    const res = await customMutator<V1AppDTO>({
+      url: '/api/v1/apps',
+      method: 'POST',
+      data: formData,
+    });
+    return res as AppItem;
+  },
+  deleteApp: async (id: string) => {
+    await deleteApiV1AppsId(id);
+  },
 
-  getAppShares: (appId: string) => request<ShareItem[]>('GET', `/api/v1/apps/${appId}/shares`),
-  createAppShare: (appId: string, recipientEmail: string, permission?: string) =>
-    request<ShareItem>('POST', `/api/v1/apps/${appId}/share`, {
+  getAppShares: async (appId: string) => {
+    const res = await getApiV1AppsIdShares(appId);
+    return (res || []) as ShareItem[];
+  },
+  createAppShare: async (appId: string, recipientEmail: string, permission?: string) => {
+    const res = await postApiV1AppsIdShare(appId, {
+      app_id: appId,
       recipient_email: recipientEmail,
       permission: permission || 'use',
-    }),
-  revokeAppShare: (appId: string, shareId: string) =>
-    request<void>('DELETE', `/api/v1/apps/${appId}/shares/${shareId}`),
+    });
+    return res as ShareItem;
+  },
+  revokeAppShare: async (appId: string, shareId: string) => {
+    await deleteApiV1AppsIdSharesSid(appId, shareId);
+  },
 
-  getClusterHealth: () => request<ClusterHealthResponse>('GET', '/api/v1/cluster/health'),
+  getClusterHealth: async () => {
+    const res = await getApiV1ClusterHealth();
+    return res as unknown as ClusterHealthResponse;
+  },
 
-  requestMagicLink: (email: string) =>
-    request<{ success: boolean; message: string }>('POST', '/auth/magic', { email }),
-  verifyMagicToken: (token: string) =>
-    request<{ access_token: string; user: UserProfile }>('POST', '/auth/verify', { token }),
-  verifyEmailToken: (token: string) =>
-    request<{ access_token: string; refresh_token?: string; expires_at?: number; user?: UserProfile }>(
-      'GET',
-      `/auth/verify-email?token=${encodeURIComponent(token)}`
-    ),
-  resendVerification: (email: string) =>
-    request<{ message: string }>('POST', '/auth/resend-verification', { email }),
-  generateAgentToken: (name?: string) =>
-    request<{ token: string; agentId: string }>('POST', '/auth/agent-token', { name }),
-  getMe: () => request<UserProfile>('GET', '/api/v1/me'),
+  requestMagicLink: async (email: string) => {
+    const res = await postAuthMagic({ email });
+    return { success: true, message: (res as any)?.message || 'Magic link requested' };
+  },
+  verifyMagicToken: async (token: string) => {
+    const res = await getAuthMagic({ token, redirect: 'false' });
+    return res as unknown as { access_token?: string; user?: UserProfile };
+  },
+  verifyEmailToken: async (token: string) => {
+    const res = await getAuthVerifyEmail({ token });
+    return res as any;
+  },
+  resendVerification: async (email: string) => {
+    const res = await postAuthResendVerification({ email });
+    return res as any;
+  },
+  generateAgentToken: async (name?: string) => {
+    const res = await postAuthAgentToken();
+    return res as any;
+  },
+  getMe: async () => {
+    const res = await getApiV1Me();
+    return res as unknown as UserProfile;
+  },
 };

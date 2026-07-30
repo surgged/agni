@@ -24,6 +24,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import {
   DropdownMenu,
@@ -112,8 +113,8 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" variant="inset">
-      <SidebarHeader>
-        <SidebarMenu>
+      <SidebarHeader className="flex flex-row items-center justify-between gap-2 p-2">
+        <SidebarMenu className="flex-1">
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -152,6 +153,7 @@ export function AppSidebar() {
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
+        <SidebarTrigger className="text-muted-foreground hover:text-foreground shrink-0" />
       </SidebarHeader>
 
       <SidebarContent>

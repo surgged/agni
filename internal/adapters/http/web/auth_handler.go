@@ -67,6 +67,17 @@ type tokenResponse struct {
 }
 
 // RegisterUser godoc
+//
+//	@Summary      Register a new user
+//	@Description  Registers a new user account with name, email, and password.
+//	@Tags         auth
+//	@Accept       json
+//	@Produce      json
+//	@Param        request  body      registerRequest  true  "Registration payload"
+//	@Success      201      {object}  map[string]string
+//	@Failure      400      {object}  api.Error
+//	@Failure      422      {object}  api.Error
+//	@Router       /auth/register [post]
 func (h *AuthHandler) RegisterUser(c *echo.Context) error {
 	var in registerRequest
 	if err := c.Bind(&in); err != nil {
@@ -90,6 +101,17 @@ func (h *AuthHandler) RegisterUser(c *echo.Context) error {
 }
 
 // Login godoc
+//
+//	@Summary      User login
+//	@Description  Authenticates a user with email and password, returning access and refresh JWT tokens.
+//	@Tags         auth
+//	@Accept       json
+//	@Produce      json
+//	@Param        credentials  body      credentials  true  "Login credentials"
+//	@Success      200          {object}  tokenResponse
+//	@Failure      401          {object}  api.Error
+//	@Failure      403          {object}  map[string]interface{}
+//	@Router       /auth/login [post]
 func (h *AuthHandler) Login(c *echo.Context) error {
 	var in credentials
 	if err := c.Bind(&in); err != nil {
@@ -122,7 +144,16 @@ func (h *AuthHandler) Login(c *echo.Context) error {
 	})
 }
 
-// VerifyEmail verifies user email address by token.
+// VerifyEmail godoc
+//
+//	@Summary      Verify email address
+//	@Description  Verifies user email using token parameter and returns session credentials.
+//	@Tags         auth
+//	@Produce      json
+//	@Param        token  query     string  true  "Verification token"
+//	@Success      200    {object}  map[string]interface{}
+//	@Failure      400    {object}  api.Error
+//	@Router       /auth/verify-email [get]
 func (h *AuthHandler) VerifyEmail(c *echo.Context) error {
 	token := c.QueryParam("token")
 	if token == "" {
@@ -149,7 +180,17 @@ func (h *AuthHandler) VerifyEmail(c *echo.Context) error {
 	})
 }
 
-// ResendVerification resends verification email to specified address.
+// ResendVerification godoc
+//
+//	@Summary      Resend email verification
+//	@Description  Resends verification link to the target user email address.
+//	@Tags         auth
+//	@Accept       json
+//	@Produce      json
+//	@Param        request  body      resendVerificationRequest  true  "Resend verification request"
+//	@Success      200      {object}  map[string]string
+//	@Failure      400      {object}  api.Error
+//	@Router       /auth/resend-verification [post]
 func (h *AuthHandler) ResendVerification(c *echo.Context) error {
 	var in resendVerificationRequest
 	if err := c.Bind(&in); err != nil {
@@ -163,6 +204,16 @@ func (h *AuthHandler) ResendVerification(c *echo.Context) error {
 }
 
 // Refresh godoc
+//
+//	@Summary      Refresh access token
+//	@Description  Reissues a new access/refresh token pair using a valid refresh token.
+//	@Tags         auth
+//	@Accept       json
+//	@Produce      json
+//	@Param        request  body      refreshRequest  true  "Refresh payload"
+//	@Success      200      {object}  tokenResponse
+//	@Failure      401      {object}  api.Error
+//	@Router       /auth/refresh [post]
 func (h *AuthHandler) Refresh(c *echo.Context) error {
 	var in refreshRequest
 	if err := c.Bind(&in); err != nil {
@@ -180,6 +231,17 @@ func (h *AuthHandler) Refresh(c *echo.Context) error {
 }
 
 // Logout godoc
+//
+//	@Summary      Logout user
+//	@Description  Revokes the user refresh token and invalidates the session.
+//	@Tags         auth
+//	@Security     BearerAuth
+//	@Accept       json
+//	@Produce      json
+//	@Param        request  body      refreshRequest  true  "Logout payload"
+//	@Success      204      "No Content"
+//	@Failure      401      {object}  api.Error
+//	@Router       /auth/logout [post]
 func (h *AuthHandler) Logout(c *echo.Context) error {
 	var in refreshRequest
 	if err := c.Bind(&in); err != nil {
@@ -192,6 +254,15 @@ func (h *AuthHandler) Logout(c *echo.Context) error {
 }
 
 // Me godoc
+//
+//	@Summary      Get authenticated user ID
+//	@Description  Returns the subject user ID from the Bearer JWT token.
+//	@Tags         auth
+//	@Security     BearerAuth
+//	@Produce      json
+//	@Success      200  {object}  map[string]interface{}
+//	@Failure      401  {object}  api.Error
+//	@Router       /me [get]
 func (h *AuthHandler) Me(c *echo.Context) error {
 	uid, _ := c.Get("user_id").(string)
 	return c.JSON(http.StatusOK, map[string]interface{}{"user_id": uid})

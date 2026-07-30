@@ -2,7 +2,7 @@ basePath: /
 consumes:
 - application/json
 definitions:
-  github_com_surgged_agni_internal_adapters_http_web_api.Error:
+  api.Error:
     properties:
       details:
         additionalProperties:
@@ -12,7 +12,88 @@ definitions:
         example: validation failed
         type: string
     type: object
-  internal_adapters_http_web_v1.userDTO:
+  v1.appDTO:
+    properties:
+      created_at:
+        type: string
+      error_message:
+        type: string
+      id:
+        type: string
+      image_ref:
+        type: string
+      name:
+        type: string
+      owner_email:
+        type: string
+      pod_name:
+        type: string
+      runtime:
+        type: string
+      service_url:
+        type: string
+      share_url:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    required:
+    - name
+    - owner_email
+    type: object
+  v1.logLinePayload:
+    properties:
+      app_id:
+        type: string
+      line:
+        type: string
+      stream:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  v1.magicRequestDTO:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  v1.shareDTO:
+    properties:
+      app_id:
+        type: string
+      id:
+        type: string
+      permission:
+        type: string
+      recipient_email:
+        type: string
+    required:
+    - app_id
+    - recipient_email
+    type: object
+  v1.shareResponseDTO:
+    properties:
+      accepted_at:
+        type: string
+      app_id:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: string
+      permission:
+        type: string
+      recipient_email:
+        type: string
+      revoked_at:
+        type: string
+      token:
+        type: string
+    type: object
+  v1.userDTO:
     properties:
       email:
         type: string
@@ -27,6 +108,63 @@ definitions:
     - name
     - password
     type: object
+  web.credentials:
+    properties:
+      email:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  web.refreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  web.registerRequest:
+    properties:
+      confirm_password:
+        type: string
+      email:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - confirm_password
+    - email
+    - name
+    - password
+    type: object
+  web.resendVerificationRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  web.tokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_at:
+        type: integer
+      refresh_token:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -34,6 +172,611 @@ info:
   title: agni API
   version: "1.0"
 paths:
+  /api/v1/apps:
+    get:
+      description: Lists microVM applications belonging to the user or all cluster
+        apps.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/v1.appDTO'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      security:
+      - BearerAuth: []
+      summary: List applications
+      tags:
+      - apps
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates a new microVM container application and deploys optional
+        source tarball.
+      parameters:
+      - description: App Name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Owner Email
+        in: formData
+        name: owner_email
+        type: string
+      - description: Source tarball bundle
+        in: formData
+        name: tarball
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/v1.appDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Error'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/api.Error'
+      security:
+      - BearerAuth: []
+      summary: Create application
+      tags:
+      - apps
+  /api/v1/apps/{id}:
+    delete:
+      description: Destroys and cleans up a microVM application container and resources.
+      parameters:
+      - description: App ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      security:
+      - BearerAuth: []
+      summary: Destroy application
+      tags:
+      - apps
+    get:
+      description: Returns details of a specific microVM application by ID.
+      parameters:
+      - description: App ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.appDTO'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Error'
+      security:
+      - BearerAuth: []
+      summary: Get application details
+      tags:
+      - apps
+  /api/v1/apps/{id}/logs:
+    get:
+      description: Streams live stdout/stderr logs from the microVM container via
+        Server-Sent Events (SSE).
+      parameters:
+      - description: App ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.logLinePayload'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      security:
+      - BearerAuth: []
+      summary: Stream application logs
+      tags:
+      - apps
+  /api/v1/apps/{id}/share:
+    post:
+      consumes:
+      - application/json
+      description: Creates a zero-trust share link for an application with specified
+        permission and recipient email.
+      parameters:
+      - description: App ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Share payload
+        in: body
+        name: share
+        required: true
+        schema:
+          $ref: '#/definitions/v1.shareDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/v1.shareResponseDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/api.Error'
+      security:
+      - BearerAuth: []
+      summary: Create application share link
+      tags:
+      - shares
+  /api/v1/apps/{id}/shares:
+    get:
+      description: Lists all active share links for a specific application.
+      parameters:
+      - description: App ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/v1.shareResponseDTO'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      security:
+      - BearerAuth: []
+      summary: List application share links
+      tags:
+      - shares
+  /api/v1/apps/{id}/shares/{sid}:
+    delete:
+      description: Revokes an active share link by share ID.
+      parameters:
+      - description: App ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Share Link ID (UUID)
+        in: path
+        name: sid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      security:
+      - BearerAuth: []
+      summary: Revoke application share link
+      tags:
+      - shares
+  /api/v1/cluster/health:
+    get:
+      description: Returns cluster health status, active microVM counts, memory allocation,
+        and Go runtime stats.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get cluster health and metrics
+      tags:
+      - cluster
+  /api/v1/me:
+    get:
+      description: Returns the profile of the authenticated user from JWT Bearer token
+        or Session token.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Error'
+      security:
+      - BearerAuth: []
+      summary: Get authenticated user profile
+      tags:
+      - users
+  /auth/agent-token:
+    post:
+      description: Issues an agent JWT token for MCP CLI client authentication.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Error'
+      security:
+      - BearerAuth: []
+      summary: Issue MCP agent token
+      tags:
+      - apps
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user with email and password, returning access
+        and refresh JWT tokens.
+      parameters:
+      - description: Login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/web.credentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.tokenResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Error'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+      summary: User login
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Revokes the user refresh token and invalidates the session.
+      parameters:
+      - description: Logout payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/web.refreshRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Error'
+      security:
+      - BearerAuth: []
+      summary: Logout user
+      tags:
+      - auth
+  /auth/magic:
+    get:
+      description: Validates a magic login link token and sets a session cookie.
+      parameters:
+      - description: Magic link token
+        in: query
+        name: token
+        required: true
+        type: string
+      - description: Optional App ID target
+        in: query
+        name: app
+        type: string
+      - description: Set to false to return JSON instead of 303 redirect
+        in: query
+        name: redirect
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: Verify magic link token
+      tags:
+      - auth
+    post:
+      consumes:
+      - application/json
+      description: Sends a passwordless magic login link to the requested email address.
+      parameters:
+      - description: Magic link request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1.magicRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: Request magic link
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Reissues a new access/refresh token pair using a valid refresh
+        token.
+      parameters:
+      - description: Refresh payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/web.refreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.tokenResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: Refresh access token
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new user account with name, email, and password.
+      parameters:
+      - description: Registration payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/web.registerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: Register a new user
+      tags:
+      - auth
+  /auth/resend-verification:
+    post:
+      consumes:
+      - application/json
+      description: Resends verification link to the target user email address.
+      parameters:
+      - description: Resend verification request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/web.resendVerificationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: Resend email verification
+      tags:
+      - auth
+  /auth/session:
+    get:
+      description: Validates session cookie access for a shared application.
+      parameters:
+      - description: App ID (UUID)
+        in: query
+        name: app
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Validate application session
+      tags:
+      - auth
+  /auth/verify-email:
+    get:
+      description: Verifies user email using token parameter and returns session credentials.
+      parameters:
+      - description: Verification token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: Verify email address
+      tags:
+      - auth
+  /me:
+    get:
+      description: Returns the subject user ID from the Bearer JWT token.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Error'
+      security:
+      - BearerAuth: []
+      summary: Get authenticated user ID
+      tags:
+      - auth
+  /preview/{id}:
+    get:
+      description: Serves deployed static assets for an application preview path.
+      parameters:
+      - description: App ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Static web assets file stream
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Error'
+      summary: Preview application UI
+      tags:
+      - apps
   /v1/users:
     post:
       consumes:
@@ -45,18 +788,18 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/internal_adapters_http_web_v1.userDTO'
+          $ref: '#/definitions/v1.userDTO'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/internal_adapters_http_web_v1.userDTO'
+            $ref: '#/definitions/v1.userDTO'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/api.Error'
       summary: Create a user
       tags:
       - users
@@ -77,7 +820,7 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/api.Error'
       summary: Delete a user
       tags:
       - users
@@ -95,11 +838,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapters_http_web_v1.userDTO'
+            $ref: '#/definitions/v1.userDTO'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/api.Error'
       summary: Get a user
       tags:
       - users
@@ -118,22 +861,22 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/internal_adapters_http_web_v1.userDTO'
+          $ref: '#/definitions/v1.userDTO'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_adapters_http_web_v1.userDTO'
+            $ref: '#/definitions/v1.userDTO'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/api.Error'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/api.Error'
       summary: Update a user
       tags:
       - users

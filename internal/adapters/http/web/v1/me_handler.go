@@ -24,6 +24,16 @@ func NewMeHandler(userQry *userapp.QueryHandler, tokens ports.TokenService, agen
 	return &MeHandler{userQry: userQry, tokens: tokens, agentTokens: agentTokens}
 }
 
+// Get godoc
+//
+//	@Summary      Get authenticated user profile
+//	@Description  Returns the profile of the authenticated user from JWT Bearer token or Session token.
+//	@Tags         users
+//	@Security     BearerAuth
+//	@Produce      json
+//	@Success      200  {object}  map[string]interface{}
+//	@Failure      401  {object}  api.Error
+//	@Router       /api/v1/me [get]
 func (h *MeHandler) Get(c *echo.Context) error {
 	var sub string
 

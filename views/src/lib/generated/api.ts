@@ -25,19 +25,166 @@ import type {
 } from '@tanstack/react-query';
 
 import { customMutator } from '../mutator';
-export type GithubComSurggedAgniInternalAdaptersHttpWebApiErrorDetails = {[key: string]: string};
+export type ApiErrorDetails = {[key: string]: string};
 
-export interface GithubComSurggedAgniInternalAdaptersHttpWebApiError {
-  details?: GithubComSurggedAgniInternalAdaptersHttpWebApiErrorDetails;
+export interface ApiError {
+  details?: ApiErrorDetails;
   error?: string;
 }
 
-export interface InternalAdaptersHttpWebV1UserDTO {
+export interface V1AppDTO {
+  created_at?: string;
+  error_message?: string;
+  id?: string;
+  image_ref?: string;
+  name: string;
+  owner_email: string;
+  pod_name?: string;
+  runtime?: string;
+  service_url?: string;
+  share_url?: string;
+  status?: string;
+  updated_at?: string;
+}
+
+export interface V1LogLinePayload {
+  app_id?: string;
+  line?: string;
+  stream?: string;
+  timestamp?: string;
+}
+
+export interface V1MagicRequestDTO {
+  email: string;
+}
+
+export interface V1ShareDTO {
+  app_id: string;
+  id?: string;
+  permission?: string;
+  recipient_email: string;
+}
+
+export interface V1ShareResponseDTO {
+  accepted_at?: string;
+  app_id?: string;
+  expires_at?: string;
+  id?: string;
+  permission?: string;
+  recipient_email?: string;
+  revoked_at?: string;
+  token?: string;
+}
+
+export interface V1UserDTO {
   email: string;
   id?: string;
   name: string;
   password: string;
 }
+
+export interface WebCredentials {
+  email: string;
+  /**
+     * @minLength 2
+     * @maxLength 100
+     */
+  name?: string;
+  /** @minLength 8 */
+  password: string;
+}
+
+export interface WebRefreshRequest {
+  refresh_token: string;
+}
+
+export interface WebRegisterRequest {
+  confirm_password: string;
+  email: string;
+  /**
+     * @minLength 2
+     * @maxLength 100
+     */
+  name: string;
+  /** @minLength 8 */
+  password: string;
+}
+
+export interface WebResendVerificationRequest {
+  email: string;
+}
+
+export interface WebTokenResponse {
+  access_token?: string;
+  expires_at?: number;
+  refresh_token?: string;
+}
+
+export type PostApiV1AppsBody = {
+  /** App Name */
+  name: string;
+  /** Owner Email */
+  owner_email?: string;
+  /** Source tarball bundle */
+  tarball?: Blob;
+};
+
+export type GetApiV1ClusterHealth200 = { [key: string]: unknown };
+
+export type GetApiV1Me200 = { [key: string]: unknown };
+
+export type PostAuthAgentToken200 = { [key: string]: unknown };
+
+export type PostAuthLogin403 = { [key: string]: unknown };
+
+export type GetAuthMagicParams = {
+/**
+ * Magic link token
+ */
+token: string;
+/**
+ * Optional App ID target
+ */
+app?: string;
+/**
+ * Set to false to return JSON instead of 303 redirect
+ */
+redirect?: string;
+};
+
+export type GetAuthMagic200 = {[key: string]: string};
+
+export type PostAuthMagic202 = { [key: string]: unknown };
+
+export type PostAuthRegister201 = {[key: string]: string};
+
+export type PostAuthResendVerification200 = {[key: string]: string};
+
+export type GetAuthSessionParams = {
+/**
+ * App ID (UUID)
+ */
+app: string;
+};
+
+export type GetAuthSession200 = {[key: string]: string};
+
+export type GetAuthSession400 = {[key: string]: string};
+
+export type GetAuthSession401 = {[key: string]: string};
+
+export type GetAuthSession500 = {[key: string]: string};
+
+export type GetAuthVerifyEmailParams = {
+/**
+ * Verification token
+ */
+token: string;
+};
+
+export type GetAuthVerifyEmail200 = { [key: string]: unknown };
+
+export type GetMe200 = { [key: string]: unknown };
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -59,19 +206,17 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 /**
- * Creates a new user.
- * @summary Create a user
+ * Lists microVM applications belonging to the user or all cluster apps.
+ * @summary List applications
  */
-export const postV1Users = (
-    internalAdaptersHttpWebV1UserDTO: InternalAdaptersHttpWebV1UserDTO,
+export const getApiV1Apps = (
+
  options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
 ) => {
 
 
-      return customMutator<InternalAdaptersHttpWebV1UserDTO>(
-      {url: `/v1/users`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: internalAdaptersHttpWebV1UserDTO, signal
+      return customMutator<V1AppDTO[]>(
+      {url: `/api/v1/apps`, method: 'GET', signal
     },
       options);
     }
@@ -79,9 +224,1780 @@ export const postV1Users = (
 
 
 
-export const getPostV1UsersMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postV1Users>>, TError,{data: InternalAdaptersHttpWebV1UserDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof postV1Users>>, TError,{data: InternalAdaptersHttpWebV1UserDTO}, TContext> => {
+export const getGetApiV1AppsQueryKey = () => {
+    return [
+    `/api/v1/apps`
+    ] as const;
+    }
+
+
+export const getGetApiV1AppsQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1Apps>>, TError = ApiError>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Apps>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1AppsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1Apps>>> = ({ signal }) => getApiV1Apps(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1Apps>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiV1AppsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1Apps>>>
+export type GetApiV1AppsQueryError = ApiError
+
+
+export function useGetApiV1Apps<TData = Awaited<ReturnType<typeof getApiV1Apps>>, TError = ApiError>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Apps>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV1Apps>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV1Apps>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV1Apps<TData = Awaited<ReturnType<typeof getApiV1Apps>>, TError = ApiError>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Apps>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV1Apps>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV1Apps>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV1Apps<TData = Awaited<ReturnType<typeof getApiV1Apps>>, TError = ApiError>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Apps>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List applications
+ */
+
+export function useGetApiV1Apps<TData = Awaited<ReturnType<typeof getApiV1Apps>>, TError = ApiError>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Apps>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiV1AppsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Creates a new microVM container application and deploys optional source tarball.
+ * @summary Create application
+ */
+export const postApiV1Apps = (
+    postApiV1AppsBody?: PostApiV1AppsBody,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+      const formData = new FormData();
+if(postApiV1AppsBody?.name !== undefined) {
+ formData.append(`name`, postApiV1AppsBody.name);
+ }
+if(postApiV1AppsBody?.owner_email !== undefined) {
+ formData.append(`owner_email`, postApiV1AppsBody.owner_email);
+ }
+if(postApiV1AppsBody?.tarball !== undefined) {
+ formData.append(`tarball`, postApiV1AppsBody.tarball);
+ }
+
+      return customMutator<V1AppDTO>(
+      {url: `/api/v1/apps`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostApiV1AppsMutationOptions = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1Apps>>, TError,{data?: PostApiV1AppsBody}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiV1Apps>>, TError,{data?: PostApiV1AppsBody}, TContext> => {
+
+const mutationKey = ['postApiV1Apps'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV1Apps>>, {data?: PostApiV1AppsBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiV1Apps(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiV1AppsMutationResult = NonNullable<Awaited<ReturnType<typeof postApiV1Apps>>>
+    export type PostApiV1AppsMutationBody = PostApiV1AppsBody | undefined
+    export type PostApiV1AppsMutationError = ApiError
+
+    /**
+ * @summary Create application
+ */
+export const usePostApiV1Apps = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1Apps>>, TError,{data?: PostApiV1AppsBody}, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiV1Apps>>,
+        TError,
+        {data?: PostApiV1AppsBody},
+        TContext
+      > => {
+      return useMutation(getPostApiV1AppsMutationOptions(options), queryClient);
+    }
+
+/**
+ * Returns details of a specific microVM application by ID.
+ * @summary Get application details
+ */
+export const getApiV1AppsId = (
+    id: string,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<V1AppDTO>(
+      {url: `/api/v1/apps/${id}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1AppsIdQueryKey = (id: string,) => {
+    return [
+    `/api/v1/apps/${id}`
+    ] as const;
+    }
+
+
+export const getGetApiV1AppsIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1AppsId>>, TError = ApiError>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1AppsIdQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1AppsId>>> = ({ signal }) => getApiV1AppsId(id, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiV1AppsIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1AppsId>>>
+export type GetApiV1AppsIdQueryError = ApiError
+
+
+export function useGetApiV1AppsId<TData = Awaited<ReturnType<typeof getApiV1AppsId>>, TError = ApiError>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV1AppsId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV1AppsId>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV1AppsId<TData = Awaited<ReturnType<typeof getApiV1AppsId>>, TError = ApiError>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV1AppsId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV1AppsId>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV1AppsId<TData = Awaited<ReturnType<typeof getApiV1AppsId>>, TError = ApiError>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get application details
+ */
+
+export function useGetApiV1AppsId<TData = Awaited<ReturnType<typeof getApiV1AppsId>>, TError = ApiError>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiV1AppsIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Destroys and cleans up a microVM application container and resources.
+ * @summary Destroy application
+ */
+export const deleteApiV1AppsId = (
+    id: string,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<void>(
+      {url: `/api/v1/apps/${id}`, method: 'DELETE', signal
+    },
+      options);
+    }
+
+
+
+
+export const getDeleteApiV1AppsIdMutationOptions = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiV1AppsId>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiV1AppsId>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteApiV1AppsId'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiV1AppsId>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteApiV1AppsId(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiV1AppsIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiV1AppsId>>>
+
+    export type DeleteApiV1AppsIdMutationError = ApiError
+
+    /**
+ * @summary Destroy application
+ */
+export const useDeleteApiV1AppsId = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiV1AppsId>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiV1AppsId>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteApiV1AppsIdMutationOptions(options), queryClient);
+    }
+
+/**
+ * Streams live stdout/stderr logs from the microVM container via Server-Sent Events (SSE).
+ * @summary Stream application logs
+ */
+export const getApiV1AppsIdLogs = (
+    id: string,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<V1LogLinePayload>(
+      {url: `/api/v1/apps/${id}/logs`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1AppsIdLogsQueryKey = (id: string,) => {
+    return [
+    `/api/v1/apps/${id}/logs`
+    ] as const;
+    }
+
+
+export const getGetApiV1AppsIdLogsQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError = ApiError>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1AppsIdLogsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1AppsIdLogs>>> = ({ signal }) => getApiV1AppsIdLogs(id, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiV1AppsIdLogsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1AppsIdLogs>>>
+export type GetApiV1AppsIdLogsQueryError = ApiError
+
+
+export function useGetApiV1AppsIdLogs<TData = Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError = ApiError>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV1AppsIdLogs>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV1AppsIdLogs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV1AppsIdLogs<TData = Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError = ApiError>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV1AppsIdLogs>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV1AppsIdLogs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV1AppsIdLogs<TData = Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError = ApiError>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Stream application logs
+ */
+
+export function useGetApiV1AppsIdLogs<TData = Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError = ApiError>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiV1AppsIdLogsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Creates a zero-trust share link for an application with specified permission and recipient email.
+ * @summary Create application share link
+ */
+export const postApiV1AppsIdShare = (
+    id: string,
+    v1ShareDTO: V1ShareDTO,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<V1ShareResponseDTO>(
+      {url: `/api/v1/apps/${id}/share`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: v1ShareDTO, signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostApiV1AppsIdShareMutationOptions = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdShare>>, TError,{id: string;data: V1ShareDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdShare>>, TError,{id: string;data: V1ShareDTO}, TContext> => {
+
+const mutationKey = ['postApiV1AppsIdShare'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV1AppsIdShare>>, {id: string;data: V1ShareDTO}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  postApiV1AppsIdShare(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiV1AppsIdShareMutationResult = NonNullable<Awaited<ReturnType<typeof postApiV1AppsIdShare>>>
+    export type PostApiV1AppsIdShareMutationBody = V1ShareDTO
+    export type PostApiV1AppsIdShareMutationError = ApiError
+
+    /**
+ * @summary Create application share link
+ */
+export const usePostApiV1AppsIdShare = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdShare>>, TError,{id: string;data: V1ShareDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiV1AppsIdShare>>,
+        TError,
+        {id: string;data: V1ShareDTO},
+        TContext
+      > => {
+      return useMutation(getPostApiV1AppsIdShareMutationOptions(options), queryClient);
+    }
+
+/**
+ * Lists all active share links for a specific application.
+ * @summary List application share links
+ */
+export const getApiV1AppsIdShares = (
+    id: string,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<V1ShareResponseDTO[]>(
+      {url: `/api/v1/apps/${id}/shares`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1AppsIdSharesQueryKey = (id: string,) => {
+    return [
+    `/api/v1/apps/${id}/shares`
+    ] as const;
+    }
+
+
+export const getGetApiV1AppsIdSharesQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError = ApiError>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1AppsIdSharesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1AppsIdShares>>> = ({ signal }) => getApiV1AppsIdShares(id, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiV1AppsIdSharesQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1AppsIdShares>>>
+export type GetApiV1AppsIdSharesQueryError = ApiError
+
+
+export function useGetApiV1AppsIdShares<TData = Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError = ApiError>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV1AppsIdShares>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV1AppsIdShares>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV1AppsIdShares<TData = Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError = ApiError>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV1AppsIdShares>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV1AppsIdShares>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV1AppsIdShares<TData = Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError = ApiError>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List application share links
+ */
+
+export function useGetApiV1AppsIdShares<TData = Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError = ApiError>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiV1AppsIdSharesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Revokes an active share link by share ID.
+ * @summary Revoke application share link
+ */
+export const deleteApiV1AppsIdSharesSid = (
+    id: string,
+    sid: string,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<void>(
+      {url: `/api/v1/apps/${id}/shares/${sid}`, method: 'DELETE', signal
+    },
+      options);
+    }
+
+
+
+
+export const getDeleteApiV1AppsIdSharesSidMutationOptions = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiV1AppsIdSharesSid>>, TError,{id: string;sid: string}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiV1AppsIdSharesSid>>, TError,{id: string;sid: string}, TContext> => {
+
+const mutationKey = ['deleteApiV1AppsIdSharesSid'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiV1AppsIdSharesSid>>, {id: string;sid: string}> = (props) => {
+          const {id,sid} = props ?? {};
+
+          return  deleteApiV1AppsIdSharesSid(id,sid,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiV1AppsIdSharesSidMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiV1AppsIdSharesSid>>>
+
+    export type DeleteApiV1AppsIdSharesSidMutationError = ApiError
+
+    /**
+ * @summary Revoke application share link
+ */
+export const useDeleteApiV1AppsIdSharesSid = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiV1AppsIdSharesSid>>, TError,{id: string;sid: string}, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiV1AppsIdSharesSid>>,
+        TError,
+        {id: string;sid: string},
+        TContext
+      > => {
+      return useMutation(getDeleteApiV1AppsIdSharesSidMutationOptions(options), queryClient);
+    }
+
+/**
+ * Returns cluster health status, active microVM counts, memory allocation, and Go runtime stats.
+ * @summary Get cluster health and metrics
+ */
+export const getApiV1ClusterHealth = (
+
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<GetApiV1ClusterHealth200>(
+      {url: `/api/v1/cluster/health`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1ClusterHealthQueryKey = () => {
+    return [
+    `/api/v1/cluster/health`
+    ] as const;
+    }
+
+
+export const getGetApiV1ClusterHealthQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1ClusterHealth>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1ClusterHealth>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1ClusterHealthQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1ClusterHealth>>> = ({ signal }) => getApiV1ClusterHealth(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1ClusterHealth>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiV1ClusterHealthQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1ClusterHealth>>>
+export type GetApiV1ClusterHealthQueryError = unknown
+
+
+export function useGetApiV1ClusterHealth<TData = Awaited<ReturnType<typeof getApiV1ClusterHealth>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1ClusterHealth>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV1ClusterHealth>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV1ClusterHealth>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV1ClusterHealth<TData = Awaited<ReturnType<typeof getApiV1ClusterHealth>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1ClusterHealth>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV1ClusterHealth>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV1ClusterHealth>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV1ClusterHealth<TData = Awaited<ReturnType<typeof getApiV1ClusterHealth>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1ClusterHealth>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get cluster health and metrics
+ */
+
+export function useGetApiV1ClusterHealth<TData = Awaited<ReturnType<typeof getApiV1ClusterHealth>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1ClusterHealth>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiV1ClusterHealthQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Returns the profile of the authenticated user from JWT Bearer token or Session token.
+ * @summary Get authenticated user profile
+ */
+export const getApiV1Me = (
+
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<GetApiV1Me200>(
+      {url: `/api/v1/me`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetApiV1MeQueryKey = () => {
+    return [
+    `/api/v1/me`
+    ] as const;
+    }
+
+
+export const getGetApiV1MeQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1Me>>, TError = ApiError>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Me>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV1MeQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1Me>>> = ({ signal }) => getApiV1Me(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV1Me>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiV1MeQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1Me>>>
+export type GetApiV1MeQueryError = ApiError
+
+
+export function useGetApiV1Me<TData = Awaited<ReturnType<typeof getApiV1Me>>, TError = ApiError>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Me>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV1Me>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV1Me>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV1Me<TData = Awaited<ReturnType<typeof getApiV1Me>>, TError = ApiError>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Me>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV1Me>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV1Me>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV1Me<TData = Awaited<ReturnType<typeof getApiV1Me>>, TError = ApiError>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Me>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get authenticated user profile
+ */
+
+export function useGetApiV1Me<TData = Awaited<ReturnType<typeof getApiV1Me>>, TError = ApiError>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Me>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiV1MeQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Issues an agent JWT token for MCP CLI client authentication.
+ * @summary Issue MCP agent token
+ */
+export const postAuthAgentToken = (
+
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<PostAuthAgentToken200>(
+      {url: `/auth/agent-token`, method: 'POST', signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostAuthAgentTokenMutationOptions = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthAgentToken>>, TError,void, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthAgentToken>>, TError,void, TContext> => {
+
+const mutationKey = ['postAuthAgentToken'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthAgentToken>>, void> = () => {
+
+
+          return  postAuthAgentToken(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAuthAgentTokenMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthAgentToken>>>
+
+    export type PostAuthAgentTokenMutationError = ApiError
+
+    /**
+ * @summary Issue MCP agent token
+ */
+export const usePostAuthAgentToken = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthAgentToken>>, TError,void, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postAuthAgentToken>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getPostAuthAgentTokenMutationOptions(options), queryClient);
+    }
+
+/**
+ * Authenticates a user with email and password, returning access and refresh JWT tokens.
+ * @summary User login
+ */
+export const postAuthLogin = (
+    webCredentials: WebCredentials,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<WebTokenResponse>(
+      {url: `/auth/login`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: webCredentials, signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostAuthLoginMutationOptions = <TError = ApiError | PostAuthLogin403,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogin>>, TError,{data: WebCredentials}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthLogin>>, TError,{data: WebCredentials}, TContext> => {
+
+const mutationKey = ['postAuthLogin'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthLogin>>, {data: WebCredentials}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postAuthLogin(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAuthLoginMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthLogin>>>
+    export type PostAuthLoginMutationBody = WebCredentials
+    export type PostAuthLoginMutationError = ApiError | PostAuthLogin403
+
+    /**
+ * @summary User login
+ */
+export const usePostAuthLogin = <TError = ApiError | PostAuthLogin403,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogin>>, TError,{data: WebCredentials}, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postAuthLogin>>,
+        TError,
+        {data: WebCredentials},
+        TContext
+      > => {
+      return useMutation(getPostAuthLoginMutationOptions(options), queryClient);
+    }
+
+/**
+ * Revokes the user refresh token and invalidates the session.
+ * @summary Logout user
+ */
+export const postAuthLogout = (
+    webRefreshRequest: WebRefreshRequest,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<void>(
+      {url: `/auth/logout`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: webRefreshRequest, signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostAuthLogoutMutationOptions = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogout>>, TError,{data: WebRefreshRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthLogout>>, TError,{data: WebRefreshRequest}, TContext> => {
+
+const mutationKey = ['postAuthLogout'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthLogout>>, {data: WebRefreshRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postAuthLogout(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAuthLogoutMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthLogout>>>
+    export type PostAuthLogoutMutationBody = WebRefreshRequest
+    export type PostAuthLogoutMutationError = ApiError
+
+    /**
+ * @summary Logout user
+ */
+export const usePostAuthLogout = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogout>>, TError,{data: WebRefreshRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postAuthLogout>>,
+        TError,
+        {data: WebRefreshRequest},
+        TContext
+      > => {
+      return useMutation(getPostAuthLogoutMutationOptions(options), queryClient);
+    }
+
+/**
+ * Validates a magic login link token and sets a session cookie.
+ * @summary Verify magic link token
+ */
+export const getAuthMagic = (
+    params: GetAuthMagicParams,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<GetAuthMagic200>(
+      {url: `/auth/magic`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetAuthMagicQueryKey = (params?: GetAuthMagicParams,) => {
+    return [
+    `/auth/magic`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetAuthMagicQueryOptions = <TData = Awaited<ReturnType<typeof getAuthMagic>>, TError = ApiError>(params: GetAuthMagicParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthMagic>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAuthMagicQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuthMagic>>> = ({ signal }) => getAuthMagic(params, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAuthMagic>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAuthMagicQueryResult = NonNullable<Awaited<ReturnType<typeof getAuthMagic>>>
+export type GetAuthMagicQueryError = ApiError
+
+
+export function useGetAuthMagic<TData = Awaited<ReturnType<typeof getAuthMagic>>, TError = ApiError>(
+ params: GetAuthMagicParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthMagic>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAuthMagic>>,
+          TError,
+          Awaited<ReturnType<typeof getAuthMagic>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAuthMagic<TData = Awaited<ReturnType<typeof getAuthMagic>>, TError = ApiError>(
+ params: GetAuthMagicParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthMagic>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAuthMagic>>,
+          TError,
+          Awaited<ReturnType<typeof getAuthMagic>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAuthMagic<TData = Awaited<ReturnType<typeof getAuthMagic>>, TError = ApiError>(
+ params: GetAuthMagicParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthMagic>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Verify magic link token
+ */
+
+export function useGetAuthMagic<TData = Awaited<ReturnType<typeof getAuthMagic>>, TError = ApiError>(
+ params: GetAuthMagicParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthMagic>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAuthMagicQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Sends a passwordless magic login link to the requested email address.
+ * @summary Request magic link
+ */
+export const postAuthMagic = (
+    v1MagicRequestDTO: V1MagicRequestDTO,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<PostAuthMagic202>(
+      {url: `/auth/magic`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: v1MagicRequestDTO, signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostAuthMagicMutationOptions = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthMagic>>, TError,{data: V1MagicRequestDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthMagic>>, TError,{data: V1MagicRequestDTO}, TContext> => {
+
+const mutationKey = ['postAuthMagic'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthMagic>>, {data: V1MagicRequestDTO}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postAuthMagic(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAuthMagicMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthMagic>>>
+    export type PostAuthMagicMutationBody = V1MagicRequestDTO
+    export type PostAuthMagicMutationError = ApiError
+
+    /**
+ * @summary Request magic link
+ */
+export const usePostAuthMagic = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthMagic>>, TError,{data: V1MagicRequestDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postAuthMagic>>,
+        TError,
+        {data: V1MagicRequestDTO},
+        TContext
+      > => {
+      return useMutation(getPostAuthMagicMutationOptions(options), queryClient);
+    }
+
+/**
+ * Reissues a new access/refresh token pair using a valid refresh token.
+ * @summary Refresh access token
+ */
+export const postAuthRefresh = (
+    webRefreshRequest: WebRefreshRequest,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<WebTokenResponse>(
+      {url: `/auth/refresh`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: webRefreshRequest, signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostAuthRefreshMutationOptions = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthRefresh>>, TError,{data: WebRefreshRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthRefresh>>, TError,{data: WebRefreshRequest}, TContext> => {
+
+const mutationKey = ['postAuthRefresh'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthRefresh>>, {data: WebRefreshRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postAuthRefresh(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAuthRefreshMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthRefresh>>>
+    export type PostAuthRefreshMutationBody = WebRefreshRequest
+    export type PostAuthRefreshMutationError = ApiError
+
+    /**
+ * @summary Refresh access token
+ */
+export const usePostAuthRefresh = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthRefresh>>, TError,{data: WebRefreshRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postAuthRefresh>>,
+        TError,
+        {data: WebRefreshRequest},
+        TContext
+      > => {
+      return useMutation(getPostAuthRefreshMutationOptions(options), queryClient);
+    }
+
+/**
+ * Registers a new user account with name, email, and password.
+ * @summary Register a new user
+ */
+export const postAuthRegister = (
+    webRegisterRequest: WebRegisterRequest,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<PostAuthRegister201>(
+      {url: `/auth/register`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: webRegisterRequest, signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostAuthRegisterMutationOptions = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthRegister>>, TError,{data: WebRegisterRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthRegister>>, TError,{data: WebRegisterRequest}, TContext> => {
+
+const mutationKey = ['postAuthRegister'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthRegister>>, {data: WebRegisterRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postAuthRegister(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAuthRegisterMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthRegister>>>
+    export type PostAuthRegisterMutationBody = WebRegisterRequest
+    export type PostAuthRegisterMutationError = ApiError
+
+    /**
+ * @summary Register a new user
+ */
+export const usePostAuthRegister = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthRegister>>, TError,{data: WebRegisterRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postAuthRegister>>,
+        TError,
+        {data: WebRegisterRequest},
+        TContext
+      > => {
+      return useMutation(getPostAuthRegisterMutationOptions(options), queryClient);
+    }
+
+/**
+ * Resends verification link to the target user email address.
+ * @summary Resend email verification
+ */
+export const postAuthResendVerification = (
+    webResendVerificationRequest: WebResendVerificationRequest,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<PostAuthResendVerification200>(
+      {url: `/auth/resend-verification`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: webResendVerificationRequest, signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostAuthResendVerificationMutationOptions = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthResendVerification>>, TError,{data: WebResendVerificationRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthResendVerification>>, TError,{data: WebResendVerificationRequest}, TContext> => {
+
+const mutationKey = ['postAuthResendVerification'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthResendVerification>>, {data: WebResendVerificationRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postAuthResendVerification(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAuthResendVerificationMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthResendVerification>>>
+    export type PostAuthResendVerificationMutationBody = WebResendVerificationRequest
+    export type PostAuthResendVerificationMutationError = ApiError
+
+    /**
+ * @summary Resend email verification
+ */
+export const usePostAuthResendVerification = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthResendVerification>>, TError,{data: WebResendVerificationRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postAuthResendVerification>>,
+        TError,
+        {data: WebResendVerificationRequest},
+        TContext
+      > => {
+      return useMutation(getPostAuthResendVerificationMutationOptions(options), queryClient);
+    }
+
+/**
+ * Validates session cookie access for a shared application.
+ * @summary Validate application session
+ */
+export const getAuthSession = (
+    params: GetAuthSessionParams,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<GetAuthSession200>(
+      {url: `/auth/session`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetAuthSessionQueryKey = (params?: GetAuthSessionParams,) => {
+    return [
+    `/auth/session`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetAuthSessionQueryOptions = <TData = Awaited<ReturnType<typeof getAuthSession>>, TError = GetAuthSession400 | GetAuthSession401 | GetAuthSession500>(params: GetAuthSessionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthSession>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAuthSessionQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuthSession>>> = ({ signal }) => getAuthSession(params, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAuthSession>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAuthSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getAuthSession>>>
+export type GetAuthSessionQueryError = GetAuthSession400 | GetAuthSession401 | GetAuthSession500
+
+
+export function useGetAuthSession<TData = Awaited<ReturnType<typeof getAuthSession>>, TError = GetAuthSession400 | GetAuthSession401 | GetAuthSession500>(
+ params: GetAuthSessionParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthSession>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAuthSession>>,
+          TError,
+          Awaited<ReturnType<typeof getAuthSession>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAuthSession<TData = Awaited<ReturnType<typeof getAuthSession>>, TError = GetAuthSession400 | GetAuthSession401 | GetAuthSession500>(
+ params: GetAuthSessionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthSession>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAuthSession>>,
+          TError,
+          Awaited<ReturnType<typeof getAuthSession>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAuthSession<TData = Awaited<ReturnType<typeof getAuthSession>>, TError = GetAuthSession400 | GetAuthSession401 | GetAuthSession500>(
+ params: GetAuthSessionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthSession>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Validate application session
+ */
+
+export function useGetAuthSession<TData = Awaited<ReturnType<typeof getAuthSession>>, TError = GetAuthSession400 | GetAuthSession401 | GetAuthSession500>(
+ params: GetAuthSessionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthSession>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAuthSessionQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Verifies user email using token parameter and returns session credentials.
+ * @summary Verify email address
+ */
+export const getAuthVerifyEmail = (
+    params: GetAuthVerifyEmailParams,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<GetAuthVerifyEmail200>(
+      {url: `/auth/verify-email`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetAuthVerifyEmailQueryKey = (params?: GetAuthVerifyEmailParams,) => {
+    return [
+    `/auth/verify-email`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetAuthVerifyEmailQueryOptions = <TData = Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError = ApiError>(params: GetAuthVerifyEmailParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAuthVerifyEmailQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuthVerifyEmail>>> = ({ signal }) => getAuthVerifyEmail(params, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAuthVerifyEmailQueryResult = NonNullable<Awaited<ReturnType<typeof getAuthVerifyEmail>>>
+export type GetAuthVerifyEmailQueryError = ApiError
+
+
+export function useGetAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError = ApiError>(
+ params: GetAuthVerifyEmailParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAuthVerifyEmail>>,
+          TError,
+          Awaited<ReturnType<typeof getAuthVerifyEmail>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError = ApiError>(
+ params: GetAuthVerifyEmailParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAuthVerifyEmail>>,
+          TError,
+          Awaited<ReturnType<typeof getAuthVerifyEmail>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError = ApiError>(
+ params: GetAuthVerifyEmailParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Verify email address
+ */
+
+export function useGetAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError = ApiError>(
+ params: GetAuthVerifyEmailParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAuthVerifyEmailQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Returns the subject user ID from the Bearer JWT token.
+ * @summary Get authenticated user ID
+ */
+export const getMe = (
+
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<GetMe200>(
+      {url: `/me`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetMeQueryKey = () => {
+    return [
+    `/me`
+    ] as const;
+    }
+
+
+export const getGetMeQueryOptions = <TData = Awaited<ReturnType<typeof getMe>>, TError = ApiError>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMeQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMe>>> = ({ signal }) => getMe(requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMeQueryResult = NonNullable<Awaited<ReturnType<typeof getMe>>>
+export type GetMeQueryError = ApiError
+
+
+export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = ApiError>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMe>>,
+          TError,
+          Awaited<ReturnType<typeof getMe>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = ApiError>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMe>>,
+          TError,
+          Awaited<ReturnType<typeof getMe>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = ApiError>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get authenticated user ID
+ */
+
+export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = ApiError>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMeQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Serves deployed static assets for an application preview path.
+ * @summary Preview application UI
+ */
+export const getPreviewId = (
+    id: string,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<void>(
+      {url: `/preview/${id}`, method: 'GET', signal
+    },
+      options);
+    }
+
+
+
+
+export const getGetPreviewIdQueryKey = (id: string,) => {
+    return [
+    `/preview/${id}`
+    ] as const;
+    }
+
+
+export const getGetPreviewIdQueryOptions = <TData = Awaited<ReturnType<typeof getPreviewId>>, TError = ApiError>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreviewId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPreviewIdQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPreviewId>>> = ({ signal }) => getPreviewId(id, requestOptions, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPreviewId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPreviewIdQueryResult = NonNullable<Awaited<ReturnType<typeof getPreviewId>>>
+export type GetPreviewIdQueryError = ApiError
+
+
+export function useGetPreviewId<TData = Awaited<ReturnType<typeof getPreviewId>>, TError = ApiError>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreviewId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPreviewId>>,
+          TError,
+          Awaited<ReturnType<typeof getPreviewId>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPreviewId<TData = Awaited<ReturnType<typeof getPreviewId>>, TError = ApiError>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreviewId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPreviewId>>,
+          TError,
+          Awaited<ReturnType<typeof getPreviewId>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPreviewId<TData = Awaited<ReturnType<typeof getPreviewId>>, TError = ApiError>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreviewId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Preview application UI
+ */
+
+export function useGetPreviewId<TData = Awaited<ReturnType<typeof getPreviewId>>, TError = ApiError>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreviewId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPreviewIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Creates a new user.
+ * @summary Create a user
+ */
+export const postV1Users = (
+    v1UserDTO: V1UserDTO,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<V1UserDTO>(
+      {url: `/v1/users`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: v1UserDTO, signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostV1UsersMutationOptions = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postV1Users>>, TError,{data: V1UserDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postV1Users>>, TError,{data: V1UserDTO}, TContext> => {
 
 const mutationKey = ['postV1Users'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -93,7 +2009,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postV1Users>>, {data: InternalAdaptersHttpWebV1UserDTO}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postV1Users>>, {data: V1UserDTO}> = (props) => {
           const {data} = props ?? {};
 
           return  postV1Users(data,requestOptions)
@@ -107,18 +2023,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostV1UsersMutationResult = NonNullable<Awaited<ReturnType<typeof postV1Users>>>
-    export type PostV1UsersMutationBody = InternalAdaptersHttpWebV1UserDTO
-    export type PostV1UsersMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
+    export type PostV1UsersMutationBody = V1UserDTO
+    export type PostV1UsersMutationError = ApiError
 
     /**
  * @summary Create a user
  */
-export const usePostV1Users = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postV1Users>>, TError,{data: InternalAdaptersHttpWebV1UserDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+export const usePostV1Users = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postV1Users>>, TError,{data: V1UserDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postV1Users>>,
         TError,
-        {data: InternalAdaptersHttpWebV1UserDTO},
+        {data: V1UserDTO},
         TContext
       > => {
       return useMutation(getPostV1UsersMutationOptions(options), queryClient);
@@ -134,7 +2050,7 @@ export const getV1UsersId = (
 ) => {
 
 
-      return customMutator<InternalAdaptersHttpWebV1UserDTO>(
+      return customMutator<V1UserDTO>(
       {url: `/v1/users/${id}`, method: 'GET', signal
     },
       options);
@@ -150,7 +2066,7 @@ export const getGetV1UsersIdQueryKey = (id: string,) => {
     }
 
 
-export const getGetV1UsersIdQueryOptions = <TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getV1UsersId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+export const getGetV1UsersIdQueryOptions = <TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = ApiError>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getV1UsersId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -169,10 +2085,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetV1UsersIdQueryResult = NonNullable<Awaited<ReturnType<typeof getV1UsersId>>>
-export type GetV1UsersIdQueryError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
+export type GetV1UsersIdQueryError = ApiError
 
 
-export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
+export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = ApiError>(
  id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getV1UsersId>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getV1UsersId>>,
@@ -182,7 +2098,7 @@ export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
+export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = ApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getV1UsersId>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getV1UsersId>>,
@@ -192,7 +2108,7 @@ export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
+export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = ApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getV1UsersId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -200,7 +2116,7 @@ export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>
  * @summary Get a user
  */
 
-export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
+export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = ApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getV1UsersId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -224,15 +2140,15 @@ export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>
  */
 export const putV1UsersId = (
     id: string,
-    internalAdaptersHttpWebV1UserDTO: InternalAdaptersHttpWebV1UserDTO,
+    v1UserDTO: V1UserDTO,
  options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
 ) => {
 
 
-      return customMutator<InternalAdaptersHttpWebV1UserDTO>(
+      return customMutator<V1UserDTO>(
       {url: `/v1/users/${id}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
-      data: internalAdaptersHttpWebV1UserDTO, signal
+      data: v1UserDTO, signal
     },
       options);
     }
@@ -240,9 +2156,9 @@ export const putV1UsersId = (
 
 
 
-export const getPutV1UsersIdMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putV1UsersId>>, TError,{id: string;data: InternalAdaptersHttpWebV1UserDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof putV1UsersId>>, TError,{id: string;data: InternalAdaptersHttpWebV1UserDTO}, TContext> => {
+export const getPutV1UsersIdMutationOptions = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putV1UsersId>>, TError,{id: string;data: V1UserDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof putV1UsersId>>, TError,{id: string;data: V1UserDTO}, TContext> => {
 
 const mutationKey = ['putV1UsersId'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -254,7 +2170,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putV1UsersId>>, {id: string;data: InternalAdaptersHttpWebV1UserDTO}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putV1UsersId>>, {id: string;data: V1UserDTO}> = (props) => {
           const {id,data} = props ?? {};
 
           return  putV1UsersId(id,data,requestOptions)
@@ -268,18 +2184,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PutV1UsersIdMutationResult = NonNullable<Awaited<ReturnType<typeof putV1UsersId>>>
-    export type PutV1UsersIdMutationBody = InternalAdaptersHttpWebV1UserDTO
-    export type PutV1UsersIdMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
+    export type PutV1UsersIdMutationBody = V1UserDTO
+    export type PutV1UsersIdMutationError = ApiError
 
     /**
  * @summary Update a user
  */
-export const usePutV1UsersId = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putV1UsersId>>, TError,{id: string;data: InternalAdaptersHttpWebV1UserDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+export const usePutV1UsersId = <TError = ApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putV1UsersId>>, TError,{id: string;data: V1UserDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof putV1UsersId>>,
         TError,
-        {id: string;data: InternalAdaptersHttpWebV1UserDTO},
+        {id: string;data: V1UserDTO},
         TContext
       > => {
       return useMutation(getPutV1UsersIdMutationOptions(options), queryClient);
@@ -304,7 +2220,7 @@ export const deleteV1UsersId = (
 
 
 
-export const getDeleteV1UsersIdMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+export const getDeleteV1UsersIdMutationOptions = <TError = ApiError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteV1UsersId>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customMutator>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteV1UsersId>>, TError,{id: string}, TContext> => {
 
@@ -333,12 +2249,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteV1UsersIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteV1UsersId>>>
 
-    export type DeleteV1UsersIdMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
+    export type DeleteV1UsersIdMutationError = ApiError
 
     /**
  * @summary Delete a user
  */
-export const useDeleteV1UsersId = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+export const useDeleteV1UsersId = <TError = ApiError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteV1UsersId>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteV1UsersId>>,

@@ -11,7 +11,7 @@ import (
 )
 
 type SessionHandler struct {
-	tokens       *agentapikey.AgentTokenService
+	tokens        *agentapikey.AgentTokenService
 	sharelinkRepo domain.Repository
 }
 
@@ -19,6 +19,18 @@ func NewSessionHandler(tokens *agentapikey.AgentTokenService, sharelinkRepo doma
 	return &SessionHandler{tokens: tokens, sharelinkRepo: sharelinkRepo}
 }
 
+// Validate godoc
+//
+//	@Summary      Validate application session
+//	@Description  Validates session cookie access for a shared application.
+//	@Tags         auth
+//	@Produce      json
+//	@Param        app  query     string  true  "App ID (UUID)"
+//	@Success      200  {object}  map[string]string
+//	@Failure      400  {object}  map[string]string
+//	@Failure      401  {object}  map[string]string
+//	@Failure      500  {object}  map[string]string
+//	@Router       /auth/session [get]
 func (h *SessionHandler) Validate(c *echo.Context) error {
 	appID := c.QueryParam("app")
 	if appID == "" {

@@ -20,12 +20,12 @@ type shareDTO struct {
 }
 
 type shareResponseDTO struct {
-	ID             string `json:"id"`
-	AppID          string `json:"app_id"`
-	RecipientEmail string `json:"recipient_email"`
-	Permission     string `json:"permission"`
-	Token          string `json:"token"`
-	ExpiresAt      string `json:"expires_at"`
+	ID             string  `json:"id"`
+	AppID          string  `json:"app_id"`
+	RecipientEmail string  `json:"recipient_email"`
+	Permission     string  `json:"permission"`
+	Token          string  `json:"token"`
+	ExpiresAt      string  `json:"expires_at"`
 	AcceptedAt     *string `json:"accepted_at,omitempty"`
 	RevokedAt      *string `json:"revoked_at,omitempty"`
 }
@@ -73,6 +73,20 @@ func (h *ShareHandler) Register(g *echo.Group) {
 	g.DELETE("/:id/shares/:sid", h.Revoke)
 }
 
+// Create godoc
+//
+//	@Summary      Create application share link
+//	@Description  Creates a zero-trust share link for an application with specified permission and recipient email.
+//	@Tags         shares
+//	@Security     BearerAuth
+//	@Accept       json
+//	@Produce      json
+//	@Param        id     path      string    true  "App ID (UUID)"
+//	@Param        share  body      shareDTO  true  "Share payload"
+//	@Success      201    {object}  shareResponseDTO
+//	@Failure      400    {object}  api.Error
+//	@Failure      422    {object}  api.Error
+//	@Router       /api/v1/apps/{id}/share [post]
 func (h *ShareHandler) Create(c *echo.Context) error {
 	var in shareDTO
 	if err := c.Bind(&in); err != nil {
@@ -94,6 +108,17 @@ func (h *ShareHandler) Create(c *echo.Context) error {
 	return c.JSON(http.StatusCreated, resp)
 }
 
+// List godoc
+//
+//	@Summary      List application share links
+//	@Description  Lists all active share links for a specific application.
+//	@Tags         shares
+//	@Security     BearerAuth
+//	@Produce      json
+//	@Param        id   path      string  true  "App ID (UUID)"
+//	@Success      200  {array}   shareResponseDTO
+//	@Failure      400  {object}  api.Error
+//	@Router       /api/v1/apps/{id}/shares [get]
 func (h *ShareHandler) List(c *echo.Context) error {
 	appID := c.Param("id")
 	links, err := h.qry.HandleListByApp(c.Request().Context(), shareapp.ListByAppQuery{AppID: appID})
@@ -107,6 +132,18 @@ func (h *ShareHandler) List(c *echo.Context) error {
 	return c.JSON(http.StatusOK, dtos)
 }
 
+// Revoke godoc
+//
+//	@Summary      Revoke application share link
+//	@Description  Revokes an active share link by share ID.
+//	@Tags         shares
+//	@Security     BearerAuth
+//	@Produce      json
+//	@Param        id   path      string  true  "App ID (UUID)"
+//	@Param        sid  path      string  true  "Share Link ID (UUID)"
+//	@Success      204  "No Content"
+//	@Failure      400  {object}  api.Error
+//	@Router       /api/v1/apps/{id}/shares/{sid} [delete]
 func (h *ShareHandler) Revoke(c *echo.Context) error {
 	err := h.cmd.HandleRevoke(c.Request().Context(), shareapp.RevokeShareLinkCommand{ID: c.Param("sid")})
 	if err != nil {

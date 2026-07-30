@@ -101,6 +101,22 @@ func (h *AppHandler) extractEmail(c *echo.Context) string {
 	return ""
 }
 
+// Create godoc
+//
+//	@Summary      Create application
+//	@Description  Creates a new microVM container application and deploys optional source tarball.
+//	@Tags         apps
+//	@Security     BearerAuth
+//	@Accept       multipart/form-data
+//	@Produce      json
+//	@Param        name         formData  string  true   "App Name"
+//	@Param        owner_email  formData  string  false  "Owner Email"
+//	@Param        tarball      formData  file    false  "Source tarball bundle"
+//	@Success      201          {object}  appDTO
+//	@Failure      400          {object}  api.Error
+//	@Failure      401          {object}  api.Error
+//	@Failure      422          {object}  api.Error
+//	@Router       /api/v1/apps [post]
 func (h *AppHandler) Create(c *echo.Context) error {
 	email := h.extractEmail(c)
 	ownerEmail := c.FormValue("owner_email")
@@ -153,6 +169,16 @@ func (h *AppHandler) Create(c *echo.Context) error {
 	return c.JSON(http.StatusCreated, toAppDTO(x))
 }
 
+// List godoc
+//
+//	@Summary      List applications
+//	@Description  Lists microVM applications belonging to the user or all cluster apps.
+//	@Tags         apps
+//	@Security     BearerAuth
+//	@Produce      json
+//	@Success      200  {array}   appDTO
+//	@Failure      400  {object}  api.Error
+//	@Router       /api/v1/apps [get]
 func (h *AppHandler) List(c *echo.Context) error {
 	email := h.extractEmail(c)
 	var apps []*app.App
@@ -174,6 +200,17 @@ func (h *AppHandler) List(c *echo.Context) error {
 	return c.JSON(http.StatusOK, dtos)
 }
 
+// Get godoc
+//
+//	@Summary      Get application details
+//	@Description  Returns details of a specific microVM application by ID.
+//	@Tags         apps
+//	@Security     BearerAuth
+//	@Produce      json
+//	@Param        id   path      string  true  "App ID (UUID)"
+//	@Success      200  {object}  appDTO
+//	@Failure      404  {object}  api.Error
+//	@Router       /api/v1/apps/{id} [get]
 func (h *AppHandler) Get(c *echo.Context) error {
 	out, err := h.qry.HandleGet(c.Request().Context(), appapp.GetAppQuery{ID: c.Param("id")})
 	if err != nil {
@@ -182,6 +219,17 @@ func (h *AppHandler) Get(c *echo.Context) error {
 	return c.JSON(http.StatusOK, toAppDTO(out))
 }
 
+// Destroy godoc
+//
+//	@Summary      Destroy application
+//	@Description  Destroys and cleans up a microVM application container and resources.
+//	@Tags         apps
+//	@Security     BearerAuth
+//	@Produce      json
+//	@Param        id   path      string  true  "App ID (UUID)"
+//	@Success      204  "No Content"
+//	@Failure      400  {object}  api.Error
+//	@Router       /api/v1/apps/{id} [delete]
 func (h *AppHandler) Destroy(c *echo.Context) error {
 	appID := c.Param("id")
 	if h.k3sProvider != nil {
@@ -202,6 +250,17 @@ type logLinePayload struct {
 	Stream    string `json:"stream"`
 }
 
+// Logs godoc
+//
+//	@Summary      Stream application logs
+//	@Description  Streams live stdout/stderr logs from the microVM container via Server-Sent Events (SSE).
+//	@Tags         apps
+//	@Security     BearerAuth
+//	@Produce      text/event-stream
+//	@Param        id   path      string  true  "App ID (UUID)"
+//	@Success      200  {object}  logLinePayload
+//	@Failure      400  {object}  api.Error
+//	@Router       /api/v1/apps/{id}/logs [get]
 func (h *AppHandler) Logs(c *echo.Context) error {
 	appID := c.Param("id")
 	if _, err := uuid.Parse(appID); err != nil {
@@ -278,6 +337,17 @@ func (h *AppHandler) Logs(c *echo.Context) error {
 	return nil
 }
 
+// IssueAgentToken godoc
+//
+//	@Summary      Issue MCP agent token
+//	@Description  Issues an agent JWT token for MCP CLI client authentication.
+//	@Tags         apps
+//	@Security     BearerAuth
+//	@Produce      json
+//	@Success      200  {object}  map[string]interface{}
+//	@Failure      401  {object}  api.Error
+//	@Failure      500  {object}  api.Error
+//	@Router       /auth/agent-token [post]
 func (h *AppHandler) IssueAgentToken(c *echo.Context) error {
 	email := h.extractEmail(c)
 	if email == "" {
@@ -306,6 +376,15 @@ func (h *AppHandler) getMaxTarballSize(c *echo.Context) int64 {
 	return n * 1024 * 1024
 }
 
+// Preview godoc
+//
+//	@Summary      Preview application UI
+//	@Description  Serves deployed static assets for an application preview path.
+//	@Tags         apps
+//	@Param        id   path  string  true  "App ID"
+//	@Success      200  "Static web assets file stream"
+//	@Failure      404  {object}  api.Error
+//	@Router       /preview/{id} [get]
 func (h *AppHandler) Preview(c *echo.Context) error {
 	appID := c.Param("id")
 	dir := filepath.Join(".", "data", "apps", appID)

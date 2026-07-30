@@ -71,44 +71,8 @@ export function AppShell() {
         {/* Top Navbar Header */}
         <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all">
           <div className="flex items-center gap-3 px-4 w-full">
-            <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground" />
-            
-            <Separator orientation="vertical" className="h-4" />
-
-            {/* Agni Brand Logo + Animated Flame Icon */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="size-8 rounded-lg bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600 flex items-center justify-center shadow-md shadow-orange-500/20 group-hover:scale-105 transition-transform">
-                <Flame className="size-5 text-white animate-pulse" />
-              </div>
-              <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 bg-clip-text text-transparent hidden sm:inline-block">
-                Agni
-              </span>
-            </Link>
-
-            {/* Cluster Connection Badge */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge
-                    variant="outline"
-                    className="hidden lg:flex items-center gap-1.5 py-1 px-2.5 font-mono text-[11px] border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium"
-                  >
-                    <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>k3s-node-01</span>
-                    <span className="text-muted-foreground/60">•</span>
-                    <span className="text-muted-foreground font-normal">Kata MicroVMs</span>
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">
-                  Connected to Local Cluster Node (Kata Containers hypervisor active)
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <Separator orientation="vertical" className="hidden lg:block h-4" />
-
             {/* Breadcrumb Navigation */}
-            <div className="hidden sm:block">
+            <div>
               <BreadcrumbNav />
             </div>
 
