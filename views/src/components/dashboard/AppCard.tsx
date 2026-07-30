@@ -2,8 +2,6 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ExternalLink,
-  Cpu,
-  HardDrive,
   Share2,
   MoreVertical,
   Terminal,
@@ -11,7 +9,6 @@ import {
   Trash2,
   Copy,
   Check,
-  ShieldCheck,
 } from 'lucide-react';
 import { App } from '@/types/app';
 import { Card, CardContent } from '@/components/ui/card';
@@ -48,7 +45,7 @@ export const AppCard: React.FC<AppCardProps> = ({
     e.stopPropagation();
     navigator.clipboard.writeText(app.serviceUrl);
     setCopied(true);
-    toast.success('Service URL copied to clipboard');
+    toast.success('App URL copied to clipboard');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -86,23 +83,11 @@ export const AppCard: React.FC<AppCardProps> = ({
         return (
           <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-zinc-500/10 text-zinc-400 border border-zinc-500/20">
             <span className="h-2 w-2 rounded-full bg-zinc-500"></span>
-            DESTROYED
+            STOPPED
           </div>
         );
     }
   };
-
-  const getRuntimeLabel = (runtime: string) => {
-    if (runtime === 'kata-fc') return 'kata-fc / Firecracker';
-    if (runtime === 'firecracker') return 'Firecracker MicroVM';
-    if (runtime === 'gvisor') return 'gVisor Sandbox';
-    return runtime;
-  };
-
-  const memPercent = Math.min(
-    100,
-    Math.round((app.metrics.memoryMB / (app.metrics.memoryLimitMB || 1)) * 100)
-  );
 
   return (
     <Card
@@ -124,7 +109,7 @@ export const AppCard: React.FC<AppCardProps> = ({
               {getStatusPill()}
             </div>
             <p className="text-xs text-muted-foreground font-mono truncate">
-              {app.imageRef}
+              {app.ownerEmail}
             </p>
           </div>
 
@@ -147,12 +132,12 @@ export const AppCard: React.FC<AppCardProps> = ({
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={copyUrl}>
                   <Copy className="mr-2 h-4 w-4" />
-                  Copy Domain
+                  Copy App URL
                 </DropdownMenuItem>
                 {onOpenLogs && (
                   <DropdownMenuItem onClick={() => onOpenLogs(app)}>
                     <Terminal className="mr-2 h-4 w-4" />
-                    Live Logs
+                    App Logs
                   </DropdownMenuItem>
                 )}
                 {onOpenShare && (
@@ -164,7 +149,7 @@ export const AppCard: React.FC<AppCardProps> = ({
                 {onRedeploy && (
                   <DropdownMenuItem onClick={() => onRedeploy(app)}>
                     <RefreshCw className="mr-2 h-4 w-4 text-amber-400" />
-                    Trigger Redeploy
+                    Redeploy App
                   </DropdownMenuItem>
                 )}
                 {onDestroy && (
@@ -175,7 +160,7 @@ export const AppCard: React.FC<AppCardProps> = ({
                       onClick={() => onDestroy(app)}
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
-                      Destroy App
+                      Delete App
                     </DropdownMenuItem>
                   </>
                 )}
@@ -184,19 +169,11 @@ export const AppCard: React.FC<AppCardProps> = ({
           </div>
         </div>
 
-        {/* Runtime and Domain Row */}
+        {/* Domain Row */}
         <div className="flex items-center justify-between gap-2 text-xs flex-wrap pt-1">
-          <Badge
-            variant="secondary"
-            className="bg-muted/80 text-muted-foreground border border-border/50 font-mono text-[11px] px-2 py-0.5 flex items-center gap-1.5"
-          >
-            <ShieldCheck className="h-3 w-3 text-primary" />
-            {getRuntimeLabel(app.runtime)}
-          </Badge>
-
           <div
             onClick={copyUrl}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer font-mono bg-muted/30 px-2 py-0.5 rounded border border-border/40 max-w-[200px] truncate"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer font-mono bg-muted/30 px-2.5 py-1 rounded-lg border border-border/40 max-w-[240px] truncate"
             title={app.serviceUrl}
           >
             <span className="truncate">{app.serviceUrl.replace(/^https?:\/\//, '')}</span>
@@ -207,63 +184,16 @@ export const AppCard: React.FC<AppCardProps> = ({
             )}
           </div>
         </div>
-
-        {/* Metrics Micro Bars */}
-        <div className="grid grid-cols-2 gap-3 pt-2">
-          {/* CPU Bar */}
-          <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-muted/20 border border-border/30">
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-              <span className="flex items-center gap-1 font-medium">
-                <Cpu className="h-3 w-3 text-blue-400" /> CPU
-              </span>
-              <span className="font-mono font-semibold text-foreground">
-                {app.status === 'LIVE' ? `${app.metrics.cpuPercent}%` : '0%'}
-              </span>
-            </div>
-            <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-              <div
-                className={`h-full transition-all duration-500 rounded-full ${
-                  app.metrics.cpuPercent > 80
-                    ? 'bg-rose-500'
-                    : app.metrics.cpuPercent > 50
-                    ? 'bg-amber-500'
-                    : 'bg-blue-500'
-                }`}
-                style={{
-                  width: app.status === 'LIVE' ? `${Math.min(100, app.metrics.cpuPercent)}%` : '0%',
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Memory Bar */}
-          <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-muted/20 border border-border/30">
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-              <span className="flex items-center gap-1 font-medium">
-                <HardDrive className="h-3 w-3 text-purple-400" /> RAM
-              </span>
-              <span className="font-mono font-semibold text-foreground truncate">
-                {app.status === 'LIVE'
-                  ? `${app.metrics.memoryMB} / ${app.metrics.memoryLimitMB}MB`
-                  : '0 MB'}
-              </span>
-            </div>
-            <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-              <div
-                className={`h-full transition-all duration-500 rounded-full ${
-                  memPercent > 85 ? 'bg-rose-500' : 'bg-purple-500'
-                }`}
-                style={{ width: app.status === 'LIVE' ? `${memPercent}%` : '0%' }}
-              />
-            </div>
-          </div>
-        </div>
       </CardContent>
 
       {/* Footer Info */}
       <div className="px-5 py-2.5 bg-muted/20 border-t border-border/40 flex items-center justify-between text-xs text-muted-foreground">
-        <span className="truncate font-mono text-[11px]">
-          {app.podName || 'pod-unassigned'}
+        <span className="text-[11px]">
+          Created {new Date(app.createdAt).toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })}
         </span>
         <div className="flex items-center gap-2">
           {app.shareCount !== undefined && app.shareCount > 0 && (
@@ -272,15 +202,9 @@ export const AppCard: React.FC<AppCardProps> = ({
               className="text-[10px] bg-primary/5 text-primary border-primary/20 px-1.5 py-0 flex items-center gap-1"
             >
               <Share2 className="h-2.5 w-2.5" />
-              {app.shareCount} active
+              {app.shareCount} shared
             </Badge>
           )}
-          <span className="text-[11px]">
-            {new Date(app.createdAt).toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-            })}
-          </span>
         </div>
       </div>
     </Card>

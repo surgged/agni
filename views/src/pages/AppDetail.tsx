@@ -403,37 +403,7 @@ export default function AppDetail() {
             </Card>
           </div>
 
-          {/* MicroVM Pod Technical Specifications */}
-          <Card className="bg-card/50 border-border/60">
-            <CardHeader>
-              <CardTitle className="text-base font-bold flex items-center gap-2">
-                <Server className="h-4 w-4 text-primary" /> MicroVM Specification & Pod Metadata
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Low-level Firecracker MicroVM jailer state and Linux kernel guest details.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-                <div className="p-3 rounded-lg bg-muted/30 border border-border/40 space-y-1">
-                  <span className="text-muted-foreground font-medium">Pod Name</span>
-                  <p className="font-mono font-bold text-foreground">{app.podName}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-muted/30 border border-border/40 space-y-1">
-                  <span className="text-muted-foreground font-medium">Hypervisor Engine</span>
-                  <p className="font-mono font-bold text-foreground">Kata + Firecracker v1.6.0</p>
-                </div>
-                <div className="p-3 rounded-lg bg-muted/30 border border-border/40 space-y-1">
-                  <span className="text-muted-foreground font-medium">Guest Kernel</span>
-                  <p className="font-mono font-bold text-foreground">vmlinux-5.15.0-kata</p>
-                </div>
-                <div className="p-3 rounded-lg bg-muted/30 border border-border/40 space-y-1">
-                  <span className="text-muted-foreground font-medium">Pod IP Address</span>
-                  <p className="font-mono font-bold text-foreground">172.19.0.4 / virtio-net</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+
         </TabsContent>
 
         {/* Tab 2: Live Logs */}
@@ -588,10 +558,10 @@ export default function AppDetail() {
           <Card className="bg-card/50 border-border/60">
             <CardHeader>
               <CardTitle className="text-base font-bold flex items-center gap-2">
-                <Key className="h-4 w-4 text-amber-400" /> MicroVM Environment Variables
+                <Key className="h-4 w-4 text-amber-400" /> Environment Variables
               </CardTitle>
               <CardDescription className="text-xs">
-                Injected into the Kata MicroVM container sandbox at initialization time.
+                Environment variables configured for this application.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -701,7 +671,7 @@ export default function AppDetail() {
                 <AlertTriangle className="h-5 w-5" /> Danger Zone
               </CardTitle>
               <CardDescription className="text-xs text-rose-300/80">
-                Permanently destroy this Kata MicroVM container and release all allocated resources.
+                Permanently delete this application and release all associated resources.
               </CardDescription>
             </CardHeader>
             <CardContent>

@@ -1,22 +1,14 @@
 import { useNavigate, Link, Outlet } from 'react-router-dom';
 import {
-  Flame,
-  Search,
   Moon,
   Sun,
-  Bell,
-  BookOpen,
   LogOut,
   Settings,
   Shield,
   ExternalLink,
-  Cpu,
 } from 'lucide-react';
-import { GithubIcon as Github } from '@/components/icons/GithubIcon';
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { Separator } from '@/components/ui/separator';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -33,9 +25,7 @@ import { AppSidebar } from './AppSidebar';
 import { BreadcrumbNav } from './BreadcrumbNav';
 import { useTheme } from '@/components/theme-provider';
 import { useAuth } from '@/contexts/auth';
-import { GithubIcon } from '@/components/icons/GithubIcon';
 import { toast } from 'sonner';
-
 
 export function AppShell() {
   const { theme, setTheme } = useTheme();
@@ -58,12 +48,6 @@ export function AppShell() {
     navigate('/login');
   };
 
-  const handleNotificationClick = () => {
-    toast.info('Cluster Health Alert', {
-      description: 'Node k3s-node-01 is operating at 100% health with Kata MicroVM hypervisor active.',
-    });
-  };
-
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -78,59 +62,6 @@ export function AppShell() {
 
             {/* Right Quick Links & Actions */}
             <div className="ml-auto flex items-center gap-2">
-              {/* Search Bar */}
-              <div className="hidden md:flex relative w-52 lg:w-64">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search apps, microvms... (⌘K)"
-                  className="pl-8 h-9 rounded-lg bg-muted/40 border-border/50 text-xs focus-visible:ring-amber-500"
-                />
-              </div>
-
-              {/* Quick Link: Agni Docs */}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-9 rounded-lg text-muted-foreground hover:text-foreground"
-                      asChild
-                    >
-                      <a href="https://docs.agni.dev" target="_blank" rel="noreferrer">
-                        <BookOpen className="size-4" />
-                        <span className="sr-only">Documentation</span>
-                      </a>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-xs">
-                    Agni Docs
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
-              {/* Quick Link: GitHub Repo */}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-9 rounded-lg text-muted-foreground hover:text-foreground"
-                      asChild
-                    >
-                      <a href="https://github.com/indralab/agni" target="_blank" rel="noreferrer">
-                        <GithubIcon className="size-4" />
-                        <span className="sr-only">GitHub Repository</span>
-                      </a>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-xs">
-                    GitHub Repo
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
               {/* Theme Switcher */}
               <TooltipProvider>
                 <Tooltip>
@@ -151,44 +82,6 @@ export function AppShell() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-
-              {/* Toast Notification Center Bell */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="size-9 rounded-lg relative text-muted-foreground hover:text-foreground">
-                    <Bell className="size-4" />
-                    <span className="absolute top-2 right-2 size-2 rounded-full bg-amber-500 animate-ping" />
-                    <span className="absolute top-2 right-2 size-2 rounded-full bg-amber-500" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80 p-2">
-                  <DropdownMenuLabel className="flex items-center justify-between text-xs font-semibold">
-                    <span>Notifications & Cluster Status</span>
-                    <Badge variant="secondary" className="text-[10px]">3 New</Badge>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <div className="space-y-1 py-1">
-                    <DropdownMenuItem className="flex flex-col items-start gap-1 p-2 cursor-pointer" onClick={handleNotificationClick}>
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-500">
-                        <Cpu className="size-3.5" />
-                        <span>Kata MicroVM active</span>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">
-                        MicroVM kata-node-01 initialized with 512MB RAM in 120ms.
-                      </p>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="flex flex-col items-start gap-1 p-2 cursor-pointer" onClick={handleNotificationClick}>
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-500">
-                        <Shield className="size-3.5" />
-                        <span>agni-mcp Connected</span>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">
-                        Agent token verified from Claude Desktop integration.
-                      </p>
-                    </DropdownMenuItem>
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
 
               {/* User Avatar & Dropdown Menu */}
               <DropdownMenu>
@@ -222,12 +115,6 @@ export function AppShell() {
                       <Link to="/settings">
                         <Settings className="mr-2 size-4 text-muted-foreground" />
                         <span>Account Settings</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="cursor-pointer">
-                      <Link to="/login">
-                        <Shield className="mr-2 size-4 text-muted-foreground" />
-                        <span>Agent API Tokens</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="cursor-pointer">

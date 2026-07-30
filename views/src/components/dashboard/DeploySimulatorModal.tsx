@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Rocket,
   CheckCircle2,
   Loader2,
   Terminal,
-  ShieldCheck,
   ExternalLink,
   Layers,
-  Container,
-  Cpu,
   Globe,
+  Play,
+  Box,
 } from 'lucide-react';
 import { App } from '@/types/app';
 import { api, mapBackendAppToApp } from '@/api';
@@ -24,13 +23,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { toast } from 'sonner';
 
 interface DeploySimulatorModalProps {
@@ -49,32 +41,32 @@ interface StepInfo {
 const DEPLOY_STEPS: StepInfo[] = [
   {
     id: 1,
-    label: 'Tarballing Source',
-    subtext: 'Packaging source files & Dockerfile bundle...',
+    label: 'Packaging',
+    subtext: 'Packaging application files...',
     icon: Layers,
   },
   {
     id: 2,
-    label: 'nerdctl Build',
-    subtext: 'Building container image with buildkit engine...',
-    icon: Container,
+    label: 'Building',
+    subtext: 'Building application bundle...',
+    icon: Box,
   },
   {
     id: 3,
-    label: 'containerd Push',
-    subtext: 'Unpacking image layers & preparing MicroVM rootfs...',
+    label: 'Environment',
+    subtext: 'Setting up execution environment...',
     icon: Terminal,
   },
   {
     id: 4,
-    label: 'Pod Provision',
-    subtext: 'Booting Kata MicroVM with Firecracker hypervisor kernel...',
-    icon: Cpu,
+    label: 'Starting',
+    subtext: 'Launching service instance...',
+    icon: Play,
   },
   {
     id: 5,
     label: 'Live URL',
-    subtext: 'Service healthy & domain routed via Agni ingress gateway',
+    subtext: 'Application live & domain routed',
     icon: Globe,
   },
 ];
@@ -84,9 +76,8 @@ export const DeploySimulatorModal: React.FC<DeploySimulatorModalProps> = ({
   onClose,
   onDeploySuccess,
 }) => {
-  const [appName, setAppName] = useState('my-express-app');
+  const [appName, setAppName] = useState('my-web-app');
   const [imageRef, setImageRef] = useState('ghcr.io/indralab/express-template:v1.0.0');
-  const [runtime, setRuntime] = useState('kata-fc');
 
   const [isDeploying, setIsDeploying] = useState(false);
   const [currentStep, setCurrentStep] = useState<number>(0); // 0 = not started, 1..5
@@ -117,25 +108,25 @@ export const DeploySimulatorModal: React.FC<DeploySimulatorModalProps> = ({
     setCurrentStep(1);
     setProgress(25);
     setStepLogs([
-      `[1 text] Initiating MicroVM provision for app [${appName}]...`,
-      `[2 text] Sending API request POST /api/v1/apps ...`,
+      `[1] Initiating deployment for app [${appName}]...`,
+      `[2] Sending deployment request...`,
     ]);
 
     try {
-      const res = await api.createApp({ name: appName.trim(), runtime, imageRef });
+      const res = await api.createApp({ name: appName.trim(), runtime: 'standard', imageRef });
       const liveApp = mapBackendAppToApp(res);
       setCurrentStep(5);
       setProgress(100);
       setStepLogs((prev) => [
         ...prev,
-        `[SUCCESS] Created MicroVM app [${liveApp.name}] (ID: ${liveApp.id})`,
+        `[SUCCESS] Deployed application [${liveApp.name}] (ID: ${liveApp.id})`,
       ]);
       setDeployedApp(liveApp);
 
       if (onDeploySuccess) {
         onDeploySuccess(liveApp);
       }
-      toast.success(`MicroVM App ${liveApp.name} deployed successfully!`);
+      toast.success(`Application ${liveApp.name} deployed successfully!`);
     } catch (err: any) {
       toast.error(err?.message || 'Deployment failed');
       setStepLogs((prev) => [...prev, `[ERROR] ${err?.message || 'Deployment failed'}`]);
@@ -154,17 +145,17 @@ export const DeploySimulatorModal: React.FC<DeploySimulatorModalProps> = ({
             </div>
             <div>
               <DialogTitle className="text-lg font-bold">
-                Deploy MicroVM Simulator
+                Deploy New Application
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                Trigger a step-by-step Kata MicroVM container build and deployment pipeline.
+                Deploy a new application to your workspace.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         <div className="flex flex-col gap-6 py-2">
-          {/* Configuration Form (if not building or when reset) */}
+          {/* Configuration Form */}
           {currentStep === 0 && (
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
@@ -182,7 +173,7 @@ export const DeploySimulatorModal: React.FC<DeploySimulatorModalProps> = ({
 
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="imageRef" className="text-xs font-semibold">
-                  Image Reference / Git Repository
+                  Repository / Image Reference
                 </Label>
                 <Input
                   id="imageRef"
@@ -193,34 +184,11 @@ export const DeploySimulatorModal: React.FC<DeploySimulatorModalProps> = ({
                 />
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-semibold flex items-center gap-1">
-                  <ShieldCheck className="h-3.5 w-3.5 text-primary" /> MicroVM Runtime Engine
-                </Label>
-                <Select value={runtime} onValueChange={setRuntime}>
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue placeholder="Select runtime" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="kata-fc">
-                      kata-fc — Firecracker MicroVM (Hardware Isolation)
-                    </SelectItem>
-                    <SelectItem value="firecracker">
-                      Firecracker — Direct MicroVM Hypervisor
-                    </SelectItem>
-                    <SelectItem value="gvisor">
-                      gVisor — Rule-based User-space Sandbox
-                    </SelectItem>
-                    <SelectItem value="runc">runc — Standard OCI Container</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
               <Button
                 onClick={startSimulation}
                 className="w-full h-10 mt-2 text-xs font-semibold flex items-center justify-center gap-2"
               >
-                <Rocket className="h-4 w-4" /> Trigger Deployment Pipeline
+                <Rocket className="h-4 w-4" /> Start Deployment
               </Button>
             </div>
           )}
@@ -237,7 +205,7 @@ export const DeploySimulatorModal: React.FC<DeploySimulatorModalProps> = ({
                     ) : (
                       <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                     )}
-                    Pipeline Progress — {progress}%
+                    Deployment Progress — {progress}%
                   </span>
                   <span className="font-mono text-muted-foreground">
                     Step {currentStep} of 5
@@ -283,17 +251,14 @@ export const DeploySimulatorModal: React.FC<DeploySimulatorModalProps> = ({
               <div className="flex flex-col rounded-lg border border-zinc-800 bg-zinc-950 overflow-hidden">
                 <div className="px-3 py-1.5 bg-zinc-900 border-b border-zinc-800 text-[11px] font-mono text-zinc-400 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <Terminal className="h-3.5 w-3.5 text-emerald-400" /> Deployment Log
+                    <Terminal className="h-3.5 w-3.5 text-emerald-400" /> Deployment Output
                   </span>
-                  <span>containerd.sock</span>
                 </div>
                 <div className="h-44 p-3 overflow-y-auto font-mono text-[11px] text-zinc-300 space-y-1 bg-zinc-950">
                   {stepLogs.map((log, i) => (
                     <div key={i} className="leading-relaxed break-all">
                       {log.startsWith('[SUCCESS]') ? (
                         <span className="text-emerald-400 font-bold">{log}</span>
-                      ) : log.startsWith(' ->') ? (
-                        <span className="text-zinc-400 pl-2">{log}</span>
                       ) : (
                         <span className="text-sky-300">{log}</span>
                       )}
@@ -308,7 +273,7 @@ export const DeploySimulatorModal: React.FC<DeploySimulatorModalProps> = ({
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-bold text-emerald-400 text-sm">
-                        App Live & Provisioned!
+                        App Live & Operational!
                       </h4>
                       <p className="text-muted-foreground text-xs font-mono">
                         {deployedApp.serviceUrl}

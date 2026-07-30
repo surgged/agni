@@ -103,7 +103,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 Share Management — {app.name}
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                Generate secure tokenized access links and manage permissions for this MicroVM app.
+                Generate secure tokenized access links and manage permissions for this application.
               </DialogDescription>
             </div>
           </div>

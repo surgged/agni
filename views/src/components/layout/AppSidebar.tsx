@@ -1,12 +1,6 @@
 import {
-  AudioWaveform,
-  BookOpen,
-  Command,
-  Frame,
   Flame,
   Settings2,
-  Files,
-  HardDrive,
   Home,
   LogOut,
   ChevronDown,
@@ -19,7 +13,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -38,55 +31,14 @@ import { toast } from 'sonner';
 
 const mainNavItems = [
   {
-    title: 'Home',
-    url: '/',
+    title: 'Dashboard',
+    url: '/dashboard',
     icon: Home,
-  },
-  {
-    title: 'Files',
-    url: '/files',
-    icon: Files,
-  },
-  {
-    title: 'Storage',
-    url: '/storage',
-    icon: HardDrive,
   },
   {
     title: 'Settings',
     url: '/settings',
     icon: Settings2,
-  },
-];
-
-const projectItems = [
-  {
-    title: 'Design Assets',
-    url: '#',
-    icon: Frame,
-  },
-  {
-    title: 'Documents',
-    url: '#',
-    icon: BookOpen,
-  },
-  {
-    title: 'Media',
-    url: '#',
-    icon: Flame,
-  },
-];
-
-const teams = [
-  {
-    name: 'Personal Workspace',
-    logo: Command,
-    plan: 'Free Plan',
-  },
-  {
-    name: 'Agni Cloud',
-    logo: AudioWaveform,
-    plan: 'Pro Plan',
   },
 ];
 
@@ -116,41 +68,15 @@ export function AppSidebar() {
       <SidebarHeader className="flex flex-row items-center justify-between gap-2 p-2">
         <SidebarMenu className="flex-1">
           <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size="lg"
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                >
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-tr from-amber-500 to-orange-600 text-white shadow-sm">
-                    <Flame className="size-4 animate-pulse" />
-                  </div>
-                  <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-semibold">Agni Engine</span>
-                    <span className="text-xs text-muted-foreground">v0.1.0</span>
-                  </div>
-                  <ChevronDown className="ml-auto size-4" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-56"
-                align="start"
-                side="bottom"
-                sideOffset={4}
-              >
-                {teams.map((team) => (
-                  <DropdownMenuItem key={team.name} className="gap-2 p-2">
-                    <div className="flex size-6 items-center justify-center rounded-sm border">
-                      <team.logo className="size-4 shrink-0" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">{team.name}</span>
-                      <span className="text-xs text-muted-foreground">{team.plan}</span>
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-2 px-2 py-1.5">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-tr from-amber-500 to-orange-600 text-white shadow-sm shrink-0">
+                <Flame className="size-4 animate-pulse" />
+              </div>
+              <div className="flex flex-col gap-0.5 leading-none">
+                <span className="font-semibold text-sm">Agni Engine</span>
+                <span className="text-[11px] text-muted-foreground">v0.1.0</span>
+              </div>
+            </div>
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarTrigger className="text-muted-foreground hover:text-foreground shrink-0" />
@@ -164,27 +90,9 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    isActive={location.pathname === item.url}
+                    isActive={location.pathname === item.url || (item.url === '/dashboard' && location.pathname === '/')}
                     tooltip={item.title}
                   >
-                    <Link to={item.url}>
-                      <item.icon className="size-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Projects</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {projectItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title}>
                     <Link to={item.url}>
                       <item.icon className="size-4" />
                       <span>{item.title}</span>
@@ -245,4 +153,3 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
-

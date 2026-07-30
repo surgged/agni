@@ -4,14 +4,11 @@ import {
   Search,
   LayoutGrid,
   List as ListIcon,
-  HardDrive,
-  Activity,
-  ShieldCheck,
   RefreshCw,
   Server,
   Filter,
 } from 'lucide-react';
-import { App, AppStatus, ShareLink } from '@/types/app';
+import { App, ShareLink } from '@/types/app';
 import { api, mapBackendAppToApp, mapBackendShareToShareLink, ClusterHealthResponse } from '@/api';
 import { AppCard } from '@/components/dashboard/AppCard';
 import { DeploySimulatorModal } from '@/components/dashboard/DeploySimulatorModal';
@@ -20,7 +17,6 @@ import { LogViewer } from '@/components/dashboard/LogViewer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -86,21 +82,6 @@ export default function Dashboard() {
     loadData();
   }, []);
 
-  // Cluster health aggregate metrics calculation
-  const clusterMetrics = useMemo(() => {
-    const activeApps = apps.filter((a) => a.status === 'LIVE' || a.status === 'BUILDING');
-    const totalPods = activeApps.reduce((acc, a) => acc + (a.metrics.activePods || 1), 0);
-    const totalMemMB = clusterHealth?.memory?.sys_mb || activeApps.reduce((acc, a) => acc + a.metrics.memoryMB, 0);
-
-    return {
-      activeMicroVMs: clusterHealth?.active_vms ?? totalPods,
-      totalAppsCount: apps.length,
-      memoryAllocatedGB: (totalMemMB / 1024).toFixed(2),
-      memoryCapacityGB: 32,
-      requestsPerSec: 0,
-    };
-  }, [apps, clusterHealth]);
-
   // Filtered Apps
   const filteredApps = useMemo(() => {
     return apps.filter((app) => {
@@ -112,13 +93,16 @@ export default function Dashboard() {
         return (
           app.name.toLowerCase().includes(q) ||
           app.imageRef.toLowerCase().includes(q) ||
-          app.runtime.toLowerCase().includes(q) ||
           app.podName.toLowerCase().includes(q)
         );
       }
       return true;
     });
   }, [apps, statusFilter, searchQuery]);
+
+  const liveAppsCount = useMemo(() => {
+    return apps.filter((a) => a.status === 'LIVE' || a.status === 'BUILDING').length;
+  }, [apps]);
 
   const handleDeploySuccess = (newApp: App) => {
     setApps((prev) => [newApp, ...prev]);
@@ -129,9 +113,9 @@ export default function Dashboard() {
     try {
       await api.deleteApp(appToDestroy.id);
       setApps((prev) => prev.filter((a) => a.id !== appToDestroy.id));
-      toast.success(`App ${appToDestroy.name} destroyed`);
+      toast.success(`App ${appToDestroy.name} deleted`);
     } catch (err: any) {
-      toast.error(err?.message || `Failed to destroy ${appToDestroy.name}`);
+      toast.error(err?.message || `Failed to delete ${appToDestroy.name}`);
     }
   };
 
@@ -178,17 +162,9 @@ export default function Dashboard() {
       {/* Dashboard Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/40 pb-5">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-extrabold tracking-tight">Agni Workspaces</h1>
-            <Badge
-              variant="outline"
-              className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-xs px-2"
-            >
-              <ShieldCheck className="h-3 w-3 mr-1" /> Kata / Firecracker Runtime
-            </Badge>
-          </div>
+          <h1 className="text-2xl font-extrabold tracking-tight">Agni Applications</h1>
           <p className="text-xs text-muted-foreground mt-1">
-            Manage hardware-isolated MicroVM containers with instant deployment and zero-trust sharing.
+            Manage your deployed applications, share access, and monitor status.
           </p>
         </div>
 
@@ -205,14 +181,13 @@ export default function Dashboard() {
             onClick={() => setIsDeployModalOpen(true)}
             className="h-9 text-xs font-semibold shadow-md gap-1.5"
           >
-            <Plus className="h-4 w-4" /> New Deploy
+            <Plus className="h-4 w-4" /> New Deployment
           </Button>
         </div>
       </div>
 
-      {/* Cluster Health Bar / Metrics Header */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Metric 1: Active MicroVMs */}
+      {/* Summary Card */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="bg-card/40 border-border/60 backdrop-blur-sm">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 shrink-0">
@@ -220,80 +195,14 @@ export default function Dashboard() {
             </div>
             <div className="flex flex-col">
               <span className="text-xs font-medium text-muted-foreground">
-                Active MicroVM Pods
+                Active Applications
               </span>
               <div className="flex items-baseline gap-2 mt-0.5">
                 <span className="text-2xl font-bold tracking-tight">
-                  {clusterMetrics.activeMicroVMs}
+                  {liveAppsCount}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  / {clusterMetrics.totalAppsCount} Apps
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Metric 2: Memory Allocation */}
-        <Card className="bg-card/40 border-border/60 backdrop-blur-sm">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400 shrink-0">
-              <HardDrive className="h-5 w-5" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-medium text-muted-foreground">
-                Cluster Memory System
-              </span>
-              <div className="flex items-baseline gap-2 mt-0.5">
-                <span className="text-2xl font-bold tracking-tight">
-                  {clusterMetrics.memoryAllocatedGB} GB
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  / {clusterMetrics.memoryCapacityGB} GB Sys
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Metric 3: Cluster Requests */}
-        <Card className="bg-card/40 border-border/60 backdrop-blur-sm">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-amber-500/10 text-amber-400 shrink-0">
-              <Activity className="h-5 w-5" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-medium text-muted-foreground">
-                Goroutines / Workers
-              </span>
-              <div className="flex items-baseline gap-2 mt-0.5">
-                <span className="text-2xl font-bold tracking-tight">
-                  {clusterHealth?.goroutines ?? 0}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  Goroutines
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Metric 4: Runtime Environment */}
-        <Card className="bg-card/40 border-border/60 backdrop-blur-sm">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-blue-500/10 text-blue-400 shrink-0">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-medium text-muted-foreground">
-                Isolation Status
-              </span>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-sm font-bold tracking-tight text-emerald-400">
-                  {clusterHealth?.status || 'Active'}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  ({clusterHealth?.go_version || 'Go'})
+                  / {apps.length} Total Apps
                 </span>
               </div>
             </div>
@@ -307,7 +216,7 @@ export default function Dashboard() {
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search apps by name, runtime or image..."
+              placeholder="Search apps by name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 h-9 text-xs rounded-xl bg-background/80"
@@ -328,7 +237,7 @@ export default function Dashboard() {
               <SelectItem value="LIVE">Live</SelectItem>
               <SelectItem value="BUILDING">Building</SelectItem>
               <SelectItem value="FAILED">Failed</SelectItem>
-              <SelectItem value="DESTROYED">Destroyed</SelectItem>
+              <SelectItem value="DESTROYED">Stopped</SelectItem>
             </SelectContent>
           </Select>
 
@@ -356,11 +265,11 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Main MicroVM App Grid / List Display */}
+      {/* Main Apps Display */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center p-16 text-center">
           <RefreshCw className="h-8 w-8 text-amber-500 animate-spin mb-3" />
-          <p className="text-sm font-medium">Loading applications from cluster...</p>
+          <p className="text-sm font-medium">Loading applications...</p>
         </div>
       ) : filteredApps.length === 0 ? (
         <Card className="p-12 text-center bg-card/20 border-dashed border-2 border-border/60">
@@ -368,15 +277,15 @@ export default function Dashboard() {
             <div className="p-4 rounded-full bg-primary/10 text-primary mb-3">
               <Server className="h-8 w-8" />
             </div>
-            <h3 className="text-lg font-bold">No MicroVM Applications</h3>
+            <h3 className="text-lg font-bold">No Deployed Applications</h3>
             <p className="text-xs text-muted-foreground mt-1 mb-4">
               {apps.length === 0
-                ? 'You do not have any deployed applications yet. Click below to launch your first MicroVM.'
+                ? 'You do not have any deployed applications yet. Click below to deploy your first app.'
                 : 'No applications match your current search query or status filter.'}
             </p>
             {apps.length === 0 && (
               <Button onClick={() => setIsDeployModalOpen(true)} className="gap-2 text-xs">
-                <Plus className="h-4 w-4" /> Deploy MicroVM
+                <Plus className="h-4 w-4" /> Deploy Application
               </Button>
             )}
           </div>
@@ -402,14 +311,14 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Deploy MicroVM Modal */}
+      {/* Deploy App Modal */}
       <DeploySimulatorModal
         isOpen={isDeployModalOpen}
         onClose={() => setIsDeployModalOpen(false)}
         onDeploySuccess={handleDeploySuccess}
       />
 
-      {/* Zero Trust Sharing Link Modal */}
+      {/* Share Link Modal */}
       <ShareModal
         app={selectedAppForShare}
         isOpen={!!selectedAppForShare}
@@ -427,7 +336,7 @@ export default function Dashboard() {
         <DialogContent className="sm:max-w-[850px] bg-card border-border p-5">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold flex items-center gap-2">
-              MicroVM Logs: {selectedAppForLogs?.name}
+              Application Logs: {selectedAppForLogs?.name}
             </DialogTitle>
           </DialogHeader>
           {selectedAppForLogs && (
