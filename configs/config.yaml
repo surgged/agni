@@ -8,7 +8,6 @@ app:
 
 database:
   dsn: "postgres://agni:agni@localhost:5432/agni?sslmode=disable"
-  worker_dsn: "postgres://agni:agni@localhost:5432/agni_worker?sslmode=disable"
 
 jwt:
   secret: "change-me-in-production"
@@ -68,3 +67,8 @@ registry:
   url: "zoteg.anurag.store"
   username: ""
   password: ""
+
+workflows:
+  database_dsn: "postgres://agni:agni@localhost:5432/agni_worker?sslmode=disable"
+  ui_user: "agni"
+  ui_password: "agni"

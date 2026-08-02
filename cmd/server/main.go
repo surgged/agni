@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/subtle"
 	"log/slog"
 	"net/http"
 	"os"
@@ -34,6 +35,7 @@ import (
 	shareapp "github.com/surgged/agni/internal/application/sharelink"
 	userapp "github.com/surgged/agni/internal/application/user"
 	"github.com/surgged/agni/internal/ports"
+
 	// crank:composition-imports (do not remove — `crank make handler` splices new application imports here)
 	"github.com/surgged/agni/internal/config"
 	"github.com/surgged/agni/pkg/crypto"
@@ -58,6 +60,9 @@ import (
 func main() {
 	cfg := config.Load()
 
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
 	logger := logging.New(logging.ParseLevel(cfg.Logging.Level), cfg.Logging.AddSource)
 	slog.SetDefault(logger)
 
@@ -67,27 +72,19 @@ func main() {
 		"log_level", cfg.Logging.Level,
 	)
 
-	gormDB, err := gorm.NewDB(cfg.Database)
+	gormDB, err := gorm.NewDB(cfg.Database.DSN)
 	if err != nil {
 		logger.Error("failed to connect to database", "error", err)
 		os.Exit(1)
 	}
-	defer func() {
-		sqlDB, dbErr := gormDB.DB()
-		if dbErr != nil {
-			return
-		}
-		_ = sqlDB.Close()
-	}()
+	defer gorm.Close(gormDB)
 
 	rdb, err := redisclient.NewClient(cfg.Redis)
 	if err != nil {
 		logger.Warn("redis unavailable, continuing without it", "error", err)
 		rdb = nil
 	}
-	if rdb != nil {
-		defer func() { _ = rdb.Close() }()
-	}
+	defer redisclient.Close(rdb)
 
 	// ---- Composition root: explicit DDD wiring ----
 	bus := eventbus.NewInMemory()
@@ -168,7 +165,7 @@ func main() {
 	}
 
 	var orch ports.Orchestrator
-	wrk, err := workflow.StartWorker(context.Background(), activityDeps, cfg.Database.WorkerDSN)
+	wrk, err := workflow.StartWorker(ctx, activityDeps, cfg.Workflows.DatabaseDSN)
 	if err != nil {
 		logger.Warn("failed to start workflow worker, deployments run without orchestration", "error", err)
 	} else {
@@ -207,6 +204,19 @@ func main() {
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.GET("/health", web.Health)
 
+	if wrk != nil {
+		workflowsGroup := e.Group("/workflows", echomw.BasicAuth(func(c *echo.Context, user, password string) (bool, error) {
+			if subtle.ConstantTimeCompare([]byte(user), []byte(cfg.Workflows.UIUser)) == 1 &&
+				subtle.ConstantTimeCompare([]byte(password), []byte(cfg.Workflows.UIPassword)) == 1 {
+				return true, nil
+			}
+			return false, echo.ErrUnauthorized
+		}))
+		diagHandler := http.StripPrefix("/workflows", wrk.DiagHandler())
+		workflowsGroup.Any("", echo.WrapHandler(diagHandler))
+		workflowsGroup.Any("/*", echo.WrapHandler(diagHandler))
+	}
+
 	mountCfg := v1.MountConfig{
 		UserHandler:          userHandler,
 		AppHandler:           appHandler,
@@ -226,9 +236,6 @@ func main() {
 
 	addr := cfg.App.Host + ":" + strconv.Itoa(cfg.App.Port)
 	logger.Info("server listening", "addr", addr)
-
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer cancel()
 
 	sc := echo.StartConfig{
 		Address:         addr,

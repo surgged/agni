@@ -35,8 +35,15 @@ func NewServer(logger *slog.Logger) *echo.Echo {
 			_ = c.JSON(ve.HTTPStatus, api.Error{Error: ve.Message, Details: ve.Errors})
 			return
 		}
-		if he, ok := err.(*echo.HTTPError); ok {
-			_ = c.JSON(he.Code, api.Error{Error: he.Message})
+		// Handle Echo v5 HTTP errors. This covers both *echo.HTTPError (from
+		// NewHTTPError) and the unexported sentinel errors like ErrUnauthorized,
+		// which implement the HTTPStatusCoder interface.
+		if code := echo.StatusCode(err); code != 0 {
+			msg := http.StatusText(code)
+			if he, ok := err.(*echo.HTTPError); ok && he.Message != "" {
+				msg = he.Message
+			}
+			_ = c.JSON(code, api.Error{Error: msg})
 			return
 		}
 		logger.ErrorContext(ctx, "unhandled error", "error", err)

@@ -2,7 +2,9 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -30,4 +32,15 @@ func NewClient(cfg config.RedisConfig) (*redis.Client, error) {
 		return nil, fmt.Errorf("ping redis at %s: %w", cfg.Addr, err)
 	}
 	return client, nil
+}
+
+func Close(rdb *redis.Client) error {
+	if rdb == nil {
+		return errors.New("nil redis client")
+	}
+	if err := rdb.Close(); err != nil {
+		slog.Error("unable to close redis client", "error", err)
+		return err
+	}
+	return nil
 }

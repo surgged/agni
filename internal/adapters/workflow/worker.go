@@ -2,17 +2,18 @@ package workflow
 
 import (
 	"context"
-	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
-
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"net/http"
 
 	pgbackend "github.com/cschleiden/go-workflows/backend/postgres"
 	"github.com/cschleiden/go-workflows/client"
+	"github.com/cschleiden/go-workflows/diag"
 	"github.com/cschleiden/go-workflows/worker"
 	"github.com/cschleiden/go-workflows/workflow"
 
+	"github.com/surgged/agni/internal/adapters/persistence/gorm"
 	"github.com/surgged/agni/internal/ports"
 )
 
@@ -22,6 +23,7 @@ type Worker struct {
 	w            *worker.Worker
 	activities   *Activities
 	orchestrator ports.Orchestrator
+	backend      diag.Backend
 }
 
 // StartWorker creates a Postgres-backed go-workflows worker, registers
@@ -29,12 +31,22 @@ type Worker struct {
 // background goroutine. Returns a Worker whose Orchestrator() can be
 // wired into the deploy service.
 func StartWorker(ctx context.Context, deps *ActivityDeps, workerDSN string) (*Worker, error) {
-	db, err := sql.Open("pgx", workerDSN)
+	if workerDSN == "" {
+		return nil, errors.New("workerDSN is not set")
+	}
+
+	gormDB, err := gorm.NewDB(workerDSN)
+	if err != nil {
+		return nil, fmt.Errorf("unable to connect to worker db: %w", err)
+	}
+
+	db, err := gormDB.DB()
 	if err != nil {
 		return nil, fmt.Errorf("open worker database: %w", err)
 	}
 
 	b := pgbackend.NewPostgresBackendWithDB(db,
+		pgbackend.WithApplyMigrations(true),
 		pgbackend.WithBackendOptions(),
 	)
 
@@ -91,11 +103,16 @@ func StartWorker(ctx context.Context, deps *ActivityDeps, workerDSN string) (*Wo
 		w:            w,
 		activities:   a,
 		orchestrator: NewOrchestrator(client.New(b)),
+		backend:      b,
 	}, nil
 }
 
 func (w *Worker) Orchestrator() ports.Orchestrator {
 	return w.orchestrator
+}
+
+func (w *Worker) DiagHandler() http.Handler {
+	return diag.NewServeMux(w.backend)
 }
 
 func (w *Worker) Stop() {
