@@ -169,6 +169,22 @@ export const AppCard: React.FC<AppCardProps> = ({
           </div>
         </div>
 
+        {/* Error Display for Failed Apps */}
+        {app.status === 'FAILED' && (app.errorMessage || app.failedStep) && (
+          <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
+            {app.failedStep && (
+              <p className="text-[10px] uppercase tracking-wide text-rose-400 font-semibold mb-0.5">
+                Failed at: {app.failedStep}
+              </p>
+            )}
+            {app.errorMessage && (
+              <p className="text-xs text-rose-300/80 leading-relaxed">
+                {app.errorMessage}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Domain Row */}
         <div className="flex items-center justify-between gap-2 text-xs flex-wrap pt-1">
           <div

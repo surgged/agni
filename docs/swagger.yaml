@@ -2,7 +2,7 @@ basePath: /
 consumes:
 - application/json
 definitions:
-  api.Error:
+  github_com_surgged_agni_internal_adapters_http_web_api.Error:
     properties:
       details:
         additionalProperties:
@@ -12,103 +12,32 @@ definitions:
         example: validation failed
         type: string
     type: object
-  v1.appDTO:
+  github_com_surgged_agni_internal_ports.MultipartUploadInit:
     properties:
-      created_at:
+      archive_key:
         type: string
-      error_message:
-        type: string
-      id:
-        type: string
-      image_ref:
-        type: string
-      name:
-        type: string
-      owner_email:
-        type: string
-      pod_name:
-        type: string
-      runtime:
-        type: string
-      service_url:
-        type: string
-      share_url:
-        type: string
-      status:
-        type: string
-      updated_at:
-        type: string
-    required:
-    - name
-    - owner_email
-    type: object
-  v1.logLinePayload:
-    properties:
-      app_id:
-        type: string
-      line:
-        type: string
-      stream:
-        type: string
-      timestamp:
+      parts:
+        items:
+          $ref: '#/definitions/github_com_surgged_agni_internal_ports.PartUploadURL'
+        type: array
+      upload_id:
         type: string
     type: object
-  v1.magicRequestDTO:
+  github_com_surgged_agni_internal_ports.PartUploadURL:
     properties:
-      email:
-        type: string
-    required:
-    - email
-    type: object
-  v1.shareDTO:
-    properties:
-      app_id:
-        type: string
-      id:
-        type: string
-      permission:
-        type: string
-      recipient_email:
-        type: string
-    required:
-    - app_id
-    - recipient_email
-    type: object
-  v1.shareResponseDTO:
-    properties:
-      accepted_at:
-        type: string
-      app_id:
-        type: string
-      expires_at:
-        type: string
-      id:
-        type: string
-      permission:
-        type: string
-      recipient_email:
-        type: string
-      revoked_at:
-        type: string
-      token:
+      part_number:
+        type: integer
+      upload_url:
         type: string
     type: object
-  v1.userDTO:
+  github_com_surgged_agni_internal_ports.UploadedPart:
     properties:
-      email:
+      etag:
         type: string
-      id:
-        type: string
-      name:
-        type: string
-      password:
-        type: string
-    required:
-    - email
-    - name
-    - password
+      part_number:
+        type: integer
     type: object
-  web.credentials:
+  internal_adapters_http_web.credentials:
     properties:
       email:
         type: string
@@ -123,14 +52,14 @@ definitions:
     - email
     - password
     type: object
-  web.refreshRequest:
+  internal_adapters_http_web.refreshRequest:
     properties:
       refresh_token:
         type: string
     required:
     - refresh_token
     type: object
-  web.registerRequest:
+  internal_adapters_http_web.registerRequest:
     properties:
       confirm_password:
         type: string
@@ -149,14 +78,14 @@ definitions:
     - name
     - password
     type: object
-  web.resendVerificationRequest:
+  internal_adapters_http_web.resendVerificationRequest:
     properties:
       email:
         type: string
     required:
     - email
     type: object
-  web.tokenResponse:
+  internal_adapters_http_web.tokenResponse:
     properties:
       access_token:
         type: string
@@ -164,6 +93,135 @@ definitions:
         type: integer
       refresh_token:
         type: string
+    type: object
+  internal_adapters_http_web_v1.appDTO:
+    properties:
+      created_at:
+        type: string
+      error_message:
+        type: string
+      failed_step:
+        type: string
+      id:
+        type: string
+      image_ref:
+        type: string
+      name:
+        type: string
+      owner_email:
+        type: string
+      pod_name:
+        type: string
+      port:
+        type: integer
+      runtime:
+        type: string
+      service_url:
+        type: string
+      share_url:
+        type: string
+      slug:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    required:
+    - name
+    - owner_email
+    type: object
+  internal_adapters_http_web_v1.createAppDTO:
+    properties:
+      name:
+        type: string
+      port:
+        type: integer
+      runtime:
+        type: string
+    required:
+    - name
+    type: object
+  internal_adapters_http_web_v1.createAppResponse:
+    properties:
+      id:
+        type: string
+      slug:
+        type: string
+      upload_expires_at:
+        type: string
+      upload_url:
+        type: string
+    type: object
+  internal_adapters_http_web_v1.deployResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  internal_adapters_http_web_v1.logLinePayload:
+    properties:
+      app_id:
+        type: string
+      line:
+        type: string
+      stream:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  internal_adapters_http_web_v1.magicRequestDTO:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  internal_adapters_http_web_v1.shareDTO:
+    properties:
+      app_id:
+        type: string
+      id:
+        type: string
+      permission:
+        type: string
+      recipient_email:
+        type: string
+    required:
+    - app_id
+    - recipient_email
+    type: object
+  internal_adapters_http_web_v1.shareResponseDTO:
+    properties:
+      accepted_at:
+        type: string
+      app_id:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: string
+      permission:
+        type: string
+      recipient_email:
+        type: string
+      revoked_at:
+        type: string
+      token:
+        type: string
+    type: object
+  internal_adapters_http_web_v1.userDTO:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - name
+    - password
     type: object
 host: localhost:8080
 info:
@@ -183,12 +241,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/v1.appDTO'
+              $ref: '#/definitions/internal_adapters_http_web_v1.appDTO'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       security:
       - BearerAuth: []
       summary: List applications
@@ -196,42 +254,35 @@ paths:
       - apps
     post:
       consumes:
-      - multipart/form-data
-      description: Creates a new microVM container application and deploys optional
-        source tarball.
+      - application/json
+      description: Creates a new application with a presigned upload URL for archive
+        submission.
       parameters:
-      - description: App Name
-        in: formData
-        name: name
+      - description: App creation request
+        in: body
+        name: body
         required: true
-        type: string
-      - description: Owner Email
-        in: formData
-        name: owner_email
-        type: string
-      - description: Source tarball bundle
-        in: formData
-        name: tarball
-        type: file
+        schema:
+          $ref: '#/definitions/internal_adapters_http_web_v1.createAppDTO'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/v1.appDTO'
+            $ref: '#/definitions/internal_adapters_http_web_v1.createAppResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/api.Error'
-        "422":
-          description: Unprocessable Entity
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+        "429":
+          description: Too Many Requests
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       security:
       - BearerAuth: []
       summary: Create application
@@ -254,7 +305,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       security:
       - BearerAuth: []
       summary: Destroy application
@@ -274,14 +325,48 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.appDTO'
+            $ref: '#/definitions/internal_adapters_http_web_v1.appDTO'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       security:
       - BearerAuth: []
       summary: Get application details
+      tags:
+      - apps
+  /api/v1/apps/{id}/deploy:
+    post:
+      description: Starts the deployment workflow for an app that has an uploaded
+        archive.
+      parameters:
+      - description: App ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/internal_adapters_http_web_v1.deployResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+      security:
+      - BearerAuth: []
+      summary: Deploy application
       tags:
       - apps
   /api/v1/apps/{id}/logs:
@@ -300,14 +385,161 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.logLinePayload'
+            $ref: '#/definitions/internal_adapters_http_web_v1.logLinePayload'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       security:
       - BearerAuth: []
       summary: Stream application logs
+      tags:
+      - apps
+  /api/v1/apps/{id}/multipart/abort:
+    post:
+      consumes:
+      - application/json
+      description: Cancels an incomplete multipart upload and cleans up partial parts.
+      parameters:
+      - description: App ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Upload ID
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            upload_id:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+      security:
+      - BearerAuth: []
+      summary: Abort multipart upload
+      tags:
+      - apps
+  /api/v1/apps/{id}/multipart/complete:
+    post:
+      consumes:
+      - application/json
+      description: Finalizes a multipart upload by assembling all uploaded parts.
+      parameters:
+      - description: App ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Upload ID and completed parts
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            parts:
+              items:
+                $ref: '#/definitions/github_com_surgged_agni_internal_ports.UploadedPart'
+              type: array
+            upload_id:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+      security:
+      - BearerAuth: []
+      summary: Complete multipart upload
+      tags:
+      - apps
+  /api/v1/apps/{id}/multipart/init:
+    post:
+      consumes:
+      - application/json
+      description: Starts a multipart upload and returns presigned URLs for each part.
+        For files > 100 MB.
+      parameters:
+      - description: App ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Total file size in bytes
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            total_size:
+              format: int64
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_surgged_agni_internal_ports.MultipartUploadInit'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+      security:
+      - BearerAuth: []
+      summary: Initialize multipart upload
+      tags:
+      - apps
+  /api/v1/apps/{id}/retry:
+    post:
+      description: Retries a failed deployment from scratch.
+      parameters:
+      - description: App ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/internal_adapters_http_web_v1.deployResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+      security:
+      - BearerAuth: []
+      summary: Retry deployment
       tags:
       - apps
   /api/v1/apps/{id}/share:
@@ -327,22 +559,22 @@ paths:
         name: share
         required: true
         schema:
-          $ref: '#/definitions/v1.shareDTO'
+          $ref: '#/definitions/internal_adapters_http_web_v1.shareDTO'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/v1.shareResponseDTO'
+            $ref: '#/definitions/internal_adapters_http_web_v1.shareResponseDTO'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       security:
       - BearerAuth: []
       summary: Create application share link
@@ -364,12 +596,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/v1.shareResponseDTO'
+              $ref: '#/definitions/internal_adapters_http_web_v1.shareResponseDTO'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       security:
       - BearerAuth: []
       summary: List application share links
@@ -397,12 +629,39 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       security:
       - BearerAuth: []
       summary: Revoke application share link
       tags:
       - shares
+  /api/v1/apps/{id}/upload-url:
+    post:
+      description: Generates a fresh presigned upload URL for an app.
+      parameters:
+      - description: App ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+      security:
+      - BearerAuth: []
+      summary: Refresh upload URL
+      tags:
+      - apps
   /api/v1/cluster/health:
     get:
       description: Returns cluster health status, active microVM counts, memory allocation,
@@ -433,7 +692,7 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       security:
       - BearerAuth: []
       summary: Get authenticated user profile
@@ -453,11 +712,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       security:
       - BearerAuth: []
       summary: Issue MCP agent token
@@ -475,18 +734,18 @@ paths:
         name: credentials
         required: true
         schema:
-          $ref: '#/definitions/web.credentials'
+          $ref: '#/definitions/internal_adapters_http_web.credentials'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/web.tokenResponse'
+            $ref: '#/definitions/internal_adapters_http_web.tokenResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
         "403":
           description: Forbidden
           schema:
@@ -506,7 +765,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/web.refreshRequest'
+          $ref: '#/definitions/internal_adapters_http_web.refreshRequest'
       produces:
       - application/json
       responses:
@@ -515,7 +774,7 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       security:
       - BearerAuth: []
       summary: Logout user
@@ -550,11 +809,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       summary: Verify magic link token
       tags:
       - auth
@@ -568,7 +827,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/v1.magicRequestDTO'
+          $ref: '#/definitions/internal_adapters_http_web_v1.magicRequestDTO'
       produces:
       - application/json
       responses:
@@ -580,11 +839,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       summary: Request magic link
       tags:
       - auth
@@ -600,18 +859,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/web.refreshRequest'
+          $ref: '#/definitions/internal_adapters_http_web.refreshRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/web.tokenResponse'
+            $ref: '#/definitions/internal_adapters_http_web.tokenResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       summary: Refresh access token
       tags:
       - auth
@@ -626,7 +885,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/web.registerRequest'
+          $ref: '#/definitions/internal_adapters_http_web.registerRequest'
       produces:
       - application/json
       responses:
@@ -639,11 +898,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       summary: Register a new user
       tags:
       - auth
@@ -658,7 +917,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/web.resendVerificationRequest'
+          $ref: '#/definitions/internal_adapters_http_web.resendVerificationRequest'
       produces:
       - application/json
       responses:
@@ -671,7 +930,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       summary: Resend email verification
       tags:
       - auth
@@ -734,7 +993,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       summary: Verify email address
       tags:
       - auth
@@ -752,7 +1011,7 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       security:
       - BearerAuth: []
       summary: Get authenticated user ID
@@ -773,7 +1032,7 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       summary: Preview application UI
       tags:
       - apps
@@ -788,18 +1047,18 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/v1.userDTO'
+          $ref: '#/definitions/internal_adapters_http_web_v1.userDTO'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/v1.userDTO'
+            $ref: '#/definitions/internal_adapters_http_web_v1.userDTO'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       summary: Create a user
       tags:
       - users
@@ -820,7 +1079,7 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       summary: Delete a user
       tags:
       - users
@@ -838,11 +1097,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.userDTO'
+            $ref: '#/definitions/internal_adapters_http_web_v1.userDTO'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       summary: Get a user
       tags:
       - users
@@ -861,22 +1120,22 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/v1.userDTO'
+          $ref: '#/definitions/internal_adapters_http_web_v1.userDTO'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.userDTO'
+            $ref: '#/definitions/internal_adapters_http_web_v1.userDTO'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
       summary: Update a user
       tags:
       - users

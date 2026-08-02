@@ -300,6 +300,30 @@ export default function AppDetail() {
         </CardContent>
       </Card>
 
+      {app.status === 'FAILED' && (app.errorMessage || app.failedStep) && (
+        <Card className="border-rose-500/30 bg-rose-500/5">
+          <CardContent className="p-4 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-rose-400" />
+              <span className="text-sm font-bold text-rose-400">Deployment Failed</span>
+            </div>
+            {app.failedStep && (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-[10px] uppercase bg-rose-500/10 text-rose-400 border-rose-500/30">
+                  Failed Step
+                </Badge>
+                <span className="text-xs font-mono text-rose-300">{app.failedStep}</span>
+              </div>
+            )}
+            {app.errorMessage && (
+              <p className="text-xs text-rose-300/80 leading-relaxed bg-rose-500/10 p-3 rounded-lg border border-rose-500/20 font-mono">
+                {app.errorMessage}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Tabs Navigation */}
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="bg-muted/40 border border-border/50 p-1 h-10">

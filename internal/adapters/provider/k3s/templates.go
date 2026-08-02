@@ -9,11 +9,16 @@ metadata:
     app: app-{{.ID}}
     agni.owner: "{{.OwnerEmail}}"
 spec:
-  runtimeClassName: kata-fc
+  runtimeClassName: {{.RuntimeClass}}
   restartPolicy: Always
+  {{if .ImagePullSecret}}imagePullSecrets:
+  - name: {{.ImagePullSecret}}{{end}}
   containers:
   - name: app
     image: {{.ImageRef}}
+    env:
+    - name: PORT
+      value: "{{.Port}}"
     ports:
     - containerPort: {{.Port}}
     resources:
@@ -61,10 +66,10 @@ spec:
   ingressClassName: {{.IngressClass}}
   tls:
   - hosts:
-    - "{{.ID}}.{{.Domain}}"
+    - "{{.Slug}}.{{.Domain}}"
     secretName: app-{{.ID}}-tls
   rules:
-  - host: "{{.ID}}.{{.Domain}}"
+  - host: "{{.Slug}}.{{.Domain}}"
     http:
       paths:
       - path: /

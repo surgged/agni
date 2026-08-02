@@ -13,6 +13,7 @@ type Status string
 
 const (
 	StatusCreated   Status = "created"
+	StatusQueued    Status = "queued"
 	StatusBuilding  Status = "building"
 	StatusDeploying Status = "deploying"
 	StatusLive      Status = "live"
@@ -21,11 +22,12 @@ const (
 )
 
 var validTransitions = map[Status][]Status{
-	StatusCreated:   {StatusBuilding, StatusDestroyed},
+	StatusCreated:   {StatusQueued, StatusDestroyed},
+	StatusQueued:    {StatusBuilding, StatusFailed, StatusDestroyed},
 	StatusBuilding:  {StatusDeploying, StatusFailed, StatusDestroyed},
 	StatusDeploying: {StatusLive, StatusFailed, StatusDestroyed},
 	StatusLive:      {StatusDestroyed},
-	StatusFailed:    {StatusDestroyed},
+	StatusFailed:    {StatusQueued, StatusDestroyed},
 }
 
 type App struct {
@@ -41,6 +43,10 @@ type App struct {
 	ShareURL     string               `gorm:"column:share_url;not null;default:'';type:TEXT"`
 	Status       Status               `gorm:"column:status;not null;default:'created';type:TEXT"`
 	ErrorMessage string               `gorm:"column:error_message;not null;default:'';type:TEXT"`
+	Slug         string               `gorm:"column:slug;not null;default:'';type:TEXT"`
+	Port         int32                `gorm:"column:port;not null;default:8080"`
+	ArchiveKey   string               `gorm:"column:archive_key;not null;default:'';type:TEXT"`
+	FailedStep   string               `gorm:"column:failed_step;not null;default:'';type:TEXT"`
 	events       []shared.DomainEvent `gorm:"-"`
 }
 
@@ -91,6 +97,32 @@ func (a *App) MarkBuilding() error {
 	return nil
 }
 
+func (a *App) Queue(archiveKey, slug string, port int32) error {
+	if !a.canTransitionTo(StatusQueued) {
+		return ErrInvalidAppTransition
+	}
+	now := time.Now().UTC()
+	a.Status = StatusQueued
+	a.ArchiveKey = archiveKey
+	a.Slug = slug
+	a.Port = port
+	a.UpdatedAt = now
+	a.recordEvent(AppQueued{ID: a.ID, Slug: slug, ArchiveKey: archiveKey, Port: port, occurredAt: now})
+	return nil
+}
+
+func (a *App) Retry() error {
+	if !a.canTransitionTo(StatusQueued) {
+		return ErrInvalidAppTransition
+	}
+	a.Status = StatusQueued
+	a.FailedStep = ""
+	a.ErrorMessage = ""
+	a.UpdatedAt = time.Now().UTC()
+	a.recordEvent(AppRetried{ID: a.ID, occurredAt: a.UpdatedAt})
+	return nil
+}
+
 func (a *App) MarkDeploying(imageRef, podName string) error {
 	if !a.canTransitionTo(StatusDeploying) {
 		return ErrInvalidAppTransition
@@ -117,14 +149,15 @@ func (a *App) MarkLive(serviceURL, shareURL string) error {
 	return nil
 }
 
-func (a *App) MarkFailed(reason string) error {
+func (a *App) MarkFailed(step, reason string) error {
 	if !a.canTransitionTo(StatusFailed) {
 		return ErrInvalidAppTransition
 	}
 	a.Status = StatusFailed
+	a.FailedStep = step
 	a.ErrorMessage = reason
 	a.UpdatedAt = time.Now().UTC()
-	a.recordEvent(AppFailed{ID: a.ID, Reason: reason, occurredAt: a.UpdatedAt})
+	a.recordEvent(AppFailed{ID: a.ID, Step: step, Reason: reason, occurredAt: a.UpdatedAt})
 	return nil
 }
 
@@ -151,7 +184,7 @@ func (a *App) recordEvent(e shared.DomainEvent) {
 	a.events = append(a.events, e)
 }
 
-func Rehydrate(id uuid.UUID, ownerEmail, name, runtime, imageRef, podName, serviceURL, shareURL string, status Status, errorMessage string, created, updated time.Time) *App {
+func Rehydrate(id uuid.UUID, ownerEmail, name, runtime, imageRef, podName, serviceURL, shareURL, slug string, port int32, archiveKey, failedStep, errorMessage string, status Status, created, updated time.Time) *App {
 	return &App{
 		ID:           id,
 		CreatedAt:    created,
@@ -163,6 +196,10 @@ func Rehydrate(id uuid.UUID, ownerEmail, name, runtime, imageRef, podName, servi
 		PodName:      podName,
 		ServiceURL:   serviceURL,
 		ShareURL:     shareURL,
+		Slug:         slug,
+		Port:         port,
+		ArchiveKey:   archiveKey,
+		FailedStep:   failedStep,
 		Status:       status,
 		ErrorMessage: errorMessage,
 	}

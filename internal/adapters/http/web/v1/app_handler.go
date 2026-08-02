@@ -2,11 +2,10 @@ package v1
 
 import (
 	"bufio"
-	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -24,6 +23,7 @@ import (
 	appapp "github.com/surgged/agni/internal/application/app"
 	"github.com/surgged/agni/internal/application/deploy"
 	"github.com/surgged/agni/internal/domain/app"
+	"github.com/surgged/agni/internal/ports"
 )
 
 type appDTO struct {
@@ -37,6 +37,9 @@ type appDTO struct {
 	ShareURL     string `json:"share_url"`
 	Status       string `json:"status"`
 	ErrorMessage string `json:"error_message"`
+	Slug         string `json:"slug"`
+	Port         int32  `json:"port"`
+	FailedStep   string `json:"failed_step"`
 	CreatedAt    string `json:"created_at"`
 	UpdatedAt    string `json:"updated_at"`
 }
@@ -53,24 +56,44 @@ func toAppDTO(x *app.App) appDTO {
 		ShareURL:     x.ShareURL,
 		Status:       string(x.Status),
 		ErrorMessage: x.ErrorMessage,
+		Slug:         x.Slug,
+		Port:         x.Port,
+		FailedStep:   x.FailedStep,
 		CreatedAt:    x.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:    x.UpdatedAt.Format(time.RFC3339),
 	}
 }
 
+type createAppDTO struct {
+	Name    string `json:"name" validate:"required"`
+	Port    int32  `json:"port"`
+	Runtime string `json:"runtime"`
+}
+
+type createAppResponse struct {
+	ID              string `json:"id"`
+	Slug            string `json:"slug"`
+	UploadURL       string `json:"upload_url"`
+	UploadExpiresAt string `json:"upload_expires_at"`
+}
+
+type deployResponse struct {
+	Status string `json:"status"`
+}
+
 type AppHandler struct {
 	cmd         *appapp.CommandHandler
 	qry         *appapp.QueryHandler
-	pipeline    *deploy.Pipeline
+	deploySvc   *deploy.Service
 	tokens      *agentapikey.AgentTokenService
 	k3sProvider *k3s.Provider
 }
 
-func NewAppHandler(cmd *appapp.CommandHandler, qry *appapp.QueryHandler, pipeline *deploy.Pipeline, tokens *agentapikey.AgentTokenService, k3sProvider *k3s.Provider) *AppHandler {
+func NewAppHandler(cmd *appapp.CommandHandler, qry *appapp.QueryHandler, deploySvc *deploy.Service, tokens *agentapikey.AgentTokenService, k3sProvider *k3s.Provider) *AppHandler {
 	return &AppHandler{
 		cmd:         cmd,
 		qry:         qry,
-		pipeline:    pipeline,
+		deploySvc:   deploySvc,
 		tokens:      tokens,
 		k3sProvider: k3sProvider,
 	}
@@ -80,6 +103,12 @@ func (h *AppHandler) Register(g *echo.Group) {
 	g.POST("", h.Create)
 	g.GET("", h.List)
 	g.GET("/:id", h.Get)
+	g.POST("/:id/deploy", h.Deploy)
+	g.POST("/:id/retry", h.Retry)
+	g.POST("/:id/upload-url", h.UploadURL)
+	g.POST("/:id/multipart/init", h.MultipartInit)
+	g.POST("/:id/multipart/complete", h.MultipartComplete)
+	g.POST("/:id/multipart/abort", h.MultipartAbort)
 	g.DELETE("/:id", h.Destroy)
 	g.GET("/:id/logs", h.Logs)
 }
@@ -104,69 +133,128 @@ func (h *AppHandler) extractEmail(c *echo.Context) string {
 // Create godoc
 //
 //	@Summary      Create application
-//	@Description  Creates a new microVM container application and deploys optional source tarball.
+//	@Description  Creates a new application with a presigned upload URL for archive submission.
 //	@Tags         apps
 //	@Security     BearerAuth
-//	@Accept       multipart/form-data
+//	@Accept       json
 //	@Produce      json
-//	@Param        name         formData  string  true   "App Name"
-//	@Param        owner_email  formData  string  false  "Owner Email"
-//	@Param        tarball      formData  file    false  "Source tarball bundle"
-//	@Success      201          {object}  appDTO
-//	@Failure      400          {object}  api.Error
-//	@Failure      401          {object}  api.Error
-//	@Failure      422          {object}  api.Error
+//	@Param        body  body      createAppDTO  true  "App creation request"
+//	@Success      201   {object}  createAppResponse
+//	@Failure      400   {object}  api.Error
+//	@Failure      401   {object}  api.Error
+//	@Failure      429   {object}  api.Error
 //	@Router       /api/v1/apps [post]
 func (h *AppHandler) Create(c *echo.Context) error {
 	email := h.extractEmail(c)
-	ownerEmail := c.FormValue("owner_email")
-	if ownerEmail == "" {
-		ownerEmail = email
-	}
-	name := c.FormValue("name")
-	if name == "" {
-		return c.JSON(http.StatusBadRequest, api.Error{Error: "name is required"})
-	}
-	if ownerEmail == "" {
+	if email == "" {
 		return c.JSON(http.StatusUnauthorized, api.Error{Error: "authentication required"})
 	}
 
-	appID := uuid.New()
+	var dto createAppDTO
+	if err := c.Bind(&dto); err != nil {
+		return c.JSON(http.StatusBadRequest, api.Error{Error: err.Error()})
+	}
+	if dto.Name == "" {
+		return c.JSON(http.StatusBadRequest, api.Error{Error: "name is required"})
+	}
 
-	x, err := h.cmd.HandleCreate(c.Request().Context(), appapp.CreateAppCommand{
-		ID:         appID.String(),
-		OwnerEmail: ownerEmail,
-		Name:       name,
-	})
+	port := dto.Port
+	if port == 0 {
+		port = 8080
+	}
+	runtime := dto.Runtime
+	if runtime == "" {
+		runtime = "kata"
+	}
+
+	result, err := h.deploySvc.CreateUpload(c.Request().Context(), email, dto.Name, port, runtime)
 	if err != nil {
-		return c.JSON(http.StatusUnprocessableEntity, api.Error{Error: err.Error()})
+		return mapDeployError(err, c)
 	}
 
-	tarball, _, err := c.Request().FormFile("tarball")
-	if err == nil {
-		defer tarball.Close()
-		tmpFile, tmpErr := os.CreateTemp("", "agni-tarball-*.tar.gz")
-		if tmpErr == nil {
-			_, _ = io.Copy(tmpFile, tarball)
-			tmpPath := tmpFile.Name()
-			_ = tmpFile.Close()
+	return c.JSON(http.StatusCreated, createAppResponse{
+		ID:              result.App.ID.String(),
+		Slug:            app.NewSlug(dto.Name, result.App.ID),
+		UploadURL:       result.UploadURL,
+		UploadExpiresAt: result.ExpiresAt,
+	})
+}
 
-			go func() {
-				f, openErr := os.Open(tmpPath)
-				if openErr == nil {
-					defer func() {
-						_ = f.Close()
-						_ = os.Remove(tmpPath)
-					}()
-					if err := h.pipeline.Deploy(context.Background(), appID, f); err != nil {
-						slog.Error("deploy failed", "app_id", appID, "error", err)
-					}
-				}
-			}()
-		}
+// Deploy godoc
+//
+//	@Summary      Deploy application
+//	@Description  Starts the deployment workflow for an app that has an uploaded archive.
+//	@Tags         apps
+//	@Security     BearerAuth
+//	@Produce      json
+//	@Param        id   path      string  true  "App ID (UUID)"
+//	@Success      202  {object}  deployResponse
+//	@Failure      404  {object}  api.Error
+//	@Failure      409  {object}  api.Error
+//	@Failure      422  {object}  api.Error
+//	@Router       /api/v1/apps/{id}/deploy [post]
+func (h *AppHandler) Deploy(c *echo.Context) error {
+	appID := c.Param("id")
+	if err := h.deploySvc.StartDeploy(c.Request().Context(), appID); err != nil {
+		return mapDeployError(err, c)
 	}
+	return c.JSON(http.StatusAccepted, deployResponse{Status: "queued"})
+}
 
-	return c.JSON(http.StatusCreated, toAppDTO(x))
+// Retry godoc
+//
+//	@Summary      Retry deployment
+//	@Description  Retries a failed deployment from scratch.
+//	@Tags         apps
+//	@Security     BearerAuth
+//	@Produce      json
+//	@Param        id   path      string  true  "App ID (UUID)"
+//	@Success      202  {object}  deployResponse
+//	@Failure      400  {object}  api.Error
+//	@Failure      404  {object}  api.Error
+//	@Router       /api/v1/apps/{id}/retry [post]
+func (h *AppHandler) Retry(c *echo.Context) error {
+	appID := c.Param("id")
+	if err := h.deploySvc.Retry(c.Request().Context(), appID); err != nil {
+		return mapDeployError(err, c)
+	}
+	return c.JSON(http.StatusAccepted, deployResponse{Status: "queued"})
+}
+
+// UploadURL godoc
+//
+//	@Summary      Refresh upload URL
+//	@Description  Generates a fresh presigned upload URL for an app.
+//	@Tags         apps
+//	@Security     BearerAuth
+//	@Produce      json
+//	@Param        id   path      string  true  "App ID (UUID)"
+//	@Success      200  {object}  map[string]string
+//	@Failure      404  {object}  api.Error
+//	@Router       /api/v1/apps/{id}/upload-url [post]
+func (h *AppHandler) UploadURL(c *echo.Context) error {
+	appID := c.Param("id")
+	url, err := h.deploySvc.PresignedUploadURL(c.Request().Context(), appID)
+	if err != nil {
+		return mapDeployError(err, c)
+	}
+	return c.JSON(http.StatusOK, map[string]string{"upload_url": url})
+}
+
+func mapDeployError(err error, c *echo.Context) error {
+	if errors.Is(err, app.ErrArchiveMissing) {
+		return c.JSON(http.StatusUnprocessableEntity, api.Error{Error: "archive not uploaded yet"})
+	}
+	if errors.Is(err, app.ErrDeployInProgress) {
+		return c.JSON(http.StatusConflict, api.Error{Error: err.Error()})
+	}
+	if errors.Is(err, app.ErrQuotaExceeded) {
+		return c.JSON(http.StatusTooManyRequests, api.Error{Error: err.Error()})
+	}
+	if errors.Is(err, app.ErrAppNotFound) {
+		return c.JSON(http.StatusNotFound, api.Error{Error: err.Error()})
+	}
+	return c.JSON(http.StatusInternalServerError, api.Error{Error: err.Error()})
 }
 
 // List godoc
@@ -407,4 +495,108 @@ func (h *AppHandler) Preview(c *echo.Context) error {
 	}
 
 	return c.File(targetFile)
+}
+
+// MultipartInit godoc
+//
+//	@Summary      Initialize multipart upload
+//	@Description  Starts a multipart upload and returns presigned URLs for each part. For files > 100 MB.
+//	@Tags         apps
+//	@Security     BearerAuth
+//	@Accept       json
+//	@Produce      json
+//	@Param        id    path      string  true  "App ID (UUID)"
+//	@Param        body  body      object{total_size=int64}  true  "Total file size in bytes"
+//	@Success      200   {object}  ports.MultipartUploadInit
+//	@Failure      404   {object}  api.Error
+//	@Router       /api/v1/apps/{id}/multipart/init [post]
+func (h *AppHandler) MultipartInit(c *echo.Context) error {
+	appID := c.Param("id")
+
+	var req struct {
+		TotalSize int64 `json:"total_size"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, api.Error{Error: "invalid request: " + err.Error()})
+	}
+	if req.TotalSize <= 0 {
+		return c.JSON(http.StatusBadRequest, api.Error{Error: "total_size must be positive"})
+	}
+
+	result, err := h.deploySvc.CreateMultipartUpload(c.Request().Context(), appID, req.TotalSize)
+	if err != nil {
+		return mapDeployError(err, c)
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+
+// MultipartComplete godoc
+//
+//	@Summary      Complete multipart upload
+//	@Description  Finalizes a multipart upload by assembling all uploaded parts.
+//	@Tags         apps
+//	@Security     BearerAuth
+//	@Accept       json
+//	@Produce      json
+//	@Param        id    path      string                          true  "App ID (UUID)"
+//	@Param        body  body      object{upload_id=string,parts=[]ports.UploadedPart}  true  "Upload ID and completed parts"
+//	@Success      200   {object}  map[string]string
+//	@Failure      400   {object}  api.Error
+//	@Router       /api/v1/apps/{id}/multipart/complete [post]
+func (h *AppHandler) MultipartComplete(c *echo.Context) error {
+	appID := c.Param("id")
+
+	var req struct {
+		UploadID string              `json:"upload_id"`
+		Parts    []ports.UploadedPart `json:"parts"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, api.Error{Error: "invalid request: " + err.Error()})
+	}
+	if req.UploadID == "" {
+		return c.JSON(http.StatusBadRequest, api.Error{Error: "upload_id is required"})
+	}
+	if len(req.Parts) == 0 {
+		return c.JSON(http.StatusBadRequest, api.Error{Error: "parts list cannot be empty"})
+	}
+
+	if err := h.deploySvc.CompleteMultipartUpload(c.Request().Context(), appID, req.UploadID, req.Parts); err != nil {
+		return mapDeployError(err, c)
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"status": "completed"})
+}
+
+// MultipartAbort godoc
+//
+//	@Summary      Abort multipart upload
+//	@Description  Cancels an incomplete multipart upload and cleans up partial parts.
+//	@Tags         apps
+//	@Security     BearerAuth
+//	@Accept       json
+//	@Produce      json
+//	@Param        id    path      string                       true  "App ID (UUID)"
+//	@Param        body  body      object{upload_id=string}     true  "Upload ID"
+//	@Success      200   {object}  map[string]string
+//	@Failure      400   {object}  api.Error
+//	@Router       /api/v1/apps/{id}/multipart/abort [post]
+func (h *AppHandler) MultipartAbort(c *echo.Context) error {
+	appID := c.Param("id")
+
+	var req struct {
+		UploadID string `json:"upload_id"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, api.Error{Error: "invalid request: " + err.Error()})
+	}
+	if req.UploadID == "" {
+		return c.JSON(http.StatusBadRequest, api.Error{Error: "upload_id is required"})
+	}
+
+	if err := h.deploySvc.AbortMultipartUpload(c.Request().Context(), appID, req.UploadID); err != nil {
+		return mapDeployError(err, c)
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"status": "aborted"})
 }

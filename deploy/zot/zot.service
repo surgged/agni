@@ -1,0 +1,24 @@
+[Unit]
+Description=Zot OCI Registry (S3-backed, stateless)
+Documentation=https://zotregistry.dev
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/zot serve /etc/zot/config.yaml
+EnvironmentFile=/etc/zot/env
+Restart=always
+RestartSec=10
+User=zot
+Group=zot
+LimitNOFILE=65536
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/zot /var/log
+PrivateTmp=yes
+PrivateDevices=yes
+
+[Install]
+WantedBy=multi-user.target

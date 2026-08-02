@@ -19,4 +19,3 @@ var ErrEmailNotVerified = errors.New("email not verified")
 
 // ErrInvalidVerificationToken is returned when an invalid email verification token is provided.
 var ErrInvalidVerificationToken = errors.New("invalid verification token")
-

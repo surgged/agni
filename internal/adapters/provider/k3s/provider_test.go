@@ -57,4 +57,3 @@ func TestK3sProvider_SimulatedDevMode(t *testing.T) {
 	err = provider.Destroy(context.Background(), "app-test-456")
 	assert.NoError(t, err)
 }
-

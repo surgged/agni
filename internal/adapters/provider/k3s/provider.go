@@ -8,10 +8,12 @@ import (
 	"html/template"
 	"io"
 	"log/slog"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -118,14 +120,17 @@ func buildClientset() (kubernetes.Interface, error) {
 }
 
 type templateParams struct {
-	ID           string
-	Namespace    string
-	OwnerEmail   string
-	ImageRef     string
-	Port         int32
-	CertIssuer   string
-	IngressClass string
-	Domain       string
+	ID              string
+	Namespace       string
+	OwnerEmail      string
+	ImageRef        string
+	Port            int32
+	RuntimeClass    string
+	ImagePullSecret string
+	Slug            string
+	CertIssuer      string
+	IngressClass    string
+	Domain          string
 }
 
 func (p *Provider) Deploy(ctx context.Context, spec ports.PodSpec) error {
@@ -142,15 +147,22 @@ func (p *Provider) Deploy(ctx context.Context, spec ports.PodSpec) error {
 	}
 
 	ownerEmailLabel := strings.ReplaceAll(strings.ReplaceAll(spec.OwnerEmail, "@", "_at_"), "+", "_")
+	runtimeClass := spec.RuntimeClass
+	if runtimeClass == "" {
+		runtimeClass = "kata-fc"
+	}
 	params := templateParams{
-		ID:           spec.AppID,
-		Namespace:    p.namespace,
-		OwnerEmail:   ownerEmailLabel,
-		ImageRef:     spec.ImageRef,
-		Port:         spec.Port,
-		CertIssuer:   p.certIssuer,
-		IngressClass: p.ingressClass,
-		Domain:       p.domain,
+		ID:              spec.AppID,
+		Namespace:       p.namespace,
+		OwnerEmail:      ownerEmailLabel,
+		ImageRef:        spec.ImageRef,
+		Port:            spec.Port,
+		RuntimeClass:    runtimeClass,
+		ImagePullSecret: spec.ImagePullSecret,
+		Slug:            spec.AppID,
+		CertIssuer:      p.certIssuer,
+		IngressClass:    p.ingressClass,
+		Domain:          p.domain,
 	}
 
 	var buf bytes.Buffer
@@ -299,3 +311,79 @@ func (p *Provider) Status(ctx context.Context, name string) (ports.PodStatus, er
 
 var _ ports.ContainerProvider = (*Provider)(nil)
 
+func (p *Provider) WaitHealthy(ctx context.Context, name string, port int32, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+	interval := 5 * time.Second
+
+	for time.Now().Before(deadline) {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(interval):
+		}
+
+		if p.clientset == nil {
+			return nil
+		}
+
+		pod, err := p.clientset.CoreV1().Pods(p.namespace).Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			continue
+		}
+
+		for _, cond := range pod.Status.Conditions {
+			if cond.Type == corev1.PodReady && cond.Status == corev1.ConditionTrue {
+				svcName := name
+				svc, err := p.clientset.CoreV1().Services(p.namespace).Get(ctx, svcName, metav1.GetOptions{})
+				if err != nil {
+					continue
+				}
+				if svc.Spec.ClusterIP != "" {
+					url := fmt.Sprintf("http://%s:%d", svc.Spec.ClusterIP, port)
+					req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+					if resp, err := http.DefaultClient.Do(req); err == nil {
+						resp.Body.Close()
+						if resp.StatusCode < 500 {
+							return nil
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return fmt.Errorf("health check timed out after %v", timeout)
+}
+
+func (p *Provider) EnsurePullSecret(ctx context.Context, namespace, name string, creds ports.RegistryAuth) error {
+	if p.clientset == nil {
+		slog.WarnContext(ctx, "pull secret simulated (dev mode)", "namespace", namespace, "name", name)
+		return nil
+	}
+
+	dockerConfig := fmt.Sprintf(`{"%s":{"username":"%s","password":"%s","auth":"%s"}}`,
+		"" /* registry URL placeholder */, creds.Username, creds.Password,
+		"" /* encoded auth placeholder */)
+	dockerConfigJSON := fmt.Sprintf(`{"auths":%s}`, dockerConfig)
+
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Type: corev1.SecretTypeDockerConfigJson,
+		Data: map[string][]byte{
+			corev1.DockerConfigJsonKey: []byte(dockerConfigJSON),
+		},
+	}
+
+	existing, err := p.clientset.CoreV1().Secrets(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err == nil {
+		secret.ResourceVersion = existing.ResourceVersion
+		_, err = p.clientset.CoreV1().Secrets(namespace).Update(ctx, secret, metav1.UpdateOptions{})
+		return err
+	}
+
+	_, err = p.clientset.CoreV1().Secrets(namespace).Create(ctx, secret, metav1.CreateOptions{})
+	return err
+}

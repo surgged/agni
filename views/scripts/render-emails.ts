@@ -2,23 +2,39 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MagicLinkEmail } from '../src/emails/MagicLinkEmail';
+import { VerifyEmailEmail } from '../src/emails/VerifyEmailEmail';
 
 async function buildEmails() {
   console.log('⚡ Rendering React Email templates to static HTML via Bun...');
 
-  const htmlContent = renderToStaticMarkup(
+  const templatesDir = `${import.meta.dir}/../../internal/adapters/email/templates`;
+
+  // Magic Link Email
+  const magicLinkHtml = renderToStaticMarkup(
     React.createElement(MagicLinkEmail, {
       magicLink: '{{MAGIC_LINK}}',
       recipientEmail: '{{RECIPIENT_EMAIL}}',
     })
   );
-  const fullHtml = `<!DOCTYPE html>\n${htmlContent}`;
+  await Bun.write(
+    `${templatesDir}/magic_link.html`,
+    `<!DOCTYPE html>\n${magicLinkHtml}`
+  );
+  console.log(`✅ MagicLinkEmail compiled -> magic_link.html`);
 
-  const targetFile = `${import.meta.dir}/../../internal/adapters/email/templates/magic_link.html`;
-  await Bun.write(targetFile, fullHtml);
-
-  console.log(`✅ Successfully compiled MagicLinkEmail.tsx -> ${targetFile}`);
+  // Verify Email
+  const verifyEmailHtml = renderToStaticMarkup(
+    React.createElement(VerifyEmailEmail, {
+      verifyLink: '{{VERIFY_LINK}}',
+      recipientName: '{{RECIPIENT_NAME}}',
+      recipientEmail: '{{RECIPIENT_EMAIL}}',
+    })
+  );
+  await Bun.write(
+    `${templatesDir}/verify_email.html`,
+    `<!DOCTYPE html>\n${verifyEmailHtml}`
+  );
+  console.log(`✅ VerifyEmailEmail compiled -> verify_email.html`);
 }
 
 buildEmails();
-

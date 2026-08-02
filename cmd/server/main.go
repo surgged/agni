@@ -17,6 +17,7 @@ import (
 	_ "github.com/surgged/agni/docs"
 	"github.com/surgged/agni/internal/adapters/auth/agentapikey"
 	"github.com/surgged/agni/internal/adapters/auth/jwt"
+	"github.com/surgged/agni/internal/adapters/builder/buildah"
 	redisclient "github.com/surgged/agni/internal/adapters/cache/redis"
 	resendadapter "github.com/surgged/agni/internal/adapters/email/resend"
 	"github.com/surgged/agni/internal/adapters/eventbus"
@@ -25,11 +26,14 @@ import (
 	v1 "github.com/surgged/agni/internal/adapters/http/web/v1"
 	"github.com/surgged/agni/internal/adapters/persistence/gorm"
 	"github.com/surgged/agni/internal/adapters/provider/k3s"
+	"github.com/surgged/agni/internal/adapters/storage/s3"
 	"github.com/surgged/agni/internal/adapters/uow"
+	"github.com/surgged/agni/internal/adapters/workflow"
 	appapp "github.com/surgged/agni/internal/application/app"
 	"github.com/surgged/agni/internal/application/deploy"
 	shareapp "github.com/surgged/agni/internal/application/sharelink"
 	userapp "github.com/surgged/agni/internal/application/user"
+	"github.com/surgged/agni/internal/ports"
 	// crank:composition-imports (do not remove — `crank make handler` splices new application imports here)
 	"github.com/surgged/agni/internal/config"
 	"github.com/surgged/agni/pkg/crypto"
@@ -124,10 +128,59 @@ func main() {
 	sharelinkCmd := shareapp.NewCommandHandler(sharelinkRepo, uow)
 	sharelinkQry := shareapp.NewQueryHandler(sharelinkRepo)
 
-	// ---- Deploy pipeline ----
-	deployPipe := deploy.NewPipeline(k3sProvider, appCmd, appQry, cfg.Share.Domain)
+	// ---- Deploy service ----
+	s3Store, err := s3.NewStore(
+		cfg.S3.Endpoint,
+		cfg.S3.Region,
+		cfg.S3.Bucket,
+		cfg.S3.AccessKey,
+		cfg.S3.SecretKey,
+		cfg.S3.UseSSL,
+	)
+	if err != nil {
+		logger.Error("failed to create S3 store", "error", err)
+		os.Exit(1)
+	}
+	logger.Info("S3 archive store connected", "bucket", cfg.S3.Bucket, "endpoint", cfg.S3.Endpoint)
 
-	appHandler := v1.NewAppHandler(appCmd, appQry, deployPipe, agentTokens, k3sProvider)
+	imageBuilder := buildah.NewBuilder("buildah", "", "")
+
+	// Create deploy service early so workflow can reference it
+	deploySvc := deploy.NewService(deploy.ServiceConfig{
+		ArchiveStore:      s3Store,
+		ImageBuilder:      imageBuilder,
+		Provider:          k3sProvider,
+		Orchestrator:      nil, // wired after worker starts
+		AppCmd:            appCmd,
+		AppQry:            appQry,
+		Domain:            cfg.Share.Domain,
+		RegistryURL:       cfg.Registry.URL,
+		MaxRunningPerUser: 1,
+	})
+
+	// ---- Workflow worker (embedded, Postgres backend) ----
+	activityDeps := &workflow.ActivityDeps{
+		ArchiveStore:  s3Store,
+		ImageBuilder:  imageBuilder,
+		Provider:      k3sProvider,
+		AppCmd:        appCmd,
+		DeployService: deploySvc,
+	}
+
+	var orch ports.Orchestrator
+	wrk, err := workflow.StartWorker(context.Background(), activityDeps, cfg.Database.WorkerDSN)
+	if err != nil {
+		logger.Warn("failed to start workflow worker, deployments run without orchestration", "error", err)
+	} else {
+		orch = wrk.Orchestrator()
+		logger.Info("workflow worker started (embedded, Postgres backend)")
+		defer wrk.Stop()
+	}
+
+	// Wire the orchestrator into deploy service (set after worker starts)
+	deploySvc.SetOrchestrator(orch)
+
+	appHandler := v1.NewAppHandler(appCmd, appQry, deploySvc, agentTokens, k3sProvider)
 	shareHandler := v1.NewShareHandler(sharelinkCmd, sharelinkQry)
 	magicHandler := v1.NewMagicHandler(cfg.Share, agentTokens, emailClient, userCmd, userQry)
 	sessionHandler := v1.NewSessionHandler(agentTokens, sharelinkRepo)

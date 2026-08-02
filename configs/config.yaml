@@ -8,6 +8,7 @@ app:
 
 database:
   dsn: "postgres://agni:agni@localhost:5432/agni?sslmode=disable"
+  worker_dsn: "postgres://agni:agni@localhost:5432/agni_worker?sslmode=disable"
 
 jwt:
   secret: "change-me-in-production"
@@ -54,3 +55,16 @@ k3s:
   kata_runtime_class: "kata-fc"
   ingress_class: "nginx"
   cert_issuer: "letsencrypt-prod"
+
+s3:
+  endpoint: "sss.surgged.xyz"
+  region: "us-east-1"
+  bucket: "agni"
+  access_key: ""
+  secret_key: ""
+  use_ssl: true
+
+registry:
+  url: "zoteg.anurag.store"
+  username: ""
+  password: ""

@@ -23,6 +23,7 @@ export interface App {
   shareUrl?: string;
   status: AppStatus;
   errorMessage?: string;
+  failedStep?: string;
   createdAt: string;
   metrics: AppMetrics;
   envVars?: Record<string, string>;

@@ -18,23 +18,20 @@ import (
 // config blocks are injected at the markers below by `crank add` (and by
 // `crank init` for multi-feature generations).
 type Config struct {
-	App AppConfig `mapstructure:"app"`
-	JWT JWTConfig `mapstructure:"jwt"`
-
-	Redis RedisConfig `mapstructure:"redis"`
-
-	Views ViewsConfig `mapstructure:"views"`
-
+	App      AppConfig      `mapstructure:"app"`
+	JWT      JWTConfig      `mapstructure:"jwt"`
+	Redis    RedisConfig    `mapstructure:"redis"`
+	Views    ViewsConfig    `mapstructure:"views"`
 	Database DatabaseConfig `mapstructure:"database"`
-
+	Logging  LoggingConfig  `mapstructure:"logging"`
+	MCP      MCPConfig      `mapstructure:"mcp"`
+	Email    EmailConfig    `mapstructure:"email"`
+	Share    ShareConfig    `mapstructure:"share"`
+	Deploy   DeployConfig   `mapstructure:"deploy"`
+	K3s      K3sConfig      `mapstructure:"k3s"`
+	S3       S3Config       `mapstructure:"s3"`
+	Registry RegistryConfig `mapstructure:"registry"`
 	// crank:config-fields
-	Logging LoggingConfig `mapstructure:"logging"`
-
-	MCP    MCPConfig    `mapstructure:"mcp"`
-	Email  EmailConfig  `mapstructure:"email"`
-	Share  ShareConfig  `mapstructure:"share"`
-	Deploy DeployConfig `mapstructure:"deploy"`
-	K3s    K3sConfig    `mapstructure:"k3s"`
 }
 
 // AppConfig holds settings for the HTTP server itself.
@@ -70,7 +67,8 @@ type ViewsConfig struct {
 
 // DatabaseConfig holds PostgreSQL connection settings.
 type DatabaseConfig struct {
-	DSN string `mapstructure:"dsn" env:"DATABASE_DSN"`
+	DSN       string `mapstructure:"dsn" env:"DATABASE_DSN"`
+	WorkerDSN string `mapstructure:"worker_dsn" env:"DATABASE_WORKER_DSN"`
 }
 
 // crank:config-structs
@@ -117,6 +115,23 @@ type K3sConfig struct {
 	CertIssuer       string `mapstructure:"cert_issuer"`
 }
 
+// S3Config holds settings for S3-compatible object storage.
+type S3Config struct {
+	Endpoint  string `mapstructure:"endpoint"`
+	Region    string `mapstructure:"region"`
+	Bucket    string `mapstructure:"bucket"`
+	AccessKey string `mapstructure:"access_key" env:"AGNI_S3_ACCESS_KEY"`
+	SecretKey string `mapstructure:"secret_key" env:"AGNI_S3_SECRET_KEY"`
+	UseSSL    bool   `mapstructure:"use_ssl"`
+}
+
+// RegistryConfig holds settings for the OCI registry (zot).
+type RegistryConfig struct {
+	URL      string `mapstructure:"url"`
+	Username string `mapstructure:"username" env:"AGNI_REGISTRY_USERNAME"`
+	Password string `mapstructure:"password" env:"AGNI_REGISTRY_PASSWORD"`
+}
+
 // Load reads non-secret values from configs/config.yaml (via Viper) and then
 // overlays secrets from .env / environment variables (via caarlos0/env). Only
 // fields tagged with `env:"..."` are affected by the env overlay — all other
@@ -161,21 +176,16 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("jwt.secret", "change-me-in-production")
 	v.SetDefault("jwt.expiration", "24h")
 	v.SetDefault("jwt.refresh_expiration", "168h")
-
 	v.SetDefault("redis.addr", "localhost:6379")
 	v.SetDefault("redis.password", "")
 	v.SetDefault("redis.db", 0)
-
 	v.SetDefault("views.enabled", false)
 	v.SetDefault("views.dev_server", "")
-
 	v.SetDefault("database.dsn", "postgres://agni:agni@localhost:5432/agni?sslmode=disable")
-
-	// crank:config-defaults
+	v.SetDefault("database.worker_dsn", "postgres://agni:agni@localhost:5432/agni_worker?sslmode=disable")
 	v.SetDefault("logging.level", "info")
 	v.SetDefault("logging.format", "text")
 	v.SetDefault("logging.add_source", false)
-
 	v.SetDefault("mcp.agent_signing_secret", "change-me-in-production")
 	v.SetDefault("mcp.agent_token_ttl", "720h")
 	v.SetDefault("email.provider", "resend")
@@ -192,4 +202,15 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("k3s.kata_runtime_class", "kata-fc")
 	v.SetDefault("k3s.ingress_class", "nginx")
 	v.SetDefault("k3s.cert_issuer", "letsencrypt-prod")
+	v.SetDefault("s3.endpoint", "")
+	v.SetDefault("s3.region", "us-east-1")
+	v.SetDefault("s3.bucket", "agni-archives")
+	v.SetDefault("s3.access_key", "")
+	v.SetDefault("s3.secret_key", "")
+	v.SetDefault("s3.use_ssl", true)
+	v.SetDefault("registry.url", "registry.agni.svc:5000")
+	v.SetDefault("registry.username", "")
+	v.SetDefault("registry.password", "")
+	v.SetDefault("worker_database_dsn", "")
+	// crank:config-defaults
 }

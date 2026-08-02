@@ -36,6 +36,46 @@ func (h *CommandHandler) HandleCreate(ctx context.Context, cmd CreateAppCommand)
 	return x, nil
 }
 
+func (h *CommandHandler) HandleQueueDeploy(ctx context.Context, cmd QueueDeployCommand) error {
+	id, err := uuid.Parse(cmd.ID)
+	if err != nil {
+		return fmt.Errorf("queue deploy: %w", err)
+	}
+	x, err := h.repo.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	if err := x.Queue(cmd.ArchiveKey, cmd.Slug, cmd.Port); err != nil {
+		return fmt.Errorf("queue deploy: %w", err)
+	}
+	if err := h.uow.SaveAndPublish(ctx, func(ctx context.Context, repos uow.TxRepositories) error {
+		return repos.Apps().Save(ctx, x)
+	}, x.PullEvents()); err != nil {
+		return fmt.Errorf("save app: %w", err)
+	}
+	return nil
+}
+
+func (h *CommandHandler) HandleRetryDeploy(ctx context.Context, cmd RetryDeployCommand) error {
+	id, err := uuid.Parse(cmd.ID)
+	if err != nil {
+		return fmt.Errorf("retry deploy: %w", err)
+	}
+	x, err := h.repo.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	if err := x.Retry(); err != nil {
+		return fmt.Errorf("retry deploy: %w", err)
+	}
+	if err := h.uow.SaveAndPublish(ctx, func(ctx context.Context, repos uow.TxRepositories) error {
+		return repos.Apps().Save(ctx, x)
+	}, x.PullEvents()); err != nil {
+		return fmt.Errorf("save app: %w", err)
+	}
+	return nil
+}
+
 func (h *CommandHandler) HandleMarkBuilding(ctx context.Context, cmd MarkBuildingCommand) error {
 	id, err := uuid.Parse(cmd.ID)
 	if err != nil {
@@ -105,7 +145,7 @@ func (h *CommandHandler) HandleMarkFailed(ctx context.Context, cmd MarkFailedCom
 	if err != nil {
 		return err
 	}
-	if err := x.MarkFailed(cmd.Reason); err != nil {
+	if err := x.MarkFailed(cmd.Step, cmd.Reason); err != nil {
 		return fmt.Errorf("mark failed: %w", err)
 	}
 	if err := h.uow.SaveAndPublish(ctx, func(ctx context.Context, repos uow.TxRepositories) error {

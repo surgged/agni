@@ -23,4 +23,3 @@ func TestRenderMagicLinkHTML(t *testing.T) {
 	assert.Contains(t, html, "Sign in to your account")
 	assert.Contains(t, html, "Agni")
 }
-

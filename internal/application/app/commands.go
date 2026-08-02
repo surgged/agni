@@ -6,6 +6,14 @@ type CreateAppCommand struct {
 	Name       string
 }
 
+type QueueDeployCommand struct {
+	ID         string
+	ArchiveKey string
+	Slug       string
+	Port       int32
+	Runtime    string
+}
+
 type MarkBuildingCommand struct {
 	ID string
 }
@@ -24,9 +32,14 @@ type MarkLiveCommand struct {
 
 type MarkFailedCommand struct {
 	ID     string
+	Step   string
 	Reason string
 }
 
 type DestroyAppCommand struct {
+	ID string
+}
+
+type RetryDeployCommand struct {
 	ID string
 }

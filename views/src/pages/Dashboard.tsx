@@ -11,7 +11,7 @@ import {
 import { App, ShareLink } from '@/types/app';
 import { api, mapBackendAppToApp, mapBackendShareToShareLink, ClusterHealthResponse } from '@/api';
 import { AppCard } from '@/components/dashboard/AppCard';
-import { DeploySimulatorModal } from '@/components/dashboard/DeploySimulatorModal';
+import { NewDeploymentSidebar } from '@/components/dashboard/NewDeploymentSidebar';
 import { ShareModal } from '@/components/dashboard/ShareModal';
 import { LogViewer } from '@/components/dashboard/LogViewer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -311,8 +311,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Deploy App Modal */}
-      <DeploySimulatorModal
+      {/* New Deployment Right Sidebar */}
+      <NewDeploymentSidebar
         isOpen={isDeployModalOpen}
         onClose={() => setIsDeployModalOpen(false)}
         onDeploySuccess={handleDeploySuccess}

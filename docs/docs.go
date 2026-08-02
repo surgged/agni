@@ -42,14 +42,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/v1.appDTO"
+                                "$ref": "#/definitions/internal_adapters_http_web_v1.appDTO"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -60,9 +60,9 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Creates a new microVM container application and deploys optional source tarball.",
+                "description": "Creates a new application with a presigned upload URL for archive submission.",
                 "consumes": [
-                    "multipart/form-data"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -73,48 +73,38 @@ const docTemplate = `{
                 "summary": "Create application",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "App Name",
-                        "name": "name",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Owner Email",
-                        "name": "owner_email",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "file",
-                        "description": "Source tarball bundle",
-                        "name": "tarball",
-                        "in": "formData"
+                        "description": "App creation request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_adapters_http_web_v1.createAppDTO"
+                        }
                     }
                 ],
                 "responses": {
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/v1.appDTO"
+                            "$ref": "#/definitions/internal_adapters_http_web_v1.createAppResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     },
-                    "422": {
-                        "description": "Unprocessable Entity",
+                    "429": {
+                        "description": "Too Many Requests",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -148,13 +138,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.appDTO"
+                            "$ref": "#/definitions/internal_adapters_http_web_v1.appDTO"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -189,7 +179,59 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/apps/{id}/deploy": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Starts the deployment workflow for an app that has an uploaded archive.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "apps"
+                ],
+                "summary": "Deploy application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "App ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/internal_adapters_http_web_v1.deployResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -223,13 +265,243 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.logLinePayload"
+                            "$ref": "#/definitions/internal_adapters_http_web_v1.logLinePayload"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/apps/{id}/multipart/abort": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancels an incomplete multipart upload and cleans up partial parts.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "apps"
+                ],
+                "summary": "Abort multipart upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "App ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Upload ID",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "upload_id": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/apps/{id}/multipart/complete": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Finalizes a multipart upload by assembling all uploaded parts.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "apps"
+                ],
+                "summary": "Complete multipart upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "App ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Upload ID and completed parts",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "parts": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/github_com_surgged_agni_internal_ports.UploadedPart"
+                                    }
+                                },
+                                "upload_id": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/apps/{id}/multipart/init": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Starts a multipart upload and returns presigned URLs for each part. For files \u003e 100 MB.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "apps"
+                ],
+                "summary": "Initialize multipart upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "App ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Total file size in bytes",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "total_size": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_ports.MultipartUploadInit"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/apps/{id}/retry": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retries a failed deployment from scratch.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "apps"
+                ],
+                "summary": "Retry deployment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "App ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/internal_adapters_http_web_v1.deployResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -267,7 +539,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1.shareDTO"
+                            "$ref": "#/definitions/internal_adapters_http_web_v1.shareDTO"
                         }
                     }
                 ],
@@ -275,19 +547,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/v1.shareResponseDTO"
+                            "$ref": "#/definitions/internal_adapters_http_web_v1.shareResponseDTO"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -323,14 +595,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/v1.shareResponseDTO"
+                                "$ref": "#/definitions/internal_adapters_http_web_v1.shareResponseDTO"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -374,7 +646,50 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/apps/{id}/upload-url": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Generates a fresh presigned upload URL for an app.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "apps"
+                ],
+                "summary": "Refresh upload URL",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "App ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -427,7 +742,7 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -459,13 +774,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -491,7 +806,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/web.credentials"
+                            "$ref": "#/definitions/internal_adapters_http_web.credentials"
                         }
                     }
                 ],
@@ -499,13 +814,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/web.tokenResponse"
+                            "$ref": "#/definitions/internal_adapters_http_web.tokenResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     },
                     "403": {
@@ -543,7 +858,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/web.refreshRequest"
+                            "$ref": "#/definitions/internal_adapters_http_web.refreshRequest"
                         }
                     }
                 ],
@@ -554,7 +869,7 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -604,13 +919,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -634,7 +949,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1.magicRequestDTO"
+                            "$ref": "#/definitions/internal_adapters_http_web_v1.magicRequestDTO"
                         }
                     }
                 ],
@@ -649,13 +964,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -681,7 +996,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/web.refreshRequest"
+                            "$ref": "#/definitions/internal_adapters_http_web.refreshRequest"
                         }
                     }
                 ],
@@ -689,13 +1004,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/web.tokenResponse"
+                            "$ref": "#/definitions/internal_adapters_http_web.tokenResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -721,7 +1036,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/web.registerRequest"
+                            "$ref": "#/definitions/internal_adapters_http_web.registerRequest"
                         }
                     }
                 ],
@@ -738,13 +1053,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -770,7 +1085,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/web.resendVerificationRequest"
+                            "$ref": "#/definitions/internal_adapters_http_web.resendVerificationRequest"
                         }
                     }
                 ],
@@ -787,7 +1102,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -882,7 +1197,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -914,7 +1229,7 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -943,7 +1258,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -969,7 +1284,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1.userDTO"
+                            "$ref": "#/definitions/internal_adapters_http_web_v1.userDTO"
                         }
                     }
                 ],
@@ -977,13 +1292,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/v1.userDTO"
+                            "$ref": "#/definitions/internal_adapters_http_web_v1.userDTO"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -1012,13 +1327,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.userDTO"
+                            "$ref": "#/definitions/internal_adapters_http_web_v1.userDTO"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -1049,7 +1364,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1.userDTO"
+                            "$ref": "#/definitions/internal_adapters_http_web_v1.userDTO"
                         }
                     }
                 ],
@@ -1057,19 +1372,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.userDTO"
+                            "$ref": "#/definitions/internal_adapters_http_web_v1.userDTO"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -1099,7 +1414,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
                         }
                     }
                 }
@@ -1107,7 +1422,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "api.Error": {
+        "github_com_surgged_agni_internal_adapters_http_web_api.Error": {
             "type": "object",
             "properties": {
                 "details": {
@@ -1122,7 +1437,129 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.appDTO": {
+        "github_com_surgged_agni_internal_ports.MultipartUploadInit": {
+            "type": "object",
+            "properties": {
+                "archive_key": {
+                    "type": "string"
+                },
+                "parts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_surgged_agni_internal_ports.PartUploadURL"
+                    }
+                },
+                "upload_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_surgged_agni_internal_ports.PartUploadURL": {
+            "type": "object",
+            "properties": {
+                "part_number": {
+                    "type": "integer"
+                },
+                "upload_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_surgged_agni_internal_ports.UploadedPart": {
+            "type": "object",
+            "properties": {
+                "etag": {
+                    "type": "string"
+                },
+                "part_number": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_adapters_http_web.credentials": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                }
+            }
+        },
+        "internal_adapters_http_web.refreshRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_adapters_http_web.registerRequest": {
+            "type": "object",
+            "required": [
+                "confirm_password",
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "confirm_password": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                }
+            }
+        },
+        "internal_adapters_http_web.resendVerificationRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_adapters_http_web.tokenResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "integer"
+                },
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_adapters_http_web_v1.appDTO": {
             "type": "object",
             "required": [
                 "name",
@@ -1133,6 +1570,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "error_message": {
+                    "type": "string"
+                },
+                "failed_step": {
                     "type": "string"
                 },
                 "id": {
@@ -1150,6 +1590,9 @@ const docTemplate = `{
                 "pod_name": {
                     "type": "string"
                 },
+                "port": {
+                    "type": "integer"
+                },
                 "runtime": {
                     "type": "string"
                 },
@@ -1157,6 +1600,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "share_url": {
+                    "type": "string"
+                },
+                "slug": {
                     "type": "string"
                 },
                 "status": {
@@ -1167,7 +1613,49 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.logLinePayload": {
+        "internal_adapters_http_web_v1.createAppDTO": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "runtime": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_adapters_http_web_v1.createAppResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "upload_expires_at": {
+                    "type": "string"
+                },
+                "upload_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_adapters_http_web_v1.deployResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_adapters_http_web_v1.logLinePayload": {
             "type": "object",
             "properties": {
                 "app_id": {
@@ -1184,7 +1672,7 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.magicRequestDTO": {
+        "internal_adapters_http_web_v1.magicRequestDTO": {
             "type": "object",
             "required": [
                 "email"
@@ -1195,7 +1683,7 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.shareDTO": {
+        "internal_adapters_http_web_v1.shareDTO": {
             "type": "object",
             "required": [
                 "app_id",
@@ -1216,7 +1704,7 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.shareResponseDTO": {
+        "internal_adapters_http_web_v1.shareResponseDTO": {
             "type": "object",
             "properties": {
                 "accepted_at": {
@@ -1245,7 +1733,7 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.userDTO": {
+        "internal_adapters_http_web_v1.userDTO": {
             "type": "object",
             "required": [
                 "email",
@@ -1263,89 +1751,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "web.credentials": {
-            "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 2
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 8
-                }
-            }
-        },
-        "web.refreshRequest": {
-            "type": "object",
-            "required": [
-                "refresh_token"
-            ],
-            "properties": {
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "web.registerRequest": {
-            "type": "object",
-            "required": [
-                "confirm_password",
-                "email",
-                "name",
-                "password"
-            ],
-            "properties": {
-                "confirm_password": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 2
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 8
-                }
-            }
-        },
-        "web.resendVerificationRequest": {
-            "type": "object",
-            "required": [
-                "email"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                }
-            }
-        },
-        "web.tokenResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "expires_at": {
-                    "type": "integer"
-                },
-                "refresh_token": {
                     "type": "string"
                 }
             }

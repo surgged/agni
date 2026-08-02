@@ -1,0 +1,28 @@
+storage:
+  rootDirectory: /var/lib/zot
+  dedupe: true
+  gc: true
+  gcDelay: 1h
+  gcInterval: 24h
+  storageDriver:
+    name: s3
+    region: ${S3_REGION}
+    bucket: ${S3_BUCKET}
+    secure: true
+    skipverify: false
+
+http:
+  address: 0.0.0.0
+  port: 5000
+  realm: zot
+
+log:
+  level: info
+  audit: /var/log/zot-audit.log
+
+extensions:
+  sync:
+    enable: false
+  scrub:
+    enable: true
+    interval: 24h

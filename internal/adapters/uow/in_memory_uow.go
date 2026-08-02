@@ -27,9 +27,9 @@ type inMemoryTxRepositories struct {
 	// crank:tx-repo-fields (do not remove — `crank make scaffold` splices new repo fields here)
 }
 
-func (r *inMemoryTxRepositories) Users() user.Repository                     { return r.userRepo }
-func (r *inMemoryTxRepositories) Apps() domainapp.Repository                  { return r.appRepo }
-func (r *inMemoryTxRepositories) ShareLinks() domainsharelink.Repository      { return r.shareLinkRepo }
+func (r *inMemoryTxRepositories) Users() user.Repository                 { return r.userRepo }
+func (r *inMemoryTxRepositories) Apps() domainapp.Repository             { return r.appRepo }
+func (r *inMemoryTxRepositories) ShareLinks() domainsharelink.Repository { return r.shareLinkRepo }
 
 // crank:tx-repo-methods (do not remove — `crank make scaffold` splices new repo accessor methods here)
 

@@ -155,7 +155,3 @@ func renderVerifyEmailHTML(link string, recipientName string, recipientEmail str
 	)
 	return r.Replace(templates.VerifyEmailHTML)
 }
-
-
-
-

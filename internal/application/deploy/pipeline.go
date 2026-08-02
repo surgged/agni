@@ -50,7 +50,7 @@ func (p *Pipeline) Deploy(ctx context.Context, appID uuid.UUID, tarball io.Reade
 	if tarball != nil {
 		tempDir, err := os.MkdirTemp("", "agni-build-*")
 		if err != nil {
-			_ = p.appCmd.HandleMarkFailed(ctx, appapp.MarkFailedCommand{ID: appID.String(), Reason: err.Error()})
+			_ = p.appCmd.HandleMarkFailed(ctx, appapp.MarkFailedCommand{ID: appID.String(), Step: "build", Reason: err.Error()})
 			return fmt.Errorf("deploy: create build temp dir: %w", err)
 		}
 		defer os.RemoveAll(tempDir)
@@ -94,6 +94,7 @@ func (p *Pipeline) Deploy(ctx context.Context, appID uuid.UUID, tarball io.Reade
 	if err := p.provider.Deploy(ctx, spec); err != nil {
 		_ = p.appCmd.HandleMarkFailed(ctx, appapp.MarkFailedCommand{
 			ID:     appID.String(),
+			Step:   "deploy",
 			Reason: err.Error(),
 		})
 		return fmt.Errorf("deploy: k3s deploy: %w", err)
@@ -235,4 +236,3 @@ func copyDir(src string, dst string) error {
 		return err
 	})
 }
-

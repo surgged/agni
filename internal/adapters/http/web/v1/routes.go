@@ -3,12 +3,12 @@ package v1
 import "github.com/labstack/echo/v5"
 
 type MountConfig struct {
-	UserHandler         *UserHandler // crank:http-fields (do not remove — `crank make handler` splices new fields here)
-	AppHandler          *AppHandler
-	ShareHandler        *ShareHandler
-	MagicHandler        *MagicHandler
-	SessionHandler      *SessionHandler
-	MeHandler           *MeHandler
+	UserHandler          *UserHandler // crank:http-fields (do not remove — `crank make handler` splices new fields here)
+	AppHandler           *AppHandler
+	ShareHandler         *ShareHandler
+	MagicHandler         *MagicHandler
+	SessionHandler       *SessionHandler
+	MeHandler            *MeHandler
 	ClusterHealthHandler *ClusterHealthHandler
 }
 

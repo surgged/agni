@@ -16,4 +16,3 @@ type ListUsersQuery struct {
 type GetUserByEmailQuery struct {
 	Email string
 }
-
