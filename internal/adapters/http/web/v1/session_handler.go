@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -54,6 +55,7 @@ func (h *SessionHandler) Validate(c *echo.Context) error {
 
 	links, err := h.sharelinkRepo.GetByAppID(c.Request().Context(), parsedAppID)
 	if err != nil {
+		slog.ErrorContext(c.Request().Context(), "failed to get share links for session validation", "app_id", appID, "error", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "internal error"})
 	}
 

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -25,6 +26,7 @@ func JWTAuth(tokens ports.TokenService) echo.MiddlewareFunc {
 			}
 			sub, err := tokens.Subject(parts[1])
 			if err != nil {
+				slog.WarnContext(c.Request().Context(), "token validation failed", "error", err)
 				return echo.NewHTTPError(http.StatusUnauthorized, "invalid token")
 			}
 			c.Set("user_id", sub)

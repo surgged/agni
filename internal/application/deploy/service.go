@@ -88,12 +88,14 @@ func (s *Service) CreateUpload(ctx context.Context, ownerEmail, name string, por
 		Name:       name,
 	})
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to create app for upload", "app_id", appID, "error", err)
 		return nil, fmt.Errorf("create upload: %w", err)
 	}
 
 	archiveKey := archiveKey(appID.String())
 	uploadURL, err := s.archivestore.PresignedPutURL(ctx, archiveKey, 15*time.Minute)
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to generate presigned upload URL", "app_id", appID, "error", err)
 		return nil, fmt.Errorf("create upload: presign: %w", err)
 	}
 
@@ -202,15 +204,21 @@ func (s *Service) Retry(ctx context.Context, appID string) error {
 
 func (s *Service) Destroy(ctx context.Context, appID string) error {
 	if s.orchestrator != nil {
-		_ = s.orchestrator.CancelDeployment(ctx, appID)
+		if err := s.orchestrator.CancelDeployment(ctx, appID); err != nil {
+			slog.WarnContext(ctx, "failed to cancel deployment during destroy", "app_id", appID, "error", err)
+		}
 	}
 
 	podName := fmt.Sprintf("app-%s", appID)
-	_ = s.provider.Destroy(ctx, podName)
+	if err := s.provider.Destroy(ctx, podName); err != nil {
+		slog.WarnContext(ctx, "failed to destroy provider resources during destroy", "app_id", appID, "error", err)
+	}
 
 	appObj, err := s.appQry.HandleGet(ctx, appapp.GetAppQuery{ID: appID})
 	if err == nil && appObj.ArchiveKey != "" {
-		_ = s.archivestore.Delete(ctx, appObj.ArchiveKey)
+		if err := s.archivestore.Delete(ctx, appObj.ArchiveKey); err != nil {
+			slog.WarnContext(ctx, "failed to delete archive during destroy", "app_id", appID, "error", err)
+		}
 	}
 
 	return s.appCmd.HandleDestroy(ctx, appapp.DestroyAppCommand{ID: appID})

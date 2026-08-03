@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -82,12 +83,8 @@ func (h *MeHandler) Get(c *echo.Context) error {
 	}
 
 	if err != nil {
-		return c.JSON(http.StatusOK, map[string]interface{}{
-			"user_id": sub,
-			"email":   sub,
-			"name":    sub,
-			"role":    "user",
-		})
+		slog.ErrorContext(ctx, "failed to fetch user profile", "sub", sub, "error", err)
+		return c.JSON(http.StatusInternalServerError, api.Error{Error: "internal server error"})
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{

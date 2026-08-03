@@ -86,6 +86,9 @@ func RequestLogger() echo.MiddlewareFunc {
 
 func generateID() string {
 	b := make([]byte, 16)
-	_, _ = rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		slog.Warn("failed to generate request ID", "error", err)
+		return ""
+	}
 	return hex.EncodeToString(b)
 }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -242,18 +243,25 @@ func (h *AppHandler) UploadURL(c *echo.Context) error {
 }
 
 func mapDeployError(err error, c *echo.Context) error {
+	ctx := c.Request().Context()
+	appID := c.Param("id")
 	if errors.Is(err, app.ErrArchiveMissing) {
+		slog.WarnContext(ctx, "deploy error: archive missing", "app_id", appID, "error", err)
 		return c.JSON(http.StatusUnprocessableEntity, api.Error{Error: "archive not uploaded yet"})
 	}
 	if errors.Is(err, app.ErrDeployInProgress) {
+		slog.WarnContext(ctx, "deploy error: deploy in progress", "app_id", appID, "error", err)
 		return c.JSON(http.StatusConflict, api.Error{Error: err.Error()})
 	}
 	if errors.Is(err, app.ErrQuotaExceeded) {
+		slog.WarnContext(ctx, "deploy error: quota exceeded", "app_id", appID, "error", err)
 		return c.JSON(http.StatusTooManyRequests, api.Error{Error: err.Error()})
 	}
 	if errors.Is(err, app.ErrAppNotFound) {
+		slog.WarnContext(ctx, "deploy error: app not found", "app_id", appID, "error", err)
 		return c.JSON(http.StatusNotFound, api.Error{Error: err.Error()})
 	}
+	slog.ErrorContext(ctx, "deploy error: internal", "app_id", appID, "error", err)
 	return c.JSON(http.StatusInternalServerError, api.Error{Error: err.Error()})
 }
 
@@ -278,6 +286,7 @@ func (h *AppHandler) List(c *echo.Context) error {
 		apps, err = h.qry.HandleList(c.Request().Context(), appapp.ListAppsQuery{})
 	}
 	if err != nil {
+		slog.ErrorContext(c.Request().Context(), "failed to list apps", "error", err)
 		return c.JSON(http.StatusBadRequest, api.Error{Error: err.Error()})
 	}
 
@@ -302,6 +311,7 @@ func (h *AppHandler) List(c *echo.Context) error {
 func (h *AppHandler) Get(c *echo.Context) error {
 	out, err := h.qry.HandleGet(c.Request().Context(), appapp.GetAppQuery{ID: c.Param("id")})
 	if err != nil {
+		slog.WarnContext(c.Request().Context(), "failed to get app", "app_id", c.Param("id"), "error", err)
 		return c.JSON(http.StatusNotFound, api.Error{Error: "app not found"})
 	}
 	return c.JSON(http.StatusOK, toAppDTO(out))
@@ -320,12 +330,16 @@ func (h *AppHandler) Get(c *echo.Context) error {
 //	@Router       /api/v1/apps/{id} [delete]
 func (h *AppHandler) Destroy(c *echo.Context) error {
 	appID := c.Param("id")
+	ctx := c.Request().Context()
 	if h.k3sProvider != nil {
 		podName := fmt.Sprintf("app-%s", appID)
-		_ = h.k3sProvider.Destroy(c.Request().Context(), podName)
+		if err := h.k3sProvider.Destroy(ctx, podName); err != nil {
+			slog.WarnContext(ctx, "failed to destroy k3s resources for app", "app_id", appID, "error", err)
+		}
 	}
-	err := h.cmd.HandleDestroy(c.Request().Context(), appapp.DestroyAppCommand{ID: appID})
+	err := h.cmd.HandleDestroy(ctx, appapp.DestroyAppCommand{ID: appID})
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to destroy app", "app_id", appID, "error", err)
 		return c.JSON(http.StatusBadRequest, api.Error{Error: err.Error()})
 	}
 	return c.NoContent(http.StatusNoContent)
@@ -379,12 +393,16 @@ func (h *AppHandler) Logs(c *echo.Context) error {
 					return nil
 				default:
 					line := scanner.Text()
-					payload, _ := json.Marshal(logLinePayload{
+					payload, err := json.Marshal(logLinePayload{
 						Timestamp: time.Now().UTC().Format(time.RFC3339),
 						AppID:     appID,
 						Line:      line,
 						Stream:    "stdout",
 					})
+					if err != nil {
+						slog.WarnContext(ctx, "failed to marshal log line payload", "app_id", appID, "error", err)
+						continue
+					}
 					if _, err := io.WriteString(c.Response(), "data: "+string(payload)+"\n\n"); err != nil {
 						return nil
 					}
@@ -408,12 +426,16 @@ func (h *AppHandler) Logs(c *echo.Context) error {
 		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
-			payload, _ := json.Marshal(logLinePayload{
+			payload, err := json.Marshal(logLinePayload{
 				Timestamp: time.Now().UTC().Format(time.RFC3339),
 				AppID:     appID,
 				Line:      fmt.Sprintf("[%s] container active (kata-fc microVM)", time.Now().Format("15:04:05")),
 				Stream:    "stdout",
 			})
+			if err != nil {
+				slog.WarnContext(ctx, "failed to marshal simulated log line payload", "app_id", appID, "error", err)
+				continue
+			}
 			if _, err := io.WriteString(c.Response(), "data: "+string(payload)+"\n\n"); err != nil {
 				return nil
 			}
@@ -443,6 +465,7 @@ func (h *AppHandler) IssueAgentToken(c *echo.Context) error {
 	}
 	token, expiresAt, err := h.tokens.Issue(email)
 	if err != nil {
+		slog.ErrorContext(c.Request().Context(), "failed to issue agent token", "email", email, "error", err)
 		return c.JSON(http.StatusInternalServerError, api.Error{Error: "failed to issue agent token"})
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{

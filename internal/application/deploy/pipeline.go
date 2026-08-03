@@ -50,7 +50,9 @@ func (p *Pipeline) Deploy(ctx context.Context, appID uuid.UUID, tarball io.Reade
 	if tarball != nil {
 		tempDir, err := os.MkdirTemp("", "agni-build-*")
 		if err != nil {
-			_ = p.appCmd.HandleMarkFailed(ctx, appapp.MarkFailedCommand{ID: appID.String(), Step: "build", Reason: err.Error()})
+			if err := p.appCmd.HandleMarkFailed(ctx, appapp.MarkFailedCommand{ID: appID.String(), Step: "build", Reason: err.Error()}); err != nil {
+				slog.WarnContext(ctx, "failed to mark app as failed after temp dir creation error", "app_id", appID, "error", err)
+			}
 			return fmt.Errorf("deploy: create build temp dir: %w", err)
 		}
 		defer os.RemoveAll(tempDir)
@@ -60,15 +62,23 @@ func (p *Pipeline) Deploy(ctx context.Context, appID uuid.UUID, tarball io.Reade
 		}
 
 		dataDir := filepath.Join(".", "data", "apps", appID.String())
-		_ = os.MkdirAll(dataDir, 0755)
-		_ = copyDir(tempDir, dataDir)
+		if err := os.MkdirAll(dataDir, 0755); err != nil {
+			slog.WarnContext(ctx, "failed to create app data dir", "path", dataDir, "app_id", appID, "error", err)
+		}
+		if err := copyDir(tempDir, dataDir); err != nil {
+			slog.WarnContext(ctx, "failed to copy build dir to app data", "app_id", appID, "error", err)
+		}
 
 		appNameClean := strings.ToLower(strings.TrimSpace(app.Name))
 		appNameClean = strings.ReplaceAll(appNameClean, " ", "-")
 		if appNameClean != "" && appNameClean != appID.String() {
 			nameDir := filepath.Join(".", "data", "apps", appNameClean)
-			_ = os.MkdirAll(nameDir, 0755)
-			_ = copyDir(tempDir, nameDir)
+			if err := os.MkdirAll(nameDir, 0755); err != nil {
+				slog.WarnContext(ctx, "failed to create app name dir", "path", nameDir, "app_id", appID, "error", err)
+			}
+			if err := copyDir(tempDir, nameDir); err != nil {
+				slog.WarnContext(ctx, "failed to copy build dir to app name", "app_id", appID, "error", err)
+			}
 		}
 
 		if err := buildAndPushImage(ctx, imageRef, tempDir); err != nil {
@@ -92,11 +102,13 @@ func (p *Pipeline) Deploy(ctx context.Context, appID uuid.UUID, tarball io.Reade
 		AppID:      appID.String(),
 	}
 	if err := p.provider.Deploy(ctx, spec); err != nil {
-		_ = p.appCmd.HandleMarkFailed(ctx, appapp.MarkFailedCommand{
+		if err := p.appCmd.HandleMarkFailed(ctx, appapp.MarkFailedCommand{
 			ID:     appID.String(),
 			Step:   "deploy",
 			Reason: err.Error(),
-		})
+		}); err != nil {
+			slog.WarnContext(ctx, "failed to mark app as failed after deploy error", "app_id", appID, "error", err)
+		}
 		return fmt.Errorf("deploy: k3s deploy: %w", err)
 	}
 
@@ -156,15 +168,23 @@ func extractTarball(r io.Reader, dest string) error {
 
 		switch header.Typeflag {
 		case tar.TypeDir:
-			_ = os.MkdirAll(target, 0755)
+			if err := os.MkdirAll(target, 0755); err != nil {
+				slog.Warn("failed to create dir from tarball", "path", target, "error", err)
+			}
 		case tar.TypeReg:
-			_ = os.MkdirAll(filepath.Dir(target), 0755)
+			if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+				slog.Warn("failed to create parent dir from tarball", "path", filepath.Dir(target), "error", err)
+			}
 			outFile, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR|os.O_TRUNC, header.FileInfo().Mode())
 			if err != nil {
 				return fmt.Errorf("create file %s: %w", target, err)
 			}
-			_, _ = io.Copy(outFile, tarReader)
-			_ = outFile.Close()
+			if _, err := io.Copy(outFile, tarReader); err != nil {
+				slog.Warn("failed to copy tar entry to file", "target", target, "error", err)
+			}
+			if err := outFile.Close(); err != nil {
+				slog.Warn("failed to close file after tar extraction", "target", target, "error", err)
+			}
 		}
 	}
 	return nil

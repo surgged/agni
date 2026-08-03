@@ -28,7 +28,9 @@ func NewClient(cfg config.RedisConfig) (*redis.Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := client.Ping(ctx).Err(); err != nil {
-		_ = client.Close()
+		if closeErr := client.Close(); closeErr != nil {
+			slog.Warn("redis client close error after ping failure", "error", closeErr)
+		}
 		return nil, fmt.Errorf("ping redis at %s: %w", cfg.Addr, err)
 	}
 	return client, nil

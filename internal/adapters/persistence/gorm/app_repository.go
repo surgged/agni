@@ -3,6 +3,7 @@ package gorm
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -31,6 +32,7 @@ func (r *AppRepository) Get(ctx context.Context, id uuid.UUID) (*app.App, error)
 		return nil, app.ErrAppNotFound
 	}
 	if err != nil {
+		slog.WarnContext(ctx, "failed to get app", "app_id", id, "error", err)
 		return nil, err
 	}
 	return row, nil
@@ -39,6 +41,7 @@ func (r *AppRepository) Get(ctx context.Context, id uuid.UUID) (*app.App, error)
 func (r *AppRepository) GetByOwner(ctx context.Context, ownerEmail string) ([]*app.App, error) {
 	var rows []app.App
 	if err := r.db.WithContext(ctx).Where("owner_email = ?", ownerEmail).Order("id ASC").Find(&rows).Error; err != nil {
+		slog.WarnContext(ctx, "failed to list apps by owner", "owner_email", ownerEmail, "error", err)
 		return nil, err
 	}
 	out := make([]*app.App, 0, len(rows))
@@ -51,6 +54,7 @@ func (r *AppRepository) GetByOwner(ctx context.Context, ownerEmail string) ([]*a
 func (r *AppRepository) List(ctx context.Context) ([]*app.App, error) {
 	var rows []app.App
 	if err := r.db.WithContext(ctx).Order("id ASC").Find(&rows).Error; err != nil {
+		slog.WarnContext(ctx, "failed to list apps", "error", err)
 		return nil, err
 	}
 	out := make([]*app.App, 0, len(rows))
@@ -63,6 +67,7 @@ func (r *AppRepository) List(ctx context.Context) ([]*app.App, error) {
 func (r *AppRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	res := r.db.WithContext(ctx).Where("id = ?", id).Delete(&app.App{})
 	if res.Error != nil {
+		slog.WarnContext(ctx, "failed to delete app", "app_id", id, "error", res.Error)
 		return res.Error
 	}
 	if res.RowsAffected == 0 {

@@ -3,6 +3,7 @@ package s3
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"time"
@@ -42,6 +43,7 @@ func NewStore(endpoint, region, bucket, accessKey, secretKey string, useSSL bool
 func (s *Store) PresignedPutURL(ctx context.Context, key string, ttl time.Duration) (string, error) {
 	u, err := s.client.PresignedPutObject(ctx, s.bucket, key, ttl)
 	if err != nil {
+		slog.ErrorContext(ctx, "s3: presign put failed", "key", key, "error", err)
 		return "", fmt.Errorf("s3: presign put %s: %w", key, err)
 	}
 	return u.String(), nil
@@ -51,6 +53,7 @@ func (s *Store) PresignedGetURL(ctx context.Context, key string, ttl time.Durati
 	reqParams := make(url.Values)
 	u, err := s.client.PresignedGetObject(ctx, s.bucket, key, ttl, reqParams)
 	if err != nil {
+		slog.ErrorContext(ctx, "s3: presign get failed", "key", key, "error", err)
 		return "", fmt.Errorf("s3: presign get %s: %w", key, err)
 	}
 	return u.String(), nil
@@ -63,6 +66,7 @@ func (s *Store) Head(ctx context.Context, key string) (int64, bool, error) {
 		if resp.Code == "NoSuchKey" || resp.StatusCode == 404 {
 			return 0, false, nil
 		}
+		slog.ErrorContext(ctx, "s3: head failed", "key", key, "error", err)
 		return 0, false, fmt.Errorf("s3: head %s: %w", key, err)
 	}
 	return info.Size, true, nil
@@ -71,6 +75,7 @@ func (s *Store) Head(ctx context.Context, key string) (int64, bool, error) {
 func (s *Store) Delete(ctx context.Context, key string) error {
 	err := s.client.RemoveObject(ctx, s.bucket, key, minio.RemoveObjectOptions{})
 	if err != nil {
+		slog.ErrorContext(ctx, "s3: delete failed", "key", key, "error", err)
 		return fmt.Errorf("s3: delete %s: %w", key, err)
 	}
 	return nil
@@ -84,6 +89,7 @@ func (s *Store) CreateMultipartUpload(ctx context.Context, key string, totalSize
 	core := &minio.Core{Client: s.client}
 	uploadID, err := core.NewMultipartUpload(ctx, s.bucket, key, minio.PutObjectOptions{})
 	if err != nil {
+		slog.ErrorContext(ctx, "s3: create multipart upload failed", "key", key, "error", err)
 		return "", nil, fmt.Errorf("s3: create multipart upload: %w", err)
 	}
 
@@ -97,7 +103,9 @@ func (s *Store) CreateMultipartUpload(ctx context.Context, key string, totalSize
 
 		u, err := s.client.PresignHeader(ctx, http.MethodPut, s.bucket, key, ttl, reqParams, nil)
 		if err != nil {
-			_ = core.AbortMultipartUpload(ctx, s.bucket, key, uploadID)
+			if abortErr := core.AbortMultipartUpload(ctx, s.bucket, key, uploadID); abortErr != nil {
+				slog.WarnContext(ctx, "s3: failed to abort multipart upload during cleanup", "key", key, "upload_id", uploadID, "error", abortErr)
+			}
 			return "", nil, fmt.Errorf("s3: presign part %d: %w", i, err)
 		}
 		parts[i-1] = ports.PartUploadURL{
@@ -122,6 +130,7 @@ func (s *Store) CompleteMultipartUpload(ctx context.Context, key string, uploadI
 
 	_, err := core.CompleteMultipartUpload(ctx, s.bucket, key, uploadID, minioParts, minio.PutObjectOptions{})
 	if err != nil {
+		slog.ErrorContext(ctx, "s3: complete multipart upload failed", "key", key, "upload_id", uploadID, "error", err)
 		return fmt.Errorf("s3: complete multipart upload: %w", err)
 	}
 	return nil
@@ -130,6 +139,7 @@ func (s *Store) CompleteMultipartUpload(ctx context.Context, key string, uploadI
 func (s *Store) AbortMultipartUpload(ctx context.Context, key string, uploadID string) error {
 	core := &minio.Core{Client: s.client}
 	if err := core.AbortMultipartUpload(ctx, s.bucket, key, uploadID); err != nil {
+		slog.ErrorContext(ctx, "s3: abort multipart upload failed", "key", key, "upload_id", uploadID, "error", err)
 		return fmt.Errorf("s3: abort multipart upload: %w", err)
 	}
 	return nil

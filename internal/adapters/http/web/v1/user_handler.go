@@ -2,6 +2,7 @@ package v1
 
 import (
 	"errors"
+	"log/slog"
 	"github.com/labstack/echo/v5"
 	"net/http"
 
@@ -93,6 +94,7 @@ func (h *UserHandler) Create(c *echo.Context) error {
 		return c.JSON(http.StatusNotFound, api.Error{Error: "user not found"})
 	}
 	if err != nil {
+		slog.ErrorContext(c.Request().Context(), "user create failed", "error", err)
 		return c.JSON(http.StatusUnprocessableEntity, api.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusCreated, toUserDTO(out))
@@ -121,6 +123,7 @@ func (h *UserHandler) Get(c *echo.Context) error {
 		return c.JSON(http.StatusNotFound, api.Error{Error: "user not found"})
 	}
 	if err != nil {
+		slog.ErrorContext(c.Request().Context(), "user get failed", "user_id", c.Param("id"), "error", err)
 		return c.JSON(http.StatusBadRequest, api.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusOK, toUserDTO(out))
@@ -157,6 +160,7 @@ func (h *UserHandler) Update(c *echo.Context) error {
 		return c.JSON(http.StatusNotFound, api.Error{Error: "user not found"})
 	}
 	if err != nil {
+		slog.ErrorContext(c.Request().Context(), "user update failed", "user_id", c.Param("id"), "error", err)
 		return c.JSON(http.StatusUnprocessableEntity, api.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusOK, toUserDTO(out))
@@ -185,6 +189,7 @@ func (h *UserHandler) Delete(c *echo.Context) error {
 		return c.JSON(http.StatusNotFound, api.Error{Error: "user not found"})
 	}
 	if err != nil {
+		slog.ErrorContext(c.Request().Context(), "user delete failed", "user_id", c.Param("id"), "error", err)
 		return c.JSON(http.StatusBadRequest, api.Error{Error: err.Error()})
 	}
 	return c.NoContent(http.StatusNoContent)

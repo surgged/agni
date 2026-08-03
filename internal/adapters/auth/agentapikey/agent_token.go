@@ -3,6 +3,7 @@ package agentapikey
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -38,6 +39,7 @@ func (s *AgentTokenService) Issue(email string) (string, int64, error) {
 	tok := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signed, err := tok.SignedString([]byte(s.secret))
 	if err != nil {
+		slog.Error("failed to sign agent token", "email", email, "error", err)
 		return "", 0, fmt.Errorf("sign agent token: %w", err)
 	}
 	return signed, exp.Unix(), nil
@@ -62,6 +64,7 @@ func (s *AgentTokenService) IssueMagicToken(email string, ttl time.Duration) (st
 	tok := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signed, err := tok.SignedString([]byte(s.secret))
 	if err != nil {
+		slog.Error("failed to sign magic token", "email", email, "error", err)
 		return "", 0, fmt.Errorf("sign magic token: %w", err)
 	}
 	return signed, exp.Unix(), nil
@@ -86,6 +89,7 @@ func (s *AgentTokenService) IssueSessionToken(email string, ttl time.Duration) (
 	tok := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signed, err := tok.SignedString([]byte(s.secret))
 	if err != nil {
+		slog.Error("failed to sign session token", "email", email, "error", err)
 		return "", 0, fmt.Errorf("sign session token: %w", err)
 	}
 	return signed, exp.Unix(), nil

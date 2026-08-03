@@ -84,7 +84,7 @@ func (b *Builder) Build(ctx context.Context, spec ports.BuildSpec) error {
 
 	if err := cmd.Run(); err != nil {
 		tail := tailBuf.String()
-		slog.Error("buildah failed", "app_id", spec.AppID, "error", err, "tail", tail)
+		logCtx.Error("buildah failed", "error", err, "tail", tail)
 		return fmt.Errorf("%w: %s", app.ErrBuildFailed, tail)
 	}
 

@@ -70,12 +70,16 @@ func (c *Client) SendMagicLink(ctx context.Context, recipientEmail string, token
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		slog.ErrorContext(ctx, "resend: send magic link http error", "email", recipientEmail, "error", err)
 		return fmt.Errorf("resend: send email http: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		respBody, _ := io.ReadAll(resp.Body)
+		respBody, readErr := io.ReadAll(resp.Body)
+		if readErr != nil {
+			slog.WarnContext(ctx, "resend: failed to read error response body for magic link", "email", recipientEmail, "error", readErr)
+		}
 		return fmt.Errorf("resend: API error (%d): %s", resp.StatusCode, string(respBody))
 	}
 
@@ -122,12 +126,16 @@ func (c *Client) SendVerificationEmail(ctx context.Context, recipientEmail, reci
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		slog.ErrorContext(ctx, "resend: send verification email http error", "email", recipientEmail, "error", err)
 		return fmt.Errorf("resend: send email http: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		respBody, _ := io.ReadAll(resp.Body)
+		respBody, readErr := io.ReadAll(resp.Body)
+		if readErr != nil {
+			slog.WarnContext(ctx, "resend: failed to read error response body for verification email", "email", recipientEmail, "error", readErr)
+		}
 		return fmt.Errorf("resend: API error (%d): %s", resp.StatusCode, string(respBody))
 	}
 

@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -33,6 +34,7 @@ func (c *CacheAdapter) Get(ctx context.Context, key string) (string, bool, error
 		return "", false, nil
 	}
 	if err != nil {
+		slog.ErrorContext(ctx, "redis get failed", "key", key, "error", err)
 		return "", false, fmt.Errorf("redis get %s: %w", key, err)
 	}
 	return val, true, nil
@@ -43,6 +45,7 @@ func (c *CacheAdapter) Set(ctx context.Context, key, value string, ttl time.Dura
 		return nil
 	}
 	if err := c.client.Set(ctx, key, value, ttl).Err(); err != nil {
+		slog.ErrorContext(ctx, "redis set failed", "key", key, "error", err)
 		return fmt.Errorf("redis set %s: %w", key, err)
 	}
 	return nil
@@ -54,6 +57,7 @@ func (c *CacheAdapter) Del(ctx context.Context, keys ...string) (int64, error) {
 	}
 	n, err := c.client.Del(ctx, keys...).Result()
 	if err != nil {
+		slog.ErrorContext(ctx, "redis del failed", "keys", keys, "error", err)
 		return 0, fmt.Errorf("redis del: %w", err)
 	}
 	return n, nil

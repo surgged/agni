@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 
 	"time"
 
@@ -145,7 +146,9 @@ type WorkflowsConfig struct {
 // fields stay as configured in the YAML file.
 func Load() *Config {
 	// 1. Load .env file into the process environment (silently skip if missing).
-	_ = godotenv.Load()
+	if err := godotenv.Load(); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: could not read .env file: %v\n", err)
+	}
 
 	// 2. Read non-secret config from YAML.
 	v := viper.New()
@@ -157,7 +160,7 @@ func Load() *Config {
 	setDefaults(v)
 
 	if err := v.ReadInConfig(); err != nil {
-		fmt.Printf("warning: could not read configs/config.yaml: %v\n", err)
+		fmt.Fprintf(os.Stderr, "warning: could not read configs/config.yaml: %v\n", err)
 	}
 
 	var cfg Config

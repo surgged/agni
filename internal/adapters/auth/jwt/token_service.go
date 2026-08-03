@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -45,10 +46,12 @@ func (s *TokenService) Issue(subject string) (*ports.TokenPair, error) {
 	now := time.Now()
 	access, accessExp, err := s.signToken(subject, "access", now, s.expiry)
 	if err != nil {
+		slog.Error("failed to sign access token", "subject", subject, "error", err)
 		return nil, err
 	}
 	refresh, _, err := s.signToken(subject, "refresh", now, s.refresh)
 	if err != nil {
+		slog.Error("failed to sign refresh token", "subject", subject, "error", err)
 		return nil, err
 	}
 	return &ports.TokenPair{

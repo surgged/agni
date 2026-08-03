@@ -93,6 +93,7 @@ func (h *AuthHandler) RegisterUser(c *echo.Context) error {
 		Password: in.Password,
 	})
 	if err != nil {
+		slog.ErrorContext(ctx, "user registration failed", "email", in.Email, "error", err)
 		return c.JSON(http.StatusUnprocessableEntity, api.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusCreated, map[string]string{
@@ -135,6 +136,7 @@ func (h *AuthHandler) Login(c *echo.Context) error {
 	}
 	tokens, err := h.tokens.Issue(u.ID.String())
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to issue tokens after login", "user_id", u.ID.String(), "error", err)
 		return c.JSON(http.StatusInternalServerError, api.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusOK, tokenResponse{
@@ -162,10 +164,12 @@ func (h *AuthHandler) VerifyEmail(c *echo.Context) error {
 	ctx := c.Request().Context()
 	u, err := h.cmd.HandleVerifyEmail(ctx, user.VerifyEmailCommand{Token: token})
 	if err != nil {
+		slog.WarnContext(ctx, "email verification failed", "error", err)
 		return c.JSON(http.StatusBadRequest, api.Error{Error: err.Error()})
 	}
 	tokens, err := h.tokens.Issue(u.ID.String())
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to issue tokens after email verification", "user_id", u.ID.String(), "error", err)
 		return c.JSON(http.StatusInternalServerError, api.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -197,7 +201,9 @@ func (h *AuthHandler) ResendVerification(c *echo.Context) error {
 		return err
 	}
 	ctx := c.Request().Context()
-	_ = h.cmd.HandleResendVerification(ctx, user.ResendVerificationCommand{Email: in.Email})
+	if err := h.cmd.HandleResendVerification(ctx, user.ResendVerificationCommand{Email: in.Email}); err != nil {
+		slog.WarnContext(ctx, "failed to resend verification email", "email", in.Email, "error", err)
+	}
 	return c.JSON(http.StatusOK, map[string]string{
 		"message": "If an unverified account exists with that email, a new verification link has been sent.",
 	})
@@ -221,6 +227,7 @@ func (h *AuthHandler) Refresh(c *echo.Context) error {
 	}
 	pair, err := h.tokens.Refresh(in.RefreshToken)
 	if err != nil {
+		slog.WarnContext(c.Request().Context(), "token refresh failed", "error", err)
 		return c.JSON(http.StatusUnauthorized, api.Error{Error: err.Error()})
 	}
 	return c.JSON(http.StatusOK, tokenResponse{
@@ -248,6 +255,7 @@ func (h *AuthHandler) Logout(c *echo.Context) error {
 		return err
 	}
 	if err := h.tokens.Revoke(in.RefreshToken); err != nil {
+		slog.WarnContext(c.Request().Context(), "token revoke failed", "error", err)
 		return c.JSON(http.StatusUnauthorized, api.Error{Error: err.Error()})
 	}
 	return c.NoContent(http.StatusNoContent)

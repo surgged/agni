@@ -2,6 +2,7 @@ package gorm
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"gorm.io/gorm"
@@ -27,7 +28,11 @@ var _ ports.TokenDenylist = (*TokenDenylist)(nil)
 // Add stores a revoked JTI with its expiration time.
 func (r *TokenDenylist) Add(ctx context.Context, jti string, expiresAt time.Time) error {
 	rt := token.NewRevokedToken(jti, expiresAt)
-	return r.db.WithContext(ctx).Create(&rt).Error
+	if err := r.db.WithContext(ctx).Create(&rt).Error; err != nil {
+		slog.WarnContext(ctx, "failed to add token to denylist", "jti", jti, "error", err)
+		return err
+	}
+	return nil
 }
 
 // Exists reports whether the given JTI has been revoked and has not yet

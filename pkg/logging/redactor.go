@@ -21,6 +21,7 @@ var sensitiveKeys = map[string]struct{}{
 	"ssn":        {},
 	"credit":     {},
 	"card":       {},
+	"link":       {},
 }
 
 // redactionMask is the replacement value for redacted fields.

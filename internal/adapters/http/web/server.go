@@ -32,7 +32,9 @@ func NewServer(logger *slog.Logger) *echo.Echo {
 
 		if ve, ok := err.(*validator.ValidationError); ok {
 			logger.WarnContext(ctx, "validation failed", "errors", ve.Errors)
-			_ = c.JSON(ve.HTTPStatus, api.Error{Error: ve.Message, Details: ve.Errors})
+			if jsonErr := c.JSON(ve.HTTPStatus, api.Error{Error: ve.Message, Details: ve.Errors}); jsonErr != nil {
+				logger.WarnContext(ctx, "failed to write validation error response", "error", jsonErr)
+			}
 			return
 		}
 		// Handle Echo v5 HTTP errors. This covers both *echo.HTTPError (from
@@ -43,11 +45,15 @@ func NewServer(logger *slog.Logger) *echo.Echo {
 			if he, ok := err.(*echo.HTTPError); ok && he.Message != "" {
 				msg = he.Message
 			}
-			_ = c.JSON(code, api.Error{Error: msg})
+			if jsonErr := c.JSON(code, api.Error{Error: msg}); jsonErr != nil {
+				logger.WarnContext(ctx, "failed to write http error response", "error", jsonErr)
+			}
 			return
 		}
 		logger.ErrorContext(ctx, "unhandled error", "error", err)
-		_ = c.JSON(http.StatusInternalServerError, api.Error{Error: "internal server error"})
+		if jsonErr := c.JSON(http.StatusInternalServerError, api.Error{Error: "internal server error"}); jsonErr != nil {
+			logger.WarnContext(ctx, "failed to write internal error response", "error", jsonErr)
+		}
 	}
 
 	return e

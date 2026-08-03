@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/google/uuid"
 
@@ -31,6 +32,7 @@ func (h *CommandHandler) HandleCreate(ctx context.Context, cmd CreateAppCommand)
 	if err := h.uow.SaveAndPublish(ctx, func(ctx context.Context, repos uow.TxRepositories) error {
 		return repos.Apps().Save(ctx, x)
 	}, x.PullEvents()); err != nil {
+		slog.ErrorContext(ctx, "failed to save new app", "app_id", cmd.ID, "error", err)
 		return nil, fmt.Errorf("save app: %w", err)
 	}
 	return x, nil
@@ -43,6 +45,7 @@ func (h *CommandHandler) HandleQueueDeploy(ctx context.Context, cmd QueueDeployC
 	}
 	x, err := h.repo.Get(ctx, id)
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to get app for queue deploy", "app_id", cmd.ID, "error", err)
 		return err
 	}
 	if err := x.Queue(cmd.ArchiveKey, cmd.Slug, cmd.Port); err != nil {
@@ -51,6 +54,7 @@ func (h *CommandHandler) HandleQueueDeploy(ctx context.Context, cmd QueueDeployC
 	if err := h.uow.SaveAndPublish(ctx, func(ctx context.Context, repos uow.TxRepositories) error {
 		return repos.Apps().Save(ctx, x)
 	}, x.PullEvents()); err != nil {
+		slog.ErrorContext(ctx, "failed to save app after queue deploy", "app_id", cmd.ID, "error", err)
 		return fmt.Errorf("save app: %w", err)
 	}
 	return nil
@@ -63,6 +67,7 @@ func (h *CommandHandler) HandleRetryDeploy(ctx context.Context, cmd RetryDeployC
 	}
 	x, err := h.repo.Get(ctx, id)
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to get app", "app_id", cmd.ID, "error", err)
 		return err
 	}
 	if err := x.Retry(); err != nil {
@@ -83,6 +88,7 @@ func (h *CommandHandler) HandleMarkBuilding(ctx context.Context, cmd MarkBuildin
 	}
 	x, err := h.repo.Get(ctx, id)
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to get app", "app_id", cmd.ID, "error", err)
 		return err
 	}
 	if err := x.MarkBuilding(); err != nil {

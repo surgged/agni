@@ -3,6 +3,7 @@ package gorm
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -37,6 +38,7 @@ func (r *UserRepository) Get(ctx context.Context, id uuid.UUID) (*user.User, err
 		return nil, user.ErrUserNotFound
 	}
 	if err != nil {
+		slog.WarnContext(ctx, "failed to get user", "user_id", id, "error", err)
 		return nil, err
 	}
 	return row, nil
@@ -51,6 +53,7 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*user.Us
 		return nil, user.ErrUserNotFound
 	}
 	if err != nil {
+		slog.WarnContext(ctx, "failed to get user by email", "email", email, "error", err)
 		return nil, err
 	}
 	return row, nil
@@ -68,6 +71,7 @@ func (r *UserRepository) GetByVerificationToken(ctx context.Context, token strin
 		return nil, user.ErrUserNotFound
 	}
 	if err != nil {
+		slog.WarnContext(ctx, "failed to get user by verification token", "error", err)
 		return nil, err
 	}
 	return row, nil
@@ -77,6 +81,7 @@ func (r *UserRepository) GetByVerificationToken(ctx context.Context, token strin
 func (r *UserRepository) List(ctx context.Context) ([]*user.User, error) {
 	var rows []user.User
 	if err := r.db.WithContext(ctx).Order("id ASC").Find(&rows).Error; err != nil {
+		slog.WarnContext(ctx, "failed to list users", "error", err)
 		return nil, err
 	}
 	out := make([]*user.User, 0, len(rows))
@@ -91,6 +96,7 @@ func (r *UserRepository) List(ctx context.Context) ([]*user.User, error) {
 func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	res := r.db.WithContext(ctx).Where("id = ?", id).Delete(&user.User{})
 	if res.Error != nil {
+		slog.WarnContext(ctx, "failed to delete user", "user_id", id, "error", res.Error)
 		return res.Error
 	}
 	if res.RowsAffected == 0 {

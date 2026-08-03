@@ -93,6 +93,11 @@ func StartWorker(ctx context.Context, deps *ActivityDeps, workerDSN string) (*Wo
 	)
 
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				slog.Error("workflow worker panicked", "panic", r)
+			}
+		}()
 		slog.Info("workflow worker starting")
 		if err := w.Start(ctx); err != nil {
 			slog.Error("workflow worker exited with error", "error", err)

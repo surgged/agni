@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/google/uuid"
 
@@ -69,7 +70,9 @@ func (h *CommandHandler) HandleCreate(ctx context.Context, cmd CreateUserCommand
 	}
 
 	if h.emailSender != nil {
-		_ = h.emailSender.SendVerificationEmail(ctx, x.Email, x.Name, vToken)
+		if err := h.emailSender.SendVerificationEmail(ctx, x.Email, x.Name, vToken); err != nil {
+			slog.WarnContext(ctx, "failed to send verification email", "email", x.Email, "error", err)
+		}
 	}
 	return x, nil
 }
@@ -133,7 +136,9 @@ func (h *CommandHandler) HandleResendVerification(ctx context.Context, cmd Resen
 		return fmt.Errorf("save user resend token: %w", err)
 	}
 	if h.emailSender != nil {
-		_ = h.emailSender.SendVerificationEmail(ctx, u.Email, u.Name, newToken)
+		if err := h.emailSender.SendVerificationEmail(ctx, u.Email, u.Name, newToken); err != nil {
+			slog.WarnContext(ctx, "failed to send verification email", "email", u.Email, "error", err)
+		}
 	}
 	return nil
 }

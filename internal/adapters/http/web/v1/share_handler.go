@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -101,6 +102,7 @@ func (h *ShareHandler) Create(c *echo.Context) error {
 	}
 	x, plaintext, err := h.cmd.HandleCreate(c.Request().Context(), in.toCreateCommand())
 	if err != nil {
+		slog.ErrorContext(c.Request().Context(), "share link create failed", "app_id", in.AppID, "error", err)
 		return c.JSON(http.StatusUnprocessableEntity, api.Error{Error: err.Error()})
 	}
 	resp := toShareDTO(x)
@@ -123,6 +125,7 @@ func (h *ShareHandler) List(c *echo.Context) error {
 	appID := c.Param("id")
 	links, err := h.qry.HandleListByApp(c.Request().Context(), shareapp.ListByAppQuery{AppID: appID})
 	if err != nil {
+		slog.ErrorContext(c.Request().Context(), "share link list failed", "app_id", appID, "error", err)
 		return c.JSON(http.StatusBadRequest, api.Error{Error: err.Error()})
 	}
 	dtos := make([]shareResponseDTO, 0, len(links))
@@ -147,6 +150,7 @@ func (h *ShareHandler) List(c *echo.Context) error {
 func (h *ShareHandler) Revoke(c *echo.Context) error {
 	err := h.cmd.HandleRevoke(c.Request().Context(), shareapp.RevokeShareLinkCommand{ID: c.Param("sid")})
 	if err != nil {
+		slog.ErrorContext(c.Request().Context(), "share link revoke failed", "share_id", c.Param("sid"), "error", err)
 		return c.JSON(http.StatusBadRequest, api.Error{Error: err.Error()})
 	}
 	return c.NoContent(http.StatusNoContent)

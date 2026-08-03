@@ -3,6 +3,7 @@ package sharelink
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -36,6 +37,7 @@ func (h *CommandHandler) HandleCreate(ctx context.Context, cmd CreateShareLinkCo
 	if err := h.uow.SaveAndPublish(ctx, func(ctx context.Context, repos uow.TxRepositories) error {
 		return repos.ShareLinks().Save(ctx, x)
 	}, x.PullEvents()); err != nil {
+		slog.ErrorContext(ctx, "failed to save share link", "share_id", cmd.ID, "error", err)
 		return nil, "", fmt.Errorf("save share link: %w", err)
 	}
 	return x, plaintext, nil
@@ -48,6 +50,7 @@ func (h *CommandHandler) HandleAccept(ctx context.Context, cmd AcceptShareLinkCo
 	}
 	x, err := h.repo.Get(ctx, id)
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to get share link for accept", "share_id", cmd.ID, "error", err)
 		return err
 	}
 	if err := x.Accept(cmd.Token); err != nil {
@@ -56,6 +59,7 @@ func (h *CommandHandler) HandleAccept(ctx context.Context, cmd AcceptShareLinkCo
 	if err := h.uow.SaveAndPublish(ctx, func(ctx context.Context, repos uow.TxRepositories) error {
 		return repos.ShareLinks().Save(ctx, x)
 	}, x.PullEvents()); err != nil {
+		slog.ErrorContext(ctx, "failed to save accepted share link", "share_id", cmd.ID, "error", err)
 		return fmt.Errorf("save share link: %w", err)
 	}
 	return nil
@@ -68,6 +72,7 @@ func (h *CommandHandler) HandleRevoke(ctx context.Context, cmd RevokeShareLinkCo
 	}
 	x, err := h.repo.Get(ctx, id)
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to get share link for revoke", "share_id", cmd.ID, "error", err)
 		return err
 	}
 	if err := x.Revoke(); err != nil {
@@ -76,6 +81,7 @@ func (h *CommandHandler) HandleRevoke(ctx context.Context, cmd RevokeShareLinkCo
 	if err := h.uow.SaveAndPublish(ctx, func(ctx context.Context, repos uow.TxRepositories) error {
 		return repos.ShareLinks().Save(ctx, x)
 	}, x.PullEvents()); err != nil {
+		slog.ErrorContext(ctx, "failed to save revoked share link", "share_id", cmd.ID, "error", err)
 		return fmt.Errorf("save share link: %w", err)
 	}
 	return nil

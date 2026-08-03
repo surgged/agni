@@ -37,7 +37,7 @@ func (b *InMemory) Publish(ctx context.Context, evs ...shared.DomainEvent) error
 	for _, ev := range evs {
 		for _, fn := range b.subs {
 			if err := fn(ctx, ev); err != nil {
-				slog.Default().Error("event bus subscriber failed",
+				slog.Error("event bus subscriber failed",
 					"event", ev.EventName(), "error", err)
 			}
 		}

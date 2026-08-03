@@ -95,7 +95,10 @@ func buildClientset() (kubernetes.Interface, error) {
 
 	kubeconfig := os.Getenv("KUBECONFIG")
 	if kubeconfig == "" {
-		home, _ := os.UserHomeDir()
+		home, err := os.UserHomeDir()
+		if err != nil {
+			slog.Warn("failed to get user home directory, using default kubeconfig path", "error", err)
+		}
 		kubeconfig = filepath.Join(home, ".kube", "config")
 		if _, err := os.Stat("/etc/rancher/k3s/k3s.yaml"); err == nil {
 			kubeconfig = "/etc/rancher/k3s/k3s.yaml"
@@ -182,9 +185,11 @@ func (p *Provider) Deploy(ctx context.Context, spec ports.PodSpec) error {
 	}
 
 	if _, err := p.clientset.CoreV1().Namespaces().Get(ctx, p.namespace, metav1.GetOptions{}); err != nil {
-		_, _ = p.clientset.CoreV1().Namespaces().Create(ctx, &corev1.Namespace{
+		if _, createErr := p.clientset.CoreV1().Namespaces().Create(ctx, &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{Name: p.namespace},
-		}, metav1.CreateOptions{})
+		}, metav1.CreateOptions{}); createErr != nil {
+			slog.WarnContext(ctx, "failed to create namespace", "namespace", p.namespace, "error", createErr)
+		}
 	}
 
 	decoder := utilyaml.NewYAMLOrJSONDecoder(&buf, 4096)
@@ -274,9 +279,15 @@ func (p *Provider) Destroy(ctx context.Context, name string) error {
 	deletePolicy := metav1.DeletePropagationBackground
 	delOpts := metav1.DeleteOptions{PropagationPolicy: &deletePolicy}
 
-	_ = p.clientset.NetworkingV1().Ingresses(p.namespace).Delete(ctx, name, delOpts)
-	_ = p.clientset.CoreV1().Services(p.namespace).Delete(ctx, name, delOpts)
-	_ = p.clientset.CoreV1().Pods(p.namespace).Delete(ctx, name, delOpts)
+	if err := p.clientset.NetworkingV1().Ingresses(p.namespace).Delete(ctx, name, delOpts); err != nil {
+		slog.WarnContext(ctx, "failed to delete ingress", "name", name, "error", err)
+	}
+	if err := p.clientset.CoreV1().Services(p.namespace).Delete(ctx, name, delOpts); err != nil {
+		slog.WarnContext(ctx, "failed to delete service", "name", name, "error", err)
+	}
+	if err := p.clientset.CoreV1().Pods(p.namespace).Delete(ctx, name, delOpts); err != nil {
+		slog.WarnContext(ctx, "failed to delete pod", "name", name, "error", err)
+	}
 
 	slog.InfoContext(ctx, "k3s destroy complete", "name", name)
 	return nil
@@ -340,7 +351,11 @@ func (p *Provider) WaitHealthy(ctx context.Context, name string, port int32, tim
 				}
 				if svc.Spec.ClusterIP != "" {
 					url := fmt.Sprintf("http://%s:%d", svc.Spec.ClusterIP, port)
-					req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+					req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+					if err != nil {
+						slog.WarnContext(ctx, "failed to create health check request", "url", url, "error", err)
+						continue
+					}
 					if resp, err := http.DefaultClient.Do(req); err == nil {
 						resp.Body.Close()
 						if resp.StatusCode < 500 {
