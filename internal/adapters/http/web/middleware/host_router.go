@@ -10,10 +10,10 @@ import (
 )
 
 func HostRouter(domain string) echo.MiddlewareFunc {
-	if domain == "" {
-		domain = "inlb.site"
+	domainSuffix := ""
+	if domain != "" {
+		domainSuffix = "." + strings.ToLower(domain)
 	}
-	domainSuffix := "." + strings.ToLower(domain)
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
@@ -22,7 +22,7 @@ func HostRouter(domain string) echo.MiddlewareFunc {
 				host = host[:idx]
 			}
 
-			isDomainMatch := strings.HasSuffix(host, domainSuffix)
+			isDomainMatch := domainSuffix != "" && strings.HasSuffix(host, domainSuffix)
 			isLocalhostMatch := strings.HasSuffix(host, ".localhost")
 
 			if isDomainMatch || isLocalhostMatch {

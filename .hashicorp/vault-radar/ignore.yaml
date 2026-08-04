@@ -1,0 +1,3 @@
+# Ignore by file path
+- paths:
+    - db/seeds/gorm/seed_users.go

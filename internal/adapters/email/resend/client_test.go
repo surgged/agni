@@ -8,7 +8,7 @@ import (
 )
 
 func TestSendMagicLink_DevMode(t *testing.T) {
-	client := NewClient("", "agni@agni.dev", "agni.dev")
+	client := NewClient("", "noreply@example.com", "example.com")
 	err := client.SendMagicLink(context.Background(), "user@example.com", "test-token-123")
 	assert.NoError(t, err)
 }

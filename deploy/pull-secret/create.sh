@@ -6,7 +6,7 @@ set -euo pipefail
 # can pull images from the zot registry.
 #
 # Usage:
-#   REGISTRY_URL=registry.agni.dev \
+#   REGISTRY_URL=zoteg.anurag.store \
 #   REGISTRY_USERNAME=agni-puller \
 #   REGISTRY_PASSWORD= \
 #   ./create.sh

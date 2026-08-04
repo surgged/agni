@@ -15,7 +15,8 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 COPY --from=frontend /src/static/dist/ ./static/dist/
-RUN CGO_ENABLED=0 GOOS=linux go build -o /out/server ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/server ./cmd/server && \
+    CGO_ENABLED=0 GOOS=linux go build -o /out/worker ./cmd/worker
 
 # Stage 3 — minimal runtime
 FROM alpine:3.21
@@ -24,6 +25,7 @@ RUN apk add --no-cache ca-certificates curl && \
 
 WORKDIR /app
 COPY --from=backend /out/server /app/server
+COPY --from=backend /out/worker /app/worker
 COPY --from=backend /src/configs/config.yaml /app/configs/config.yaml
 COPY --from=backend /src/db/migrations /app/db/migrations
 COPY --from=backend /src/scripts/docker-entrypoint.sh /app/entrypoint.sh

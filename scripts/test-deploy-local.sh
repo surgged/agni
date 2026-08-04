@@ -26,7 +26,7 @@ COPYFILE_DISABLE=1 tar --exclude='._*' --exclude='.DS_Store' -czf "${TMP_TARBALL
 
 echo "📤 Deploying sample UI app to Agni API (POST ${SERVER_URL}/api/v1/apps)..."
 RESPONSE=$(curl -s -X POST "${SERVER_URL}/api/v1/apps" \
-  -F "owner_email=tester@agni.dev" \
+  -F "owner_email=tester@example.com" \
   -F "name=Agni Interactive UI Demo" \
   -F "tarball=@${TMP_TARBALL}")
 

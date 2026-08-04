@@ -11,7 +11,7 @@ the workflow activities — it must match across all layers.
 ## Create
 
 ```bash
-REGISTRY_URL=registry.agni.dev \
+REGISTRY_URL=zoteg.anurag.store \
 REGISTRY_USERNAME=agni-puller \
 REGISTRY_PASSWORD= \
 ./create.sh

@@ -129,7 +129,7 @@ func proxyToDevServerMiddleware(target string, logger *slog.Logger) echo.Middlew
 // isAPIPath returns true for paths that should NOT be handled as SPA routes or
 // proxied to the Vite dev server (API routes, health checks, Swagger docs).
 func isAPIPath(path string) bool {
-	apiPrefixes := []string{"/api/", "/api", "/auth/", "/auth", "/health", "/swagger/", "/swagger", "/preview/", "/preview", "/workflows", "/workflows/"}
+	apiPrefixes := []string{"/api/", "/api", "/auth/", "/auth", "/health", "/swagger/", "/swagger", "/preview/", "/preview"}
 	if v := os.Getenv("VIEWS_SKIP_PROXY"); v != "" {
 		for _, prefix := range strings.Split(v, ",") {
 			apiPrefixes = append(apiPrefixes, strings.TrimSpace(prefix))

@@ -2,8 +2,8 @@ package v1
 
 import (
 	"errors"
-	"log/slog"
 	"github.com/labstack/echo/v5"
+	"log/slog"
 	"net/http"
 
 	"github.com/surgged/agni/internal/adapters/http/web/api"

@@ -5,121 +5,92 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"net/http"
 
-	pgbackend "github.com/cschleiden/go-workflows/backend/postgres"
-	"github.com/cschleiden/go-workflows/client"
-	"github.com/cschleiden/go-workflows/diag"
-	"github.com/cschleiden/go-workflows/worker"
-	"github.com/cschleiden/go-workflows/workflow"
-
-	"github.com/surgged/agni/internal/adapters/persistence/gorm"
-	"github.com/surgged/agni/internal/ports"
+	"go.temporal.io/sdk/client"
+	"go.temporal.io/sdk/worker"
 )
 
-// Worker wraps the go-workflows worker, its backend, and exposes an
-// Orchestrator the application layer uses to start/cancel deployments.
-type Worker struct {
-	w            *worker.Worker
-	activities   *Activities
-	orchestrator ports.Orchestrator
-	backend      diag.Backend
+// WorkerConfig configures the Temporal worker + client connection.
+type WorkerConfig struct {
+	HostPort  string // e.g. "localhost:7233"
+	Namespace string // e.g. "default"
+	TaskQueue string // e.g. "agni-deploy"
 }
 
-// StartWorker creates a Postgres-backed go-workflows worker, registers
-// every activity + the DeploymentWorkflow, and starts the worker in a
-// background goroutine. Returns a Worker whose Orchestrator() can be
-// wired into the deploy service.
-func StartWorker(ctx context.Context, deps *ActivityDeps, workerDSN string) (*Worker, error) {
-	if workerDSN == "" {
-		return nil, errors.New("workerDSN is not set")
+// Worker owns the Temporal client, the running worker, and the workflow
+// Client surfaced to the application layer.
+type Worker struct {
+	c      client.Client
+	w      worker.Worker
+	client *Client
+}
+
+// StartWorker dials Temporal, registers the DeploymentWorkflow and every
+// activity on the given task queue, then starts the worker. The returned
+// Worker's Client() is what the deploy service calls to start/cancel
+// deployments.
+func StartWorker(_ context.Context, cfg WorkerConfig, deps *ActivityDeps) (*Worker, error) {
+	if cfg.HostPort == "" {
+		return nil, errors.New("workflow: HostPort is required")
+	}
+	if cfg.TaskQueue == "" {
+		return nil, errors.New("workflow: TaskQueue is required")
+	}
+	if cfg.Namespace == "" {
+		cfg.Namespace = client.DefaultNamespace
 	}
 
-	gormDB, err := gorm.NewDB(workerDSN)
+	c, err := client.Dial(client.Options{
+		HostPort:  cfg.HostPort,
+		Namespace: cfg.Namespace,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("unable to connect to worker db: %w", err)
+		return nil, fmt.Errorf("workflow: dial temporal: %w", err)
 	}
 
-	db, err := gormDB.DB()
-	if err != nil {
-		return nil, fmt.Errorf("open worker database: %w", err)
-	}
+	w := worker.New(c, cfg.TaskQueue, worker.Options{})
 
-	b := pgbackend.NewPostgresBackendWithDB(db,
-		pgbackend.WithApplyMigrations(true),
-		pgbackend.WithBackendOptions(),
-	)
+	w.RegisterWorkflow(DeploymentWorkflow)
 
 	a := &Activities{Deps: deps}
-	w := worker.New(b, &worker.Options{})
+	// RegisterActivity registers every exported method on *Activities
+	// under its method name (MarkBuilding, ValidateArchive, …). The string
+	// names used in workflow.ExecuteActivity must match these exactly.
+	w.RegisterActivity(a)
 
-	// Register workflow
-	if err := w.RegisterWorkflow(DeploymentWorkflow); err != nil {
-		return nil, fmt.Errorf("register workflow: %w", err)
-	}
-
-	// Register all activities (one per file in activities_*.go)
-	activities := []struct {
-		fn   workflow.Activity
-		name string
-	}{
-		{a.MarkBuilding, "MarkBuilding"},
-		{a.MarkDeploying, "MarkDeploying"},
-		{a.ValidateArchive, "ValidateArchive"},
-		{a.BuildImage, "BuildImage"},
-		{a.ResolvePort, "ResolvePort"},
-		{a.DeployRuntime, "DeployRuntime"},
-		{a.WaitHealthy, "WaitHealthy"},
-		{a.Finalize, "Finalize"},
-		{a.CleanupPartial, "CleanupPartial"},
-		{a.MarkFailed, "MarkFailed"},
-	}
-
-	for _, act := range activities {
-		if err := w.RegisterActivity(act.fn); err != nil {
-			return nil, fmt.Errorf("register activity %s: %w", act.name, err)
-		}
-	}
-
-	slog.Info("workflow worker activities registered",
-		"count", len(activities),
-		"names", func() []string {
-			out := make([]string, len(activities))
-			for i, a := range activities {
-				out[i] = a.name
-			}
-			return out
-		}(),
+	slog.Info("temporal worker registered",
+		"task_queue", cfg.TaskQueue,
+		"namespace", cfg.Namespace,
+		"host_port", cfg.HostPort,
 	)
 
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				slog.Error("workflow worker panicked", "panic", r)
+				slog.Error("temporal worker panicked", "panic", r)
 			}
 		}()
-		slog.Info("workflow worker starting")
-		if err := w.Start(ctx); err != nil {
-			slog.Error("workflow worker exited with error", "error", err)
+		slog.Info("temporal worker starting")
+		if err := w.Run(worker.InterruptCh()); err != nil {
+			slog.Error("temporal worker exited with error", "error", err)
 		}
 	}()
 
 	return &Worker{
-		w:            w,
-		activities:   a,
-		orchestrator: NewOrchestrator(client.New(b)),
-		backend:      b,
+		c:      c,
+		w:      w,
+		client: NewClient(c, cfg.TaskQueue),
 	}, nil
 }
 
-func (w *Worker) Orchestrator() ports.Orchestrator {
-	return w.orchestrator
-}
+// Client returns the workflow Client used by the deploy service.
+func (w *Worker) Client() *Client { return w.client }
 
-func (w *Worker) DiagHandler() http.Handler {
-	return diag.NewServeMux(w.backend)
-}
-
+// Stop closes the Temporal client. The worker goroutine exits on
+// SIGTERM via worker.InterruptCh(); Stop only releases the client
+// connection during graceful shutdown.
 func (w *Worker) Stop() {
-	// Context cancellation in main.go's signal handler stops the worker goroutine.
+	if w.c != nil {
+		w.c.Close()
+	}
 }

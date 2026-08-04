@@ -26,9 +26,6 @@ type Pipeline struct {
 }
 
 func NewPipeline(provider ports.ContainerProvider, appCmd *appapp.CommandHandler, appQry *appapp.QueryHandler, domain string) *Pipeline {
-	if domain == "" {
-		domain = "agni.dev"
-	}
 	return &Pipeline{provider: provider, appCmd: appCmd, appQry: appQry, domain: domain}
 }
 

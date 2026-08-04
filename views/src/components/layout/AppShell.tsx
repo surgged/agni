@@ -118,7 +118,7 @@ export function AppShell() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="cursor-pointer">
-                      <a href="https://docs.agni.dev" target="_blank" rel="noreferrer">
+                      <a href="/docs">
                         <ExternalLink className="mr-2 size-4 text-muted-foreground" />
                         <span>Agni Specs & Docs</span>
                       </a>

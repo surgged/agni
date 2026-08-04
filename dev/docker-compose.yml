@@ -13,21 +13,51 @@ services:
       timeout: 3s
       retries: 5
 
-  app:
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      DATABASE_URL: postgres://agni:agni@db:5432/agni?sslmode=disable
-      REDIS_ADDR: redis:6379
-    depends_on:
-      db:
-        condition: service_healthy
-
   redis:
     image: redis:8-alpine
     ports:
       - "6379:6379"
 
+  # Temporal dev server — single binary with embedded Web UI on :8233.
+  temporal-dev:
+    image: temporalio/temporal:latest
+    command: ["server", "start-dev", "--ip", "0.0.0.0"]
+    ports:
+      - "7233:7233" # gRPC frontend (workers / SDK clients)
+      - "8233:8233" # Web UI — http://localhost:8233
+    volumes:
+      - temporal_data:/home/temporal
+
+  app:
+    build: ..
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_DSN: postgres://agni:agni@db:5432/agni?sslmode=disable
+      REDIS_ADDR: redis:6379
+      TEMPORAL_HOST_PORT: temporal-dev:7233
+      TEMPORAL_NAMESPACE: default
+      TEMPORAL_TASK_QUEUE: agni-deploy
+    depends_on:
+      db:
+        condition: service_healthy
+      temporal-dev:
+        condition: service_started
+
+  worker:
+    build: ..
+    command: ["/app/worker"]
+    environment:
+      DATABASE_DSN: postgres://agni:agni@db:5432/agni?sslmode=disable
+      TEMPORAL_HOST_PORT: temporal-dev:7233
+      TEMPORAL_NAMESPACE: default
+      TEMPORAL_TASK_QUEUE: agni-deploy
+    depends_on:
+      db:
+        condition: service_healthy
+      temporal-dev:
+        condition: service_started
+
 volumes:
   pgdata:
+  temporal_data:

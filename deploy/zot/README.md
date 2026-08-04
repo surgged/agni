@@ -92,7 +92,7 @@ Required S3 IAM permissions:
 
 ```bash
 # Catalog (requires auth if enabled)
-curl -k https://registry.agni.dev/v2/_catalog
+curl -k https://zoteg.anurag.store/v2/_catalog
 
 # Systemd
 systemctl status zot

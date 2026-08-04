@@ -62,9 +62,7 @@ export function Navbar() {
         {/* Right CTA Actions */}
         <div className="hidden sm:flex items-center gap-3">
           <a
-            href="https://docs.agni.dev"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/docs"
             className="flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground bg-secondary/80 hover:bg-secondary rounded-lg border border-border transition-all duration-200"
           >
             <BookOpen className="w-3.5 h-3.5 text-orange-500" />
@@ -131,9 +129,7 @@ export function Navbar() {
 
           <div className="pt-3 border-t border-border flex flex-col gap-2">
             <a
-              href="https://docs.agni.dev"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/docs"
               className="flex items-center justify-center gap-2 py-2 text-xs font-medium text-muted-foreground bg-muted rounded-lg border border-border"
             >
               <BookOpen className="w-4 h-4 text-orange-500" />

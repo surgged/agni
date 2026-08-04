@@ -9,10 +9,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - agni.dev
+    - agni.indralab.xyz
     secretName: agni-api-tls
   rules:
-  - host: agni.dev
+  - host: agni.indralab.xyz
     http:
       paths:
       - path: /

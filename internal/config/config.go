@@ -133,11 +133,14 @@ type RegistryConfig struct {
 	Password string `mapstructure:"password" env:"AGNI_REGISTRY_PASSWORD"`
 }
 
-// WorkflowsConfig holds settings for the go-workflows diagnostic UI.
+// WorkflowsConfig holds settings for the Temporal deployment workflow.
+// Temporal owns its own database; the app only needs to know how to reach
+// the temporal-server (HostPort), which Namespace to use, and which
+// TaskQueue the worker + client agree on.
 type WorkflowsConfig struct {
-	DatabaseDSN string `mapstructure:"database_dsn" env:"WORKFLOWS_DATABASE_DSN"`
-	UIUser      string `mapstructure:"ui_user" env:"WORKFLOWS_UI_USER"`
-	UIPassword  string `mapstructure:"ui_password" env:"WORKFLOWS_UI_PASSWORD"`
+	HostPort  string `mapstructure:"host_port" env:"TEMPORAL_HOST_PORT"`
+	Namespace string `mapstructure:"namespace" env:"TEMPORAL_NAMESPACE"`
+	TaskQueue string `mapstructure:"task_queue" env:"TEMPORAL_TASK_QUEUE"`
 }
 
 // Load reads non-secret values from configs/config.yaml (via Viper) and then
@@ -199,8 +202,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("mcp.agent_token_ttl", "720h")
 	v.SetDefault("email.provider", "resend")
 	v.SetDefault("email.resend_api_key", "")
-	v.SetDefault("email.from_address", "agni@agni.dev")
-	v.SetDefault("share.domain", "agni.dev")
+	v.SetDefault("email.from_address", "")
+	v.SetDefault("share.domain", "")
 	v.SetDefault("share.magic_link_ttl", "24h")
 	v.SetDefault("share.session_ttl", "168h")
 	v.SetDefault("deploy.max_tarball_size_mb", 500)
@@ -220,8 +223,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("registry.url", "registry.agni.svc:5000")
 	v.SetDefault("registry.username", "")
 	v.SetDefault("registry.password", "")
-	v.SetDefault("workflows.database_dsn", "postgres://agni:agni@localhost:5432/agni_worker?sslmode=disable")
-	v.SetDefault("workflows.ui_user", "admin")
-	v.SetDefault("workflows.ui_password", "agni-admin")
+	v.SetDefault("workflows.host_port", "localhost:7233")
+	v.SetDefault("workflows.namespace", "default")
+	v.SetDefault("workflows.task_queue", "agni-deploy")
 	// crank:config-defaults
 }

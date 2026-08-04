@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/surgged/agni/internal/ports"
+	"go.temporal.io/sdk/temporal"
 )
 
 // BuildImage builds a container image from the archive via buildah and returns
@@ -41,7 +42,13 @@ func (a *Activities) BuildImage(ctx context.Context, appID, archiveKey string) (
 
 	if err != nil {
 		logCtx.Error("build failed", "error", err, "duration_ms", elapsed.Milliseconds())
-		return "", fmt.Errorf("build: %w", err)
+		// A failed build is almost always a user error (bad Dockerfile, missing
+		// deps). Surface it as non-retryable so Temporal does not waste 3 attempts
+		// re-running buildah on the same broken source.
+		return "", temporal.NewNonRetryableApplicationError(
+			"image build failed", "BuildFailed", err,
+			"app_id", appID, "image_ref", imageRef,
+		)
 	}
 
 	logCtx.Info("build succeeded", "duration_ms", elapsed.Milliseconds())

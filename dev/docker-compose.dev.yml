@@ -20,5 +20,16 @@ services:
     ports:
       - "6379:6379"
 
+  # Temporal dev server — single binary with embedded Web UI on :8233.
+  temporal-dev:
+    image: temporalio/temporal:latest
+    command: ["server", "start-dev", "--ip", "0.0.0.0"]
+    ports:
+      - "7233:7233" # gRPC frontend (workers / SDK clients)
+      - "8233:8233" # Web UI — http://localhost:8233
+    volumes:
+      - temporal_data:/home/temporal
+
 volumes:
   pgdata:
+  temporal_data:

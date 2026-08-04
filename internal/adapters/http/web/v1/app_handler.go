@@ -571,7 +571,7 @@ func (h *AppHandler) MultipartComplete(c *echo.Context) error {
 	appID := c.Param("id")
 
 	var req struct {
-		UploadID string              `json:"upload_id"`
+		UploadID string               `json:"upload_id"`
 		Parts    []ports.UploadedPart `json:"parts"`
 	}
 	if err := c.Bind(&req); err != nil {

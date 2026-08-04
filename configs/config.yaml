@@ -69,6 +69,6 @@ registry:
   password: ""
 
 workflows:
-  database_dsn: "postgres://agni:agni@localhost:5432/agni_worker?sslmode=disable"
-  ui_user: "agni"
-  ui_password: "agni"
+  host_port: "localhost:7233"
+  namespace: "default"
+  task_queue: "agni-deploy"

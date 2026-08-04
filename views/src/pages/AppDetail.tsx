@@ -159,7 +159,8 @@ export default function AppDetail() {
       const res = await api.createAppShare(app.id, recipientEmail, permission);
       const newShare = mapBackendShareToShareLink(res);
       setShareLinks((prev) => [newShare, ...prev]);
-      setCreatedShareUrl(`https://agni.dev/share/${newShare.tokenHash}`);
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      setCreatedShareUrl(`${origin}/share/${newShare.tokenHash}`);
       setRecipientEmail('');
       toast.success(`Share link generated for ${recipientEmail}`);
     } catch (err: any) {

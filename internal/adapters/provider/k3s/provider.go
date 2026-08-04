@@ -42,9 +42,6 @@ func NewProvider(namespace, registryAddr, domain string) *Provider {
 	if namespace == "" {
 		namespace = "agni"
 	}
-	if domain == "" {
-		domain = "inlb.site"
-	}
 	p := &Provider{
 		namespace:      namespace,
 		registryAddr:   registryAddr,
@@ -68,9 +65,6 @@ func NewProvider(namespace, registryAddr, domain string) *Provider {
 func NewProviderWithClientset(cs kubernetes.Interface, namespace, registryAddr, domain string) *Provider {
 	if namespace == "" {
 		namespace = "agni"
-	}
-	if domain == "" {
-		domain = "inlb.site"
 	}
 	return &Provider{
 		clientset:      cs,

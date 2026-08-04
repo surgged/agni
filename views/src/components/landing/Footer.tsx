@@ -130,7 +130,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="https://docs.agni.dev" target="_blank" rel="noopener noreferrer" className="hover:text-orange-500 transition-colors">
+                <a href="/docs" className="hover:text-orange-500 transition-colors">
                   Documentation
                 </a>
               </li>

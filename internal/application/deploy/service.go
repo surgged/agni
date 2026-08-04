@@ -19,7 +19,7 @@ type Service struct {
 	archivestore      ports.ArchiveStore
 	imagebuilder      ports.ImageBuilder
 	provider          ports.ContainerProvider
-	orchestrator      ports.Orchestrator
+	wf                ports.DeploymentWorkflow
 	appCmd            *appapp.CommandHandler
 	appQry            *appapp.QueryHandler
 	domain            string
@@ -31,7 +31,7 @@ type ServiceConfig struct {
 	ArchiveStore      ports.ArchiveStore
 	ImageBuilder      ports.ImageBuilder
 	Provider          ports.ContainerProvider
-	Orchestrator      ports.Orchestrator
+	Workflow          ports.DeploymentWorkflow
 	AppCmd            *appapp.CommandHandler
 	AppQry            *appapp.QueryHandler
 	Domain            string
@@ -40,9 +40,6 @@ type ServiceConfig struct {
 }
 
 func NewService(cfg ServiceConfig) *Service {
-	if cfg.Domain == "" {
-		cfg.Domain = "agni.dev"
-	}
 	if cfg.MaxRunningPerUser <= 0 {
 		cfg.MaxRunningPerUser = 1
 	}
@@ -50,7 +47,7 @@ func NewService(cfg ServiceConfig) *Service {
 		archivestore:      cfg.ArchiveStore,
 		imagebuilder:      cfg.ImageBuilder,
 		provider:          cfg.Provider,
-		orchestrator:      cfg.Orchestrator,
+		wf:                cfg.Workflow,
 		appCmd:            cfg.AppCmd,
 		appQry:            cfg.AppQry,
 		domain:            cfg.Domain,
@@ -161,18 +158,18 @@ func (s *Service) StartDeploy(ctx context.Context, appID string) error {
 		}
 	}
 
-	if s.orchestrator != nil {
-		if err := s.orchestrator.StartDeployment(ctx, ports.DeploymentInput{
+	if s.wf != nil {
+		if err := s.wf.StartDeployment(ctx, ports.DeploymentInput{
 			AppID:        appID,
 			ArchiveKey:   archiveKey,
 			Slug:         slug,
 			PortOverride: port,
 			Runtime:      runtime,
 		}); err != nil {
-			return fmt.Errorf("start deploy: orchestrator: %w", err)
+			return fmt.Errorf("start deploy: workflow: %w", err)
 		}
 	} else {
-		slog.Warn("orchestrator is nil, deployment queued but will not be processed", "app_id", appID)
+		slog.Warn("workflow client is nil, deployment queued but will not be processed", "app_id", appID)
 	}
 
 	return nil
@@ -188,24 +185,24 @@ func (s *Service) Retry(ctx context.Context, appID string) error {
 		return err
 	}
 
-	if s.orchestrator != nil {
-		if err := s.orchestrator.StartDeployment(ctx, ports.DeploymentInput{
+	if s.wf != nil {
+		if err := s.wf.StartDeployment(ctx, ports.DeploymentInput{
 			AppID:        appID,
 			ArchiveKey:   appObj.ArchiveKey,
 			Slug:         appObj.Slug,
 			PortOverride: appObj.Port,
 			Runtime:      appObj.Runtime,
 		}); err != nil {
-			return fmt.Errorf("retry: orchestrator: %w", err)
+			return fmt.Errorf("retry: workflow: %w", err)
 		}
 	}
 	return nil
 }
 
 func (s *Service) Destroy(ctx context.Context, appID string) error {
-	if s.orchestrator != nil {
-		if err := s.orchestrator.CancelDeployment(ctx, appID); err != nil {
-			slog.WarnContext(ctx, "failed to cancel deployment during destroy", "app_id", appID, "error", err)
+	if s.wf != nil {
+		if err := s.wf.CancelDeployment(ctx, appID); err != nil {
+			slog.WarnContext(ctx, "failed to cancel deployment workflow during destroy", "app_id", appID, "error", err)
 		}
 	}
 
@@ -260,8 +257,11 @@ func (s *Service) BuildServiceURL(slug string) string {
 	return fmt.Sprintf("https://%s.%s", slug, s.domain)
 }
 
-func (s *Service) SetOrchestrator(orch ports.Orchestrator) {
-	s.orchestrator = orch
+// SetWorkflow wires the deployment workflow runner after the worker has
+// started. Required because the worker owns (creates) the Temporal client at
+// startup, but the deploy service must be constructed earlier in main().
+func (s *Service) SetWorkflow(wf ports.DeploymentWorkflow) {
+	s.wf = wf
 }
 
 // ---------------------------------------------------------------------------

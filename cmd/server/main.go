@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/subtle"
 	"log/slog"
 	"net/http"
 	"os"
@@ -18,7 +17,6 @@ import (
 	_ "github.com/surgged/agni/docs"
 	"github.com/surgged/agni/internal/adapters/auth/agentapikey"
 	"github.com/surgged/agni/internal/adapters/auth/jwt"
-	"github.com/surgged/agni/internal/adapters/builder/buildah"
 	redisclient "github.com/surgged/agni/internal/adapters/cache/redis"
 	resendadapter "github.com/surgged/agni/internal/adapters/email/resend"
 	"github.com/surgged/agni/internal/adapters/eventbus"
@@ -26,15 +24,13 @@ import (
 	"github.com/surgged/agni/internal/adapters/http/web/middleware"
 	v1 "github.com/surgged/agni/internal/adapters/http/web/v1"
 	"github.com/surgged/agni/internal/adapters/persistence/gorm"
-	"github.com/surgged/agni/internal/adapters/provider/k3s"
-	"github.com/surgged/agni/internal/adapters/storage/s3"
 	"github.com/surgged/agni/internal/adapters/uow"
 	"github.com/surgged/agni/internal/adapters/workflow"
 	appapp "github.com/surgged/agni/internal/application/app"
 	"github.com/surgged/agni/internal/application/deploy"
 	shareapp "github.com/surgged/agni/internal/application/sharelink"
 	userapp "github.com/surgged/agni/internal/application/user"
-	"github.com/surgged/agni/internal/ports"
+	"github.com/surgged/agni/internal/composition"
 
 	// crank:composition-imports (do not remove — `crank make handler` splices new application imports here)
 	"github.com/surgged/agni/internal/config"
@@ -72,12 +68,16 @@ func main() {
 		"log_level", cfg.Logging.Level,
 	)
 
-	gormDB, err := gorm.NewDB(cfg.Database.DSN)
+	// Shared infrastructure (Postgres, S3, buildah, k3s) — also used by the
+	// worker binary via the same composition package.
+	infra, err := composition.NewInfra(cfg)
 	if err != nil {
-		logger.Error("failed to connect to database", "error", err)
+		logger.Error("failed to initialize infrastructure", "error", err)
 		os.Exit(1)
 	}
-	defer gorm.Close(gormDB)
+	defer infra.Close()
+
+	logger.Info("S3 archive store connected", "bucket", cfg.S3.Bucket, "endpoint", cfg.S3.Endpoint)
 
 	rdb, err := redisclient.NewClient(cfg.Redis)
 	if err != nil {
@@ -88,10 +88,10 @@ func main() {
 
 	// ---- Composition root: explicit DDD wiring ----
 	bus := eventbus.NewInMemory()
-	userRepo := gorm.NewUserRepository(gormDB)
+	userRepo := gorm.NewUserRepository(infra.GormDB)
 	// crank:repos (do not remove — `crank make handler` splices new repository constructors here)
-	appRepo := gorm.NewAppRepository(gormDB)
-	sharelinkRepo := gorm.NewShareLinkRepository(gormDB)
+	appRepo := gorm.NewAppRepository(infra.GormDB)
+	sharelinkRepo := gorm.NewShareLinkRepository(infra.GormDB)
 
 	uowOpts := []uow.Option{
 		uow.WithUserRepo(userRepo),
@@ -99,11 +99,11 @@ func main() {
 		uow.WithAppRepo(appRepo),
 		uow.WithShareLinkRepo(sharelinkRepo),
 	}
-	uow := uow.NewInMemoryUoW(bus, userRepo, uowOpts...)
+	unit := uow.NewInMemoryUoW(bus, userRepo, uowOpts...)
 
 	hasher := crypto.NewBCryptHasher()
 
-	denylist := gorm.NewTokenDenylist(gormDB)
+	denylist := gorm.NewTokenDenylist(infra.GormDB)
 	tokens := jwt.NewTokenService(cfg.JWT, denylist)
 
 	// ---- Agent token service ----
@@ -112,42 +112,22 @@ func main() {
 	// ---- Email adapter ----
 	emailClient := resendadapter.NewClient(cfg.Email.ResendAPIKey, cfg.Email.FromAddress, cfg.Share.Domain)
 
-	// ---- k3s provider ----
-	k3sProvider := k3s.NewProvider(cfg.K3s.Namespace, cfg.K3s.RegistryAddr, cfg.Share.Domain)
-
-	userCmd := userapp.NewCommandHandler(userRepo, uow, hasher, emailClient)
+	userCmd := userapp.NewCommandHandler(userRepo, unit, hasher, emailClient)
 	userQry := userapp.NewQueryHandler(userRepo)
 	userHandler := v1.NewUserHandler(userCmd, userQry)
 
 	// ---- Application services ----
-	appCmd := appapp.NewCommandHandler(appRepo, uow)
+	appCmd := appapp.NewCommandHandler(appRepo, unit)
 	appQry := appapp.NewQueryHandler(appRepo)
-	sharelinkCmd := shareapp.NewCommandHandler(sharelinkRepo, uow)
+	sharelinkCmd := shareapp.NewCommandHandler(sharelinkRepo, unit)
 	sharelinkQry := shareapp.NewQueryHandler(sharelinkRepo)
 
 	// ---- Deploy service ----
-	s3Store, err := s3.NewStore(
-		cfg.S3.Endpoint,
-		cfg.S3.Region,
-		cfg.S3.Bucket,
-		cfg.S3.AccessKey,
-		cfg.S3.SecretKey,
-		cfg.S3.UseSSL,
-	)
-	if err != nil {
-		logger.Error("failed to create S3 store", "error", err)
-		os.Exit(1)
-	}
-	logger.Info("S3 archive store connected", "bucket", cfg.S3.Bucket, "endpoint", cfg.S3.Endpoint)
-
-	imageBuilder := buildah.NewBuilder("buildah", "", "")
-
-	// Create deploy service early so workflow can reference it
 	deploySvc := deploy.NewService(deploy.ServiceConfig{
-		ArchiveStore:      s3Store,
-		ImageBuilder:      imageBuilder,
-		Provider:          k3sProvider,
-		Orchestrator:      nil, // wired after worker starts
+		ArchiveStore:      infra.S3Store,
+		ImageBuilder:      infra.ImageBuilder,
+		Provider:          infra.Provider,
+		Workflow:          nil, // wired below after Temporal client dials
 		AppCmd:            appCmd,
 		AppQry:            appQry,
 		Domain:            cfg.Share.Domain,
@@ -155,29 +135,25 @@ func main() {
 		MaxRunningPerUser: 1,
 	})
 
-	// ---- Workflow worker (embedded, Postgres backend) ----
-	activityDeps := &workflow.ActivityDeps{
-		ArchiveStore:  s3Store,
-		ImageBuilder:  imageBuilder,
-		Provider:      k3sProvider,
-		AppCmd:        appCmd,
-		DeployService: deploySvc,
-	}
-
-	var orch ports.Orchestrator
-	wrk, err := workflow.StartWorker(ctx, activityDeps, cfg.Workflows.DatabaseDSN)
+	// ---- Temporal client (starts/cancels workflows; does NOT run a worker) ----
+	wfClient, err := workflow.Dial(workflow.WorkerConfig{
+		HostPort:  cfg.Workflows.HostPort,
+		Namespace: cfg.Workflows.Namespace,
+		TaskQueue: cfg.Workflows.TaskQueue,
+	})
 	if err != nil {
-		logger.Warn("failed to start workflow worker, deployments run without orchestration", "error", err)
+		logger.Warn("failed to dial temporal, deployments will not be processed", "error", err)
 	} else {
-		orch = wrk.Orchestrator()
-		logger.Info("workflow worker started (embedded, Postgres backend)")
-		defer wrk.Stop()
+		deploySvc.SetWorkflow(wfClient)
+		logger.Info("temporal client connected",
+			"host_port", cfg.Workflows.HostPort,
+			"namespace", cfg.Workflows.Namespace,
+			"task_queue", cfg.Workflows.TaskQueue,
+		)
+		defer wfClient.Close()
 	}
 
-	// Wire the orchestrator into deploy service (set after worker starts)
-	deploySvc.SetOrchestrator(orch)
-
-	appHandler := v1.NewAppHandler(appCmd, appQry, deploySvc, agentTokens, k3sProvider)
+	appHandler := v1.NewAppHandler(appCmd, appQry, deploySvc, agentTokens, infra.Provider)
 	shareHandler := v1.NewShareHandler(sharelinkCmd, sharelinkQry)
 	magicHandler := v1.NewMagicHandler(cfg.Share, agentTokens, emailClient, userCmd, userQry)
 	sessionHandler := v1.NewSessionHandler(agentTokens, sharelinkRepo)
@@ -203,19 +179,6 @@ func main() {
 	})
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.GET("/health", web.Health)
-
-	if wrk != nil {
-		workflowsGroup := e.Group("/workflows", echomw.BasicAuth(func(c *echo.Context, user, password string) (bool, error) {
-			if subtle.ConstantTimeCompare([]byte(user), []byte(cfg.Workflows.UIUser)) == 1 &&
-				subtle.ConstantTimeCompare([]byte(password), []byte(cfg.Workflows.UIPassword)) == 1 {
-				return true, nil
-			}
-			return false, echo.ErrUnauthorized
-		}))
-		diagHandler := http.StripPrefix("/workflows", wrk.DiagHandler())
-		workflowsGroup.Any("", echo.WrapHandler(diagHandler))
-		workflowsGroup.Any("/*", echo.WrapHandler(diagHandler))
-	}
 
 	mountCfg := v1.MountConfig{
 		UserHandler:          userHandler,

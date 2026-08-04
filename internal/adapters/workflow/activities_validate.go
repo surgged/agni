@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+
+	"go.temporal.io/sdk/temporal"
 )
 
 // ValidateArchive checks the archive object exists in S3.
@@ -24,7 +26,9 @@ func (a *Activities) ValidateArchive(ctx context.Context, appID, archiveKey stri
 	}
 	if !found {
 		logCtx.Warn("archive not found")
-		return false, fmt.Errorf("archive not found for app %s", appID)
+		return false, temporal.NewNonRetryableApplicationError(
+			"archive not found", "ArchiveMissing", nil, "app_id", appID,
+		)
 	}
 
 	logCtx.Info("archive validated")
