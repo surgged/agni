@@ -14,6 +14,7 @@ type ActivityDeps struct {
 	Provider      ports.ContainerProvider
 	AppCmd        *appapp.CommandHandler
 	DeployService *deploy.Service
+	RegistryAuth  ports.RegistryAuth
 }
 
 // Activities is the single struct whose methods are registered as

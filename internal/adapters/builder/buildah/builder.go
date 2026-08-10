@@ -3,6 +3,7 @@ package buildah
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"log/slog"
@@ -89,7 +90,69 @@ func (b *Builder) Build(ctx context.Context, spec ports.BuildSpec) error {
 	}
 
 	logCtx.Info("build succeeded")
+
+	// Push the image to the configured registry (zot). Without this the
+	// built image never leaves the builder, so the k3s pod could not pull it.
+	if err := b.push(ctx, spec, imageRef); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+// push pushes the built image to the OCI registry using buildah. Registry
+// credentials come from BuildSpec.RegistryAuth (env-injected). buildah logs
+// in via a temporary auth file to avoid leaking credentials on the command
+// line.
+func (b *Builder) push(ctx context.Context, spec ports.BuildSpec, imageRef string) error {
+	logCtx := slog.With("app_id", spec.AppID, "image_ref", imageRef)
+
+	authFile, err := os.CreateTemp("", "agni-auth-*")
+	if err != nil {
+		return fmt.Errorf("buildah: create auth file: %w", err)
+	}
+	defer os.Remove(authFile.Name())
+
+	if spec.RegistryAuth.Username != "" || spec.RegistryAuth.Password != "" {
+		auth := fmt.Sprintf("%s:%s", spec.RegistryAuth.Username, spec.RegistryAuth.Password)
+		encoded := base64.StdEncoding.EncodeToString([]byte(auth))
+		// Docker config JSON for the single registry server derived from the
+		// image reference.
+		server := registryServer(imageRef)
+		authJSON := fmt.Sprintf(`{"auths":{%q:{"auth":%q}}}`, server, encoded)
+		if _, err := authFile.WriteString(authJSON); err != nil {
+			return fmt.Errorf("buildah: write auth file: %w", err)
+		}
+	}
+
+	pushArgs := []string{"push", "--tls-verify=true"}
+	if _, err := os.Stat(authFile.Name()); err == nil && spec.RegistryAuth.Username != "" {
+		pushArgs = append(pushArgs, "--authfile", authFile.Name())
+	}
+	pushArgs = append(pushArgs, imageRef)
+
+	logCtx.Info("pushing image", "command", b.binary, "args", strings.Join(pushArgs, " "))
+	cmd := exec.CommandContext(ctx, b.binary, pushArgs...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		logCtx.Error("buildah push failed", "error", err, "output", string(out))
+		return fmt.Errorf("%w: push: %s", app.ErrBuildFailed, string(out))
+	}
+
+	logCtx.Info("push succeeded")
+	return nil
+}
+
+// registryServer extracts the registry host from an image reference
+// (e.g. "zoteg.anurag.store/apps/123:latest" → "zoteg.anurag.store").
+// Falls back to the whole reference prefix if no slash is present.
+func registryServer(ref string) string {
+	// Strip tag/digest.
+	ref = strings.SplitN(ref, ":", 2)[0]
+	if idx := strings.Index(ref, "/"); idx >= 0 {
+		return ref[:idx]
+	}
+	return ref
 }
 
 func (b *Builder) findDockerfile(dir string) string {

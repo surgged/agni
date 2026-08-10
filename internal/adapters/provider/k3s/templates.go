@@ -60,7 +60,7 @@ metadata:
   namespace: {{.Namespace}}
   annotations:
     cert-manager.io/cluster-issuer: "{{.CertIssuer}}"
-    nginx.ingress.kubernetes.io/auth-url: "http://agni-api.{{.Namespace}}.svc:8080/auth/session?app={{.ID}}"
+    nginx.ingress.kubernetes.io/auth-url: "{{.AuthURL}}"
     nginx.ingress.kubernetes.io/auth-signin: "https://{{.Domain}}/login?app={{.ID}}"
 spec:
   ingressClassName: {{.IngressClass}}

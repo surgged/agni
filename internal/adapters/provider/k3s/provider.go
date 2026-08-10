@@ -33,6 +33,7 @@ type Provider struct {
 	certIssuer   string
 	ingressClass string
 	domain       string
+	authURL      string
 
 	mu             sync.RWMutex
 	devStatusStore map[string]ports.PodStatus
@@ -48,6 +49,7 @@ func NewProvider(namespace, registryAddr, domain string) *Provider {
 		domain:         domain,
 		certIssuer:     "letsencrypt-prod",
 		ingressClass:   "nginx",
+		authURL:        fmt.Sprintf("http://agni-api.%s.svc:8080/auth/session?app=", namespace),
 		devStatusStore: make(map[string]ports.PodStatus),
 	}
 
@@ -73,6 +75,7 @@ func NewProviderWithClientset(cs kubernetes.Interface, namespace, registryAddr, 
 		domain:         domain,
 		certIssuer:     "letsencrypt-prod",
 		ingressClass:   "nginx",
+		authURL:        fmt.Sprintf("http://agni-api.%s.svc:8080/auth/session?app=", namespace),
 		devStatusStore: make(map[string]ports.PodStatus),
 	}
 }
@@ -128,6 +131,7 @@ type templateParams struct {
 	CertIssuer      string
 	IngressClass    string
 	Domain          string
+	AuthURL         string
 }
 
 func (p *Provider) Deploy(ctx context.Context, spec ports.PodSpec) error {
@@ -160,6 +164,7 @@ func (p *Provider) Deploy(ctx context.Context, spec ports.PodSpec) error {
 		CertIssuer:      p.certIssuer,
 		IngressClass:    p.ingressClass,
 		Domain:          p.domain,
+		AuthURL:         p.authURL + spec.AppID,
 	}
 
 	var buf bytes.Buffer

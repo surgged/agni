@@ -23,6 +23,7 @@ import (
 	"github.com/surgged/agni/internal/application/deploy"
 	"github.com/surgged/agni/internal/composition"
 	"github.com/surgged/agni/internal/config"
+	"github.com/surgged/agni/internal/ports"
 	"github.com/surgged/agni/pkg/logging"
 )
 
@@ -78,6 +79,10 @@ func main() {
 		Provider:      infra.Provider,
 		AppCmd:        appCmd,
 		DeployService: deploySvc,
+		RegistryAuth: ports.RegistryAuth{
+			Username: cfg.Registry.Username,
+			Password: cfg.Registry.Password,
+		},
 	}
 
 	wrk, err := workflow.StartWorker(ctx, workflow.WorkerConfig{

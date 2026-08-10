@@ -32,11 +32,16 @@ func (a *Activities) BuildImage(ctx context.Context, appID, archiveKey string) (
 	}
 
 	logCtx.Info("building image", "context_url", contextURL)
+	registryAuth := ports.RegistryAuth{}
+	if a.Deps != nil {
+		registryAuth = a.Deps.RegistryAuth
+	}
 	err = a.Deps.ImageBuilder.Build(ctx, ports.BuildSpec{
-		AppID:      appID,
-		ContextURL: contextURL,
-		ImageRef:   imageRef,
-		MaxLogTail: 20,
+		AppID:        appID,
+		ContextURL:   contextURL,
+		ImageRef:     imageRef,
+		RegistryAuth: registryAuth,
+		MaxLogTail:   20,
 	})
 	elapsed := time.Since(start).Round(time.Millisecond)
 

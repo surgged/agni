@@ -4,7 +4,25 @@ kind: Kustomization
 namespace: agni
 
 resources:
-  - deployment.yaml
+  - namespace.yaml
+  - server-deployment.yaml
+  - worker-deployment.yaml
   - service.yaml
   - ingress.yaml
-  - configmap.yaml
+
+# Secrets come from the environment at deploy time; kustomize just declares
+# the placeholders (values are set by scripts/deploy-stack.sh from .env).
+secretGenerator:
+  - name: agni-secrets
+    type: Opaque
+    envs:
+      - agni-secrets.env
+    options:
+      disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: agni-config
+    files:
+      - config.yaml
+    options:
+      disableNameSuffixHash: true

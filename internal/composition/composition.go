@@ -6,12 +6,14 @@ package composition
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/surgged/agni/internal/adapters/builder/buildah"
 	gormadapter "github.com/surgged/agni/internal/adapters/persistence/gorm"
 	"github.com/surgged/agni/internal/adapters/provider/k3s"
 	"github.com/surgged/agni/internal/adapters/storage/s3"
 	"github.com/surgged/agni/internal/config"
+	"github.com/surgged/agni/internal/ports"
 	"gorm.io/gorm"
 )
 
@@ -19,7 +21,7 @@ import (
 type Infra struct {
 	GormDB       *gorm.DB
 	S3Store      *s3.Store
-	ImageBuilder *buildah.Builder
+	ImageBuilder ports.ImageBuilder
 	Provider     *k3s.Provider
 }
 
@@ -44,7 +46,13 @@ func NewInfra(cfg *config.Config) (*Infra, error) {
 		return nil, fmt.Errorf("composition: connect s3: %w", err)
 	}
 
-	builder := buildah.NewBuilder("buildah", "", "")
+	var builder ports.ImageBuilder = buildah.NewBuilder("buildah", "", "")
+	if jobBuilder := buildah.NewJobBuilder(cfg.K3s.Namespace, ""); jobBuilder != nil {
+		// In-cluster build: the worker runs inside k3s and launches build
+		// Jobs on the cluster. Fall back to host buildah if no cluster.
+		builder = jobBuilder
+		slog.Info("using in-cluster k8s Job image builder", "namespace", cfg.K3s.Namespace)
+	}
 	provider := k3s.NewProvider(cfg.K3s.Namespace, cfg.K3s.RegistryAddr, cfg.Share.Domain)
 
 	return &Infra{

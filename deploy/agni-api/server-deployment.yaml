@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agni-server
+  labels:
+    app: agni-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agni-server
+  template:
+    metadata:
+      labels:
+        app: agni-server
+    spec:
+      containers:
+      - name: server
+        image: zoteg.anurag.store/agni/agni:latest
+        command: ["/app/server"]
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - secretRef:
+            name: agni-secrets
+        volumeMounts:
+        - name: config
+          mountPath: /app/configs
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+      volumes:
+      - name: config
+        configMap:
+          name: agni-config

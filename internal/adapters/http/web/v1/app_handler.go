@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -86,16 +87,18 @@ type AppHandler struct {
 	cmd         *appapp.CommandHandler
 	qry         *appapp.QueryHandler
 	deploySvc   *deploy.Service
-	tokens      *agentapikey.AgentTokenService
+	userTokens  ports.TokenService
+	agentTokens *agentapikey.AgentTokenService
 	k3sProvider *k3s.Provider
 }
 
-func NewAppHandler(cmd *appapp.CommandHandler, qry *appapp.QueryHandler, deploySvc *deploy.Service, tokens *agentapikey.AgentTokenService, k3sProvider *k3s.Provider) *AppHandler {
+func NewAppHandler(cmd *appapp.CommandHandler, qry *appapp.QueryHandler, deploySvc *deploy.Service, userTokens ports.TokenService, agentTokens *agentapikey.AgentTokenService, k3sProvider *k3s.Provider) *AppHandler {
 	return &AppHandler{
 		cmd:         cmd,
 		qry:         qry,
 		deploySvc:   deploySvc,
-		tokens:      tokens,
+		userTokens:  userTokens,
+		agentTokens: agentTokens,
 		k3sProvider: k3sProvider,
 	}
 }
@@ -118,14 +121,25 @@ func (h *AppHandler) extractEmail(c *echo.Context) string {
 	if email, ok := c.Get("user_email").(string); ok && email != "" {
 		return email
 	}
-	if cookie, err := c.Cookie("agni_session"); err == nil {
-		if email, err := h.tokens.ValidateSessionToken(cookie.Value); err == nil {
+	if id, ok := c.Get("user_id").(string); ok && id != "" {
+		return id
+	}
+	if cookie, err := c.Cookie("agni_session"); err == nil && h.agentTokens != nil {
+		if email, err := h.agentTokens.ValidateSessionToken(cookie.Value); err == nil {
 			return email
 		}
 	}
-	if token := c.Request().Header.Get("Authorization"); len(token) > 7 && token[:7] == "Bearer " {
-		if email, err := h.tokens.Validate(token[7:]); err == nil {
-			return email
+	if token := c.Request().Header.Get("Authorization"); len(token) > 7 && strings.EqualFold(token[:7], "Bearer ") {
+		rawToken := token[7:]
+		if h.userTokens != nil {
+			if sub, err := h.userTokens.Subject(rawToken); err == nil && sub != "" {
+				return sub
+			}
+		}
+		if h.agentTokens != nil {
+			if email, err := h.agentTokens.Validate(rawToken); err == nil && email != "" {
+				return email
+			}
 		}
 	}
 	return ""
@@ -463,7 +477,7 @@ func (h *AppHandler) IssueAgentToken(c *echo.Context) error {
 	if email == "" {
 		return c.JSON(http.StatusUnauthorized, api.Error{Error: "authenticated session required"})
 	}
-	token, expiresAt, err := h.tokens.Issue(email)
+	token, expiresAt, err := h.agentTokens.Issue(email)
 	if err != nil {
 		slog.ErrorContext(c.Request().Context(), "failed to issue agent token", "email", email, "error", err)
 		return c.JSON(http.StatusInternalServerError, api.Error{Error: "failed to issue agent token"})

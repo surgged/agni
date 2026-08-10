@@ -18,6 +18,28 @@ services:
     ports:
       - "6379:6379"
 
+  # Local S3 substitute for e2e (dev only). In production, S3 is external.
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000" # S3 API
+      - "9001:9001" # console
+    volumes:
+      - minio_data:/data
+
+  # Local OCI registry substitute for e2e (dev only). In production, zot is
+  # external (zoteg.anurag.store).
+  registry:
+    image: registry:2
+    ports:
+      - "5000:5000"
+    environment:
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+
   # Temporal dev server — single binary with embedded Web UI on :8233.
   temporal-dev:
     image: temporalio/temporal:latest
@@ -61,3 +83,4 @@ services:
 volumes:
   pgdata:
   temporal_data:
+  minio_data:

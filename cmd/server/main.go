@@ -153,7 +153,7 @@ func main() {
 		defer wfClient.Close()
 	}
 
-	appHandler := v1.NewAppHandler(appCmd, appQry, deploySvc, agentTokens, infra.Provider)
+	appHandler := v1.NewAppHandler(appCmd, appQry, deploySvc, tokens, agentTokens, infra.Provider)
 	shareHandler := v1.NewShareHandler(sharelinkCmd, sharelinkQry)
 	magicHandler := v1.NewMagicHandler(cfg.Share, agentTokens, emailClient, userCmd, userQry)
 	sessionHandler := v1.NewSessionHandler(agentTokens, sharelinkRepo)
