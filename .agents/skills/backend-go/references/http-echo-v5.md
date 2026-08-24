@@ -27,7 +27,7 @@ handlers and `server.go` are the source of truth, not general Echo tutorials.
 
 `web.NewServer` returns a configured `*echo.Echo`. It installs a custom binder
 that runs struct validation automatically after binding, and a JSON error handler
-that renders the standard `api.Error` envelope.
+that renders the standard `rest.Error` envelope.
 
 ```go
 type EchoBinder struct {
@@ -105,15 +105,15 @@ func (h *UserHandler) Create(c *echo.Context) error {
 	ctx := helpers.Ctx(c)
 	var in userDTO
 	if err := c.Bind(&in); err != nil {
-		return c.JSON(http.StatusBadRequest, api.Error{Error: err.Error()})
+		return c.JSON(http.StatusBadRequest, rest.Error{Error: err.Error()})
 	}
 	out, err := h.cmd.HandleCreate(ctx, in.toCreateCommand())
 	if errors.Is(err, user.ErrUserNotFound) {
-		return c.JSON(http.StatusNotFound, api.Error{Error: "user not found"})
+		return c.JSON(http.StatusNotFound, rest.Error{Error: "user not found"})
 	}
 	if err != nil {
 		slog.ErrorContext(ctx, "user create failed", "error", err)
-		return c.JSON(http.StatusUnprocessableEntity, api.Error{Error: err.Error()})
+		return c.JSON(http.StatusUnprocessableEntity, rest.Error{Error: err.Error()})
 	}
 	slog.InfoContext(ctx, "user created", "user_id", out.ID.String())
 	return c.JSON(http.StatusCreated, toUserDTO(out))
@@ -140,10 +140,10 @@ resource exists:
 ```go
 userID, ok := c.Get("user_id").(string)
 if !ok || userID == "" {
-	return c.JSON(http.StatusUnauthorized, api.Error{Error: "unauthenticated"})
+	return c.JSON(http.StatusUnauthorized, rest.Error{Error: "unauthenticated"})
 }
 if c.Param("id") != userID { // or scopeChecker.UserOwnsX(ctx, userID, id)
-	return c.JSON(http.StatusNotFound, api.Error{Error: "user not found"})
+	return c.JSON(http.StatusNotFound, rest.Error{Error: "user not found"})
 }
 ```
 

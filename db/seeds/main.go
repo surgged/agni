@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	config "github.com/surgged/agni/configs"
 	seedgorm "github.com/surgged/agni/db/seeds/gorm"
-	"github.com/surgged/agni/internal/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

@@ -1,0 +1,180 @@
+package v1
+
+import (
+	"log/slog"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/labstack/echo/v5"
+	"github.com/surgged/agni/api/rest"
+
+	config "github.com/surgged/agni/configs"
+	"github.com/surgged/agni/service/email"
+	userapp "github.com/surgged/agni/service/user"
+)
+
+type AgentTokenIssuer interface {
+	Issue(email string) (string, int64, error)
+	Validate(token string) (string, error)
+	IssueMagicToken(email string, ttl time.Duration) (string, int64, error)
+	ValidateMagicToken(token string) (string, error)
+	IssueSessionToken(email string, ttl time.Duration) (string, int64, error)
+	ValidateSessionToken(token string) (string, error)
+}
+
+type MagicHandler struct {
+	shareCfg    config.ShareConfig
+	agentTokens AgentTokenIssuer
+	emailClient email.EmailSender
+	userCmd     *userapp.CommandHandler
+	userQry     *userapp.QueryHandler
+}
+
+func NewMagicHandler(
+	shareCfg config.ShareConfig,
+	agentTokens AgentTokenIssuer,
+	emailClient email.EmailSender,
+	userCmd *userapp.CommandHandler,
+	userQry *userapp.QueryHandler,
+) *MagicHandler {
+	return &MagicHandler{
+		shareCfg:    shareCfg,
+		agentTokens: agentTokens,
+		emailClient: emailClient,
+		userCmd:     userCmd,
+		userQry:     userQry,
+	}
+}
+
+func (h *MagicHandler) Register(g *echo.Group) {
+	g.POST("/magic", h.RequestMagicLink)
+	g.GET("/magic", h.VerifyMagicLink)
+}
+
+type magicRequestDTO struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+// RequestMagicLink godoc
+//
+//	@Summary      Request magic link
+//	@Description  Sends a passwordless magic login link to the requested email address.
+//	@Tags         auth
+//	@Accept       json
+//	@Produce      json
+//	@Param        request  body      magicRequestDTO  true  "Magic link request"
+//	@Success      202      {object}  map[string]interface{}
+//	@Failure      400      {object}  rest.Error
+//	@Failure      500      {object}  rest.Error
+//	@Router       /auth/magic [post]
+func (h *MagicHandler) RequestMagicLink(c *echo.Context) error {
+	var in magicRequestDTO
+	if err := c.Bind(&in); err != nil {
+		return c.JSON(http.StatusBadRequest, rest.Error{Error: err.Error()})
+	}
+
+	ctx := c.Request().Context()
+
+	token, expiresAt, err := h.agentTokens.IssueMagicToken(in.Email, h.shareCfg.MagicLinkTTL)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to issue magic token", "error", err)
+		return c.JSON(http.StatusInternalServerError, rest.Error{Error: "internal server error"})
+	}
+
+	if err := h.emailClient.SendMagicLink(ctx, in.Email, token); err != nil {
+		slog.ErrorContext(ctx, "failed to send magic link", "error", err)
+	}
+
+	return c.JSON(http.StatusAccepted, map[string]interface{}{
+		"message":    "if an account exists, a magic link has been sent",
+		"expires_at": expiresAt,
+	})
+}
+
+// VerifyMagicLink godoc
+//
+//	@Summary      Verify magic link token
+//	@Description  Validates a magic login link token and sets a session cookie.
+//	@Tags         auth
+//	@Produce      json
+//	@Param        token     query     string  true   "Magic link token"
+//	@Param        app       query     string  false  "Optional App ID target"
+//	@Param        redirect  query     string  false  "Set to false to return JSON instead of 303 redirect"
+//	@Success      200       {object}  map[string]string
+//	@Failure      400       {object}  rest.Error
+//	@Failure      401       {object}  rest.Error
+//	@Router       /auth/magic [get]
+func (h *MagicHandler) VerifyMagicLink(c *echo.Context) error {
+	tokenStr := c.QueryParam("token")
+	if tokenStr == "" {
+		return c.JSON(http.StatusBadRequest, rest.Error{Error: "token is required"})
+	}
+
+	email, err := h.agentTokens.ValidateMagicToken(tokenStr)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, rest.Error{Error: "invalid or expired token"})
+	}
+
+	ctx := c.Request().Context()
+
+	userID := uuid.NewSHA1(uuid.NameSpaceOID, []byte(email))
+	_, err = h.userQry.HandleGetByEmail(ctx, userapp.GetUserByEmailQuery{Email: email})
+	if err != nil {
+		dummyPassword := uuid.New().String()
+		_, createErr := h.userCmd.HandleCreate(ctx, userapp.CreateUserCommand{
+			ID:       userID.String(),
+			Name:     email,
+			Email:    email,
+			Password: dummyPassword,
+		})
+		if createErr != nil && !errIsDup(createErr) {
+			slog.ErrorContext(ctx, "failed to create user", "error", createErr)
+			return c.JSON(http.StatusInternalServerError, rest.Error{Error: "internal server error"})
+		}
+	}
+
+	sessionToken, _, err := h.agentTokens.IssueSessionToken(email, h.shareCfg.SessionTTL)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to issue session token", "error", err)
+		return c.JSON(http.StatusInternalServerError, rest.Error{Error: "internal server error"})
+	}
+
+	cookie := &http.Cookie{
+		Name:     "agni_session",
+		Value:    sessionToken,
+		Path:     "/",
+		Domain:   "",
+		Expires:  time.Now().Add(h.shareCfg.SessionTTL),
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	}
+	c.SetCookie(cookie)
+
+	redirectURL := "/apps"
+	if appParam := c.QueryParam("app"); appParam != "" {
+		redirectURL = "/apps/" + appParam
+	}
+
+	if c.QueryParam("redirect") == "false" {
+		return c.JSON(http.StatusOK, map[string]string{
+			"user_id": userID.String(),
+			"email":   email,
+			"message": "session created",
+		})
+	}
+
+	return c.Redirect(http.StatusSeeOther, redirectURL)
+}
+
+func errIsDup(err error) bool {
+	if err == nil {
+		return false
+	}
+	errStr := strings.ToLower(err.Error())
+	return strings.Contains(errStr, "duplicate") ||
+		strings.Contains(errStr, "unique") ||
+		strings.Contains(errStr, "already exists")
+}

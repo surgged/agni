@@ -49,7 +49,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -92,19 +92,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     },
                     "429": {
                         "description": "Too Many Requests",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -144,7 +144,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -179,7 +179,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -219,19 +219,19 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -271,7 +271,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -331,7 +331,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -397,7 +397,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -455,7 +455,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -495,13 +495,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -553,13 +553,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -602,7 +602,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -646,7 +646,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -689,7 +689,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -742,7 +742,7 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -774,13 +774,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -820,7 +820,7 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     },
                     "403": {
@@ -869,7 +869,7 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -919,13 +919,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -964,13 +964,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -1010,7 +1010,7 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -1053,13 +1053,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -1102,7 +1102,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -1197,7 +1197,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -1229,7 +1229,7 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -1258,7 +1258,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -1298,7 +1298,7 @@ const docTemplate = `{
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -1333,7 +1333,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -1378,13 +1378,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     },
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -1414,7 +1414,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error"
+                            "$ref": "#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error"
                         }
                     }
                 }
@@ -1422,7 +1422,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_surgged_agni_internal_adapters_http_web_api.Error": {
+        "github_com_surgged_agni_internal_adapters_http_web_rest.Error": {
             "type": "object",
             "properties": {
                 "details": {

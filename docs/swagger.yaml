@@ -2,7 +2,7 @@ basePath: /
 consumes:
 - application/json
 definitions:
-  github_com_surgged_agni_internal_adapters_http_web_api.Error:
+  github_com_surgged_agni_internal_adapters_http_web_rest.Error:
     properties:
       details:
         additionalProperties:
@@ -246,7 +246,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: List applications
@@ -274,15 +274,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
         "429":
           description: Too Many Requests
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: Create application
@@ -305,7 +305,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: Destroy application
@@ -329,7 +329,7 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: Get application details
@@ -355,15 +355,15 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: Deploy application
@@ -389,7 +389,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: Stream application logs
@@ -427,7 +427,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: Abort multipart upload
@@ -469,7 +469,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: Complete multipart upload
@@ -507,7 +507,7 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: Initialize multipart upload
@@ -532,11 +532,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: Retry deployment
@@ -570,11 +570,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: Create application share link
@@ -601,7 +601,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: List application share links
@@ -629,7 +629,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: Revoke application share link
@@ -656,7 +656,7 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: Refresh upload URL
@@ -692,7 +692,7 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: Get authenticated user profile
@@ -712,11 +712,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: Issue MCP agent token
@@ -745,7 +745,7 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
         "403":
           description: Forbidden
           schema:
@@ -774,7 +774,7 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: Logout user
@@ -809,11 +809,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       summary: Verify magic link token
       tags:
       - auth
@@ -839,11 +839,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       summary: Request magic link
       tags:
       - auth
@@ -870,7 +870,7 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       summary: Refresh access token
       tags:
       - auth
@@ -898,11 +898,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       summary: Register a new user
       tags:
       - auth
@@ -930,7 +930,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       summary: Resend email verification
       tags:
       - auth
@@ -993,7 +993,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       summary: Verify email address
       tags:
       - auth
@@ -1011,7 +1011,7 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       security:
       - BearerAuth: []
       summary: Get authenticated user ID
@@ -1032,7 +1032,7 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       summary: Preview application UI
       tags:
       - apps
@@ -1058,7 +1058,7 @@ paths:
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       summary: Create a user
       tags:
       - users
@@ -1079,7 +1079,7 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       summary: Delete a user
       tags:
       - users
@@ -1101,7 +1101,7 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       summary: Get a user
       tags:
       - users
@@ -1131,11 +1131,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_api.Error'
+            $ref: '#/definitions/github_com_surgged_agni_internal_adapters_http_web_rest.Error'
       summary: Update a user
       tags:
       - users

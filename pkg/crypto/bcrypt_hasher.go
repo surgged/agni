@@ -5,7 +5,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/surgged/agni/internal/ports"
+	"github.com/surgged/agni/ports"
 )
 
 // BCryptHasher is a ports.Hasher implementation backed by bcrypt.

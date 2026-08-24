@@ -48,13 +48,6 @@ deploy:
   build_timeout_s: 300
   deploy_timeout_s: 120
 
-k3s:
-  namespace: "agni"
-  registry_addr: "registry.agni.svc:5000"
-  kata_runtime_class: "kata-fc"
-  ingress_class: "nginx"
-  cert_issuer: "letsencrypt-prod"
-
 s3:
   endpoint: "sss.surgged.xyz"
   region: "us-east-1"
