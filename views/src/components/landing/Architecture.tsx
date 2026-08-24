@@ -89,7 +89,7 @@ const ARCH_NODES: ArchNode[] = [
       'You get an official web address with a security lock icon (HTTPS). Share it with friends or generate a 1-click private magic link!',
     specs: [
       { label: 'Security Lock', value: 'Automatic SSL certificate' },
-      { label: 'Web Address', value: 'https://your-app.agni.dev' },
+      { label: 'Web Address', value: 'https://your-app.example.com' },
       { label: 'Sharing', value: '1-click private magic links' },
     ],
   },

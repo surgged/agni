@@ -312,7 +312,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({
       <div className="flex items-center justify-between px-4 py-1.5 bg-zinc-900/60 border-t border-zinc-800/80 text-[11px] text-zinc-400 font-mono">
         <span>Showing {filteredLogs.length} / {logs.length} lines</span>
         <span className="flex items-center gap-1 text-zinc-500">
-          <Check className="h-3 w-3 text-emerald-400" /> Kata Container stdout/stderr pipe active
+          <Check className="h-3 w-3 text-emerald-400" /> Live log stream connected
         </span>
       </div>
     </div>

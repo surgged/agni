@@ -24,7 +24,7 @@ export function MagicLinkEmail({
           fontFamily:
             "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
           WebkitFontSmoothing: 'antialiased',
-          color: '#f4f4f5',
+          color: '#fafafa',
         }}
       >
         <table
@@ -33,7 +33,7 @@ export function MagicLinkEmail({
           border={0}
           cellSpacing={0}
           cellPadding={0}
-          style={{ backgroundColor: '#09090b', padding: '40px 16px' }}
+          style={{ backgroundColor: '#09090b', padding: '48px 16px' }}
         >
           <tbody>
             <tr>
@@ -44,125 +44,168 @@ export function MagicLinkEmail({
                   border={0}
                   cellSpacing={0}
                   cellPadding={0}
-                  style={{
-                    maxWidth: '520px',
-                    backgroundColor: '#141417',
-                    border: '1px solid #27272a',
-                    borderRadius: '20px',
-                    overflow: 'hidden',
-                    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
-                  }}
+                  style={{ maxWidth: '480px' }}
                 >
                   <tbody>
-                    {/* Top Accent Line */}
+                    {/* Brand Logo */}
                     <tr>
-                      <td
-                        height={4}
-                        style={{
-                          background:
-                            'linear-gradient(90deg, #f97316 0%, #f59e0b 50%, #eab308 100%)',
-                        }}
-                      />
-                    </tr>
-
-                    {/* Main Content */}
-                    <tr>
-                      <td style={{ padding: '36px 32px' }}>
-                        {/* Brand Logo Header */}
+                      <td style={{ padding: '0 0 32px 0' }}>
                         <table
                           role="presentation"
                           border={0}
                           cellSpacing={0}
                           cellPadding={0}
-                          style={{ marginBottom: '28px' }}
                         >
                           <tbody>
                             <tr>
                               <td
                                 style={{
                                   background:
-                                    'linear-gradient(135deg, #f97316 0%, #d97706 100%)',
+                                    'linear-gradient(to bottom right, #f97316, #d97706, #c2410c)',
                                   borderRadius: '12px',
-                                  width: '40px',
-                                  height: '40px',
-                                  textAlign: 'center',
-                                  verticalAlign: 'middle',
-                                  boxShadow:
-                                    '0 4px 12px rgba(249, 115, 22, 0.3)',
+                                  padding: '1px',
+                                  boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)',
                                 }}
                               >
-                                <span
-                                  style={{
-                                    fontSize: '20px',
-                                    lineHeight: '40px',
-                                    color: '#ffffff',
-                                  }}
+                                <table
+                                  role="presentation"
+                                  border={0}
+                                  cellSpacing={0}
+                                  cellPadding={0}
                                 >
-                                  🔥
-                                </span>
+                                  <tbody>
+                                    <tr>
+                                      <td
+                                        style={{
+                                          background: '#09090b',
+                                          borderRadius: '11px',
+                                          width: '38px',
+                                          height: '38px',
+                                          textAlign: 'center',
+                                          verticalAlign: 'middle',
+                                        }}
+                                      >
+                                        <img
+                                          src="https://sss.surgged.xyz/agni/logo.svg"
+                                          alt="Agni"
+                                          width="22"
+                                          height="22"
+                                          style={{ display: 'block', margin: '0 auto' }}
+                                        />
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
                               </td>
                               <td style={{ paddingLeft: '12px' }}>
-                                <span
-                                  style={{
-                                    fontSize: '22px',
-                                    fontWeight: 800,
-                                    letterSpacing: '-0.5px',
-                                    color: '#f97316',
-                                    display: 'inline-block',
-                                  }}
+                                <table
+                                  role="presentation"
+                                  border={0}
+                                  cellSpacing={0}
+                                  cellPadding={0}
                                 >
-                                  Agni
-                                </span>
+                                  <tbody>
+                                    <tr>
+                                      <td>
+                                        <span
+                                          style={{
+                                            fontSize: '20px',
+                                            fontWeight: 800,
+                                            letterSpacing: '-0.3px',
+                                            color: '#fafafa',
+                                            fontFamily:
+                                              'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                                          }}
+                                        >
+                                          AGNI
+                                        </span>
+                                      </td>
+                                      <td style={{ paddingLeft: '8px' }}>
+                                        <span
+                                          style={{
+                                            fontSize: '10px',
+                                            fontWeight: 600,
+                                            color: '#f97316',
+                                            fontFamily:
+                                              'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                                            background: 'rgba(249, 115, 22, 0.1)',
+                                            border: '1px solid rgba(249, 115, 22, 0.3)',
+                                            borderRadius: '4px',
+                                            padding: '2px 6px',
+                                          }}
+                                        >
+                                          MCP
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
                               </td>
                             </tr>
                           </tbody>
                         </table>
+                      </td>
+                    </tr>
 
-                        {/* Personalized Greeting */}
+                    {/* Greeting */}
+                    <tr>
+                      <td style={{ paddingBottom: '8px' }}>
                         <p
                           style={{
-                            margin: '0 0 12px 0',
-                            fontSize: '16px',
-                            fontWeight: 600,
-                            color: '#f4f4f5',
+                            margin: 0,
+                            fontSize: '14px',
+                            fontWeight: 500,
+                            color: '#a1a1aa',
                           }}
                         >
                           Hi {recipientEmail},
                         </p>
+                      </td>
+                    </tr>
 
-                        {/* Title & Description */}
+                    {/* Title */}
+                    <tr>
+                      <td style={{ paddingBottom: '8px' }}>
                         <h1
                           style={{
-                            margin: '0 0 12px 0',
-                            fontSize: '22px',
+                            margin: 0,
+                            fontSize: '24px',
                             fontWeight: 700,
-                            color: '#ffffff',
-                            letterSpacing: '-0.3px',
+                            color: '#fafafa',
+                            letterSpacing: '-0.4px',
                           }}
                         >
                           Sign in to your account
                         </h1>
+                      </td>
+                    </tr>
 
+                    {/* Description */}
+                    <tr>
+                      <td style={{ paddingBottom: '32px' }}>
                         <p
                           style={{
-                            margin: '0 0 28px 0',
-                            fontSize: '14px',
+                            margin: 0,
+                            fontSize: '15px',
                             lineHeight: 1.6,
                             color: '#a1a1aa',
                           }}
                         >
-                          You requested a passwordless login link for your Agni
-                          workspace. Click the button below to sign in instantly
-                          to your dashboard and manage your Kata MicroVM sandboxes.
+                          Click the button below to sign in instantly to your
+                          dashboard and manage your Kata MicroVM sandboxes.
                         </p>
+                      </td>
+                    </tr>
 
-                        {/* Primary CTA Button */}
+                    {/* CTA Button */}
+                    <tr>
+                      <td style={{ paddingBottom: '32px' }}>
                         <table
                           role="presentation"
                           border={0}
                           cellSpacing={0}
                           cellPadding={0}
-                          style={{ marginBottom: '28px', width: '100%' }}
+                          style={{ width: '100%' }}
                         >
                           <tbody>
                             <tr>
@@ -170,7 +213,7 @@ export function MagicLinkEmail({
                                 align="center"
                                 style={{
                                   backgroundColor: '#f97316',
-                                  borderRadius: '12px',
+                                  borderRadius: '10px',
                                 }}
                               >
                                 <a
@@ -181,122 +224,84 @@ export function MagicLinkEmail({
                                     display: 'block',
                                     width: '100%',
                                     boxSizing: 'border-box',
-                                    padding: '14px 28px',
+                                    padding: '14px 32px',
                                     backgroundColor: '#f97316',
-                                    background:
-                                      'linear-gradient(135deg, #f97316 0%, #d97706 100%)',
                                     color: '#ffffff',
                                     textDecoration: 'none',
-                                    fontWeight: 700,
+                                    fontWeight: 600,
                                     fontSize: '15px',
-                                    borderRadius: '12px',
+                                    borderRadius: '10px',
                                     textAlign: 'center',
-                                    letterSpacing: '0.2px',
+                                    letterSpacing: '0.1px',
                                   }}
                                 >
-                                  Sign In to Agni Workspace →
+                                  Sign in to Agni →
                                 </a>
                               </td>
                             </tr>
                           </tbody>
                         </table>
-
-                        {/* Security Expiration Box */}
-                        <table
-                          role="presentation"
-                          border={0}
-                          cellSpacing={0}
-                          cellPadding={0}
-                          style={{
-                            width: '100%',
-                            backgroundColor: '#1a1a1e',
-                            border: '1px solid #27272a',
-                            borderRadius: '12px',
-                            marginBottom: '24px',
-                          }}
-                        >
-                          <tbody>
-                            <tr>
-                              <td style={{ padding: '14px 16px' }}>
-                                <p
-                                  style={{
-                                    margin: 0,
-                                    fontSize: '12px',
-                                    lineHeight: 1.5,
-                                    color: '#a1a1aa',
-                                  }}
-                                >
-                                  <strong style={{ color: '#f59e0b' }}>
-                                    ⏱️ Security Notice:
-                                  </strong>{' '}
-                                  This magic link will expire in{' '}
-                                  <strong style={{ color: '#f4f4f5' }}>
-                                    24 hours
-                                  </strong>
-                                  . If you didn't request this email, you can safely
-                                  ignore it.
-                                </p>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-
-                        {/* Monospace Copy Link Fallback */}
-                        <div
-                          style={{
-                            borderTop: '1px solid #27272a',
-                            paddingTop: '20px',
-                          }}
-                        >
-                          <p
-                            style={{
-                              margin: '0 0 8px 0',
-                              fontSize: '12px',
-                              fontWeight: 500,
-                              color: '#71717a',
-                            }}
-                          >
-                            Button not working? Copy and paste this URL into your
-                            browser:
-                          </p>
-                          <div
-                            style={{
-                              padding: '10px 12px',
-                              backgroundColor: '#09090b',
-                              border: '1px solid #27272a',
-                              borderRadius: '8px',
-                              fontFamily:
-                                'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                              fontSize: '11px',
-                              color: '#f97316',
-                              wordBreak: 'break-all',
-                              lineHeight: 1.4,
-                            }}
-                          >
-                            {magicLink}
-                          </div>
-                        </div>
                       </td>
                     </tr>
 
-                    {/* Inner Card Footer */}
+                    {/* Fallback Link */}
                     <tr>
                       <td
                         style={{
-                          padding: '20px 32px',
-                          backgroundColor: '#0d0d0f',
-                          borderTop: '1px solid #27272a',
-                          textAlign: 'center',
+                          padding: '24px 0 0 0',
+                          borderTop: '1px solid #1c1c1f',
                         }}
                       >
                         <p
                           style={{
-                            margin: 0,
+                            margin: '0 0 10px 0',
                             fontSize: '12px',
-                            color: '#71717a',
+                            fontWeight: 500,
+                            color: '#52525b',
                           }}
                         >
-                          Agni Engine • Kata MicroVM Isolation & Orchestration
+                          Link not working? Copy and paste this URL:
+                        </p>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontFamily:
+                              'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                            fontSize: '12px',
+                            color: '#71717a',
+                            wordBreak: 'break-all',
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {magicLink}
+                        </p>
+                      </td>
+                    </tr>
+
+                    {/* Security Notice */}
+                    <tr>
+                      <td style={{ paddingTop: '32px' }}>
+                        <p
+                          style={{
+                            margin: '0 0 4px 0',
+                            fontSize: '12px',
+                            lineHeight: 1.5,
+                            color: '#52525b',
+                          }}
+                        >
+                          This link expires in 10 minutes and can only be used
+                          once.
+                        </p>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: '12px',
+                            lineHeight: 1.5,
+                            color: '#52525b',
+                          }}
+                        >
+                          If you didn't request this, you can safely ignore this
+                          email.
                         </p>
                       </td>
                     </tr>
@@ -310,16 +315,15 @@ export function MagicLinkEmail({
                   border={0}
                   cellSpacing={0}
                   cellPadding={0}
-                  style={{ maxWidth: '520px', marginTop: '20px' }}
+                  style={{ maxWidth: '480px', marginTop: '32px' }}
                 >
                   <tbody>
                     <tr>
                       <td
                         align="center"
-                        style={{ fontSize: '11px', color: '#52525b' }}
+                        style={{ fontSize: '11px', color: '#3f3f46' }}
                       >
-                        &copy; 2026 Agni Cloud Platform. Built for autonomous AI
-                        agents & microVMs.
+                        Agni Cloud Platform &middot; Kata MicroVM Orchestration
                       </td>
                     </tr>
                   </tbody>

@@ -1,0 +1,48 @@
+package gorm
+
+import (
+	"context"
+	"log/slog"
+	"time"
+
+	"gorm.io/gorm"
+
+	"github.com/surgged/agni/domain/token"
+	"github.com/surgged/agni/ports"
+)
+
+// TokenDenylist is the GORM-backed implementation of ports.TokenDenylist.
+// The token.RevokedToken aggregate carries its own GORM tags and doubles as
+// the persistence row, so this adapter needs no separate row DTO or mapping.
+type TokenDenylist struct {
+	db *gorm.DB
+}
+
+// NewTokenDenylist constructs a GORM-backed TokenDenylist.
+func NewTokenDenylist(db *gorm.DB) *TokenDenylist {
+	return &TokenDenylist{db: db}
+}
+
+var _ ports.TokenDenylist = (*TokenDenylist)(nil)
+
+// Add stores a revoked JTI with its expiration time.
+func (r *TokenDenylist) Add(ctx context.Context, jti string, expiresAt time.Time) error {
+	rt := token.NewRevokedToken(jti, expiresAt)
+	if err := r.db.WithContext(ctx).Create(&rt).Error; err != nil {
+		slog.WarnContext(ctx, "failed to add token to denylist", "jti", jti, "error", err)
+		return err
+	}
+	return nil
+}
+
+// Exists reports whether the given JTI has been revoked and has not yet
+// expired. Expired JTIs are treated as non-existent (pruning is done by a
+// periodic cleanup migration).
+func (r *TokenDenylist) Exists(ctx context.Context, jti string) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).
+		Model(&token.RevokedToken{}).
+		Where("jti = ? AND expires_at > ?", jti, time.Now()).
+		Count(&count).Error
+	return count > 0, err
+}

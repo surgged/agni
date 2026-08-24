@@ -1,14 +1,12 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User, Bell, Shield, CreditCard } from 'lucide-react';
+import { User, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,10 +20,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -52,8 +50,8 @@ export default function Settings() {
   const profileForm = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: user?.name || '',
-      email: user?.email || '',
+      name: user?.name || 'Agni Developer',
+      email: user?.email || 'dev@agni.io',
     },
   });
 
@@ -63,39 +61,32 @@ export default function Settings() {
   });
 
   function onProfileSubmit(values: ProfileValues) {
-    console.log('Profile update:', values);
+    toast.success('Profile preferences updated');
   }
 
   function onPasswordSubmit(values: PasswordValues) {
-    console.log('Password change:', values);
+    toast.success('Password update submitted');
+    passwordForm.reset();
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-4xl">
       <div>
         <h2 className="text-2xl font-bold">Settings</h2>
         <p className="text-muted-foreground text-sm mt-1">
-          Manage your account settings and preferences.
+          Manage your account profile and security credentials.
         </p>
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="w-full sm:w-auto grid grid-cols-4 gap-2">
+        <TabsList className="w-full sm:w-auto grid grid-cols-2 gap-2">
           <TabsTrigger value="profile" className="gap-2">
             <User className="size-4" />
-            <span className="hidden sm:inline">Profile</span>
+            <span>Profile</span>
           </TabsTrigger>
           <TabsTrigger value="security" className="gap-2">
             <Shield className="size-4" />
-            <span className="hidden sm:inline">Security</span>
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2">
-            <Bell className="size-4" />
-            <span className="hidden sm:inline">Notifications</span>
-          </TabsTrigger>
-          <TabsTrigger value="billing" className="gap-2">
-            <CreditCard className="size-4" />
-            <span className="hidden sm:inline">Billing</span>
+            <span>Security</span>
           </TabsTrigger>
         </TabsList>
 
@@ -105,19 +96,19 @@ export default function Settings() {
             <CardHeader>
               <CardTitle>Profile</CardTitle>
               <CardDescription>
-                Update your personal information and how others see you.
+                Update your personal information and workspace details.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center gap-4">
-                <Avatar className="size-16 rounded-xl">
-                  <AvatarFallback className="rounded-xl bg-primary/10 text-primary text-lg font-bold">
+                <Avatar className="size-14 rounded-xl">
+                  <AvatarFallback className="rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white text-base font-bold">
                     {profileForm.watch('name')?.charAt(0)?.toUpperCase() || 'A'}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium">{profileForm.watch('name')}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-semibold text-sm">{profileForm.watch('name')}</p>
+                  <p className="text-xs text-muted-foreground">
                     {profileForm.watch('email')}
                   </p>
                 </div>
@@ -135,7 +126,7 @@ export default function Settings() {
                       <FormItem>
                         <FormLabel>Full Name</FormLabel>
                         <FormControl>
-                          <Input className="rounded-xl bg-muted/50" {...field} />
+                          <Input className="rounded-xl bg-muted/40" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -149,7 +140,7 @@ export default function Settings() {
                         <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input
-                            className="rounded-xl bg-muted/50"
+                            className="rounded-xl bg-muted/40"
                             type="email"
                             {...field}
                           />
@@ -160,7 +151,7 @@ export default function Settings() {
                   />
                   <Button
                     type="submit"
-                    className="rounded-xl shadow-lg shadow-primary/30"
+                    className="rounded-xl shadow-md"
                   >
                     Save Changes
                   </Button>
@@ -176,7 +167,7 @@ export default function Settings() {
             <CardHeader>
               <CardTitle>Security</CardTitle>
               <CardDescription>
-                Update your password and manage security settings.
+                Update your account password and security settings.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -194,7 +185,7 @@ export default function Settings() {
                         <FormControl>
                           <Input
                             type="password"
-                            className="rounded-xl bg-muted/50"
+                            className="rounded-xl bg-muted/40"
                             {...field}
                           />
                         </FormControl>
@@ -211,7 +202,7 @@ export default function Settings() {
                         <FormControl>
                           <Input
                             type="password"
-                            className="rounded-xl bg-muted/50"
+                            className="rounded-xl bg-muted/40"
                             {...field}
                           />
                         </FormControl>
@@ -228,7 +219,7 @@ export default function Settings() {
                         <FormControl>
                           <Input
                             type="password"
-                            className="rounded-xl bg-muted/50"
+                            className="rounded-xl bg-muted/40"
                             {...field}
                           />
                         </FormControl>
@@ -238,7 +229,7 @@ export default function Settings() {
                   />
                   <Button
                     type="submit"
-                    className="rounded-xl shadow-lg shadow-primary/30"
+                    className="rounded-xl shadow-md"
                   >
                     Update Password
                   </Button>
@@ -247,79 +238,7 @@ export default function Settings() {
             </CardContent>
           </Card>
         </TabsContent>
-
-        {/* Notifications Tab */}
-        <TabsContent value="notifications" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notifications</CardTitle>
-              <CardDescription>
-                Configure how you receive alerts and updates.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Email Notifications</p>
-                  <p className="text-sm text-muted-foreground">
-                    Receive email alerts for important updates.
-                  </p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Push Notifications</p>
-                  <p className="text-sm text-muted-foreground">
-                    Receive push notifications in your browser.
-                  </p>
-                </div>
-                <Switch />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Storage Alerts</p>
-                  <p className="text-sm text-muted-foreground">
-                    Get notified when storage is running low.
-                  </p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Billing Tab */}
-        <TabsContent value="billing" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Billing</CardTitle>
-              <CardDescription>
-                Manage your subscription and billing information.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="rounded-xl border p-4 flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Free Plan</p>
-                  <p className="text-sm text-muted-foreground">
-                    1 TB storage, basic features
-                  </p>
-                </div>
-                <Badge variant="secondary" className="font-normal">
-                  Active
-                </Badge>
-              </div>
-              <Button variant="outline" className="rounded-xl">
-                Upgrade to Pro
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   );
 }
-

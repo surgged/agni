@@ -159,7 +159,8 @@ export default function AppDetail() {
       const res = await api.createAppShare(app.id, recipientEmail, permission);
       const newShare = mapBackendShareToShareLink(res);
       setShareLinks((prev) => [newShare, ...prev]);
-      setCreatedShareUrl(`https://agni.dev/share/${newShare.tokenHash}`);
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      setCreatedShareUrl(`${origin}/share/${newShare.tokenHash}`);
       setRecipientEmail('');
       toast.success(`Share link generated for ${recipientEmail}`);
     } catch (err: any) {
@@ -300,6 +301,30 @@ export default function AppDetail() {
         </CardContent>
       </Card>
 
+      {app.status === 'FAILED' && (app.errorMessage || app.failedStep) && (
+        <Card className="border-rose-500/30 bg-rose-500/5">
+          <CardContent className="p-4 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-rose-400" />
+              <span className="text-sm font-bold text-rose-400">Deployment Failed</span>
+            </div>
+            {app.failedStep && (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-[10px] uppercase bg-rose-500/10 text-rose-400 border-rose-500/30">
+                  Failed Step
+                </Badge>
+                <span className="text-xs font-mono text-rose-300">{app.failedStep}</span>
+              </div>
+            )}
+            {app.errorMessage && (
+              <p className="text-xs text-rose-300/80 leading-relaxed bg-rose-500/10 p-3 rounded-lg border border-rose-500/20 font-mono">
+                {app.errorMessage}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Tabs Navigation */}
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="bg-muted/40 border border-border/50 p-1 h-10">
@@ -403,37 +428,7 @@ export default function AppDetail() {
             </Card>
           </div>
 
-          {/* MicroVM Pod Technical Specifications */}
-          <Card className="bg-card/50 border-border/60">
-            <CardHeader>
-              <CardTitle className="text-base font-bold flex items-center gap-2">
-                <Server className="h-4 w-4 text-primary" /> MicroVM Specification & Pod Metadata
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Low-level Firecracker MicroVM jailer state and Linux kernel guest details.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-                <div className="p-3 rounded-lg bg-muted/30 border border-border/40 space-y-1">
-                  <span className="text-muted-foreground font-medium">Pod Name</span>
-                  <p className="font-mono font-bold text-foreground">{app.podName}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-muted/30 border border-border/40 space-y-1">
-                  <span className="text-muted-foreground font-medium">Hypervisor Engine</span>
-                  <p className="font-mono font-bold text-foreground">Kata + Firecracker v1.6.0</p>
-                </div>
-                <div className="p-3 rounded-lg bg-muted/30 border border-border/40 space-y-1">
-                  <span className="text-muted-foreground font-medium">Guest Kernel</span>
-                  <p className="font-mono font-bold text-foreground">vmlinux-5.15.0-kata</p>
-                </div>
-                <div className="p-3 rounded-lg bg-muted/30 border border-border/40 space-y-1">
-                  <span className="text-muted-foreground font-medium">Pod IP Address</span>
-                  <p className="font-mono font-bold text-foreground">172.19.0.4 / virtio-net</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+
         </TabsContent>
 
         {/* Tab 2: Live Logs */}
@@ -588,10 +583,10 @@ export default function AppDetail() {
           <Card className="bg-card/50 border-border/60">
             <CardHeader>
               <CardTitle className="text-base font-bold flex items-center gap-2">
-                <Key className="h-4 w-4 text-amber-400" /> MicroVM Environment Variables
+                <Key className="h-4 w-4 text-amber-400" /> Environment Variables
               </CardTitle>
               <CardDescription className="text-xs">
-                Injected into the Kata MicroVM container sandbox at initialization time.
+                Environment variables configured for this application.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -701,7 +696,7 @@ export default function AppDetail() {
                 <AlertTriangle className="h-5 w-5" /> Danger Zone
               </CardTitle>
               <CardDescription className="text-xs text-rose-300/80">
-                Permanently destroy this Kata MicroVM container and release all allocated resources.
+                Permanently delete this application and release all associated resources.
               </CardDescription>
             </CardHeader>
             <CardContent>

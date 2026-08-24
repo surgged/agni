@@ -56,7 +56,7 @@ const DEPLOY_STEPS: DeployStep[] = [
   {
     id: 5,
     label: 'Securing Web Address',
-    detail: 'Issuing free SSL security lock for my-app.agni.dev...',
+    detail: 'Issuing free SSL security lock for my-app.example.com...',
     icon: Key,
     durationMs: 900,
   },
@@ -132,7 +132,7 @@ windsurf.mcp.call("agni_deploy_app", {
 
     if (currentStepIndex >= DEPLOY_STEPS.length) {
       setIsRunning(false);
-      const finalUrl = 'https://my-app.agni.dev';
+      const finalUrl = 'https://my-app.example.com';
       setLiveUrl(finalUrl);
       setLogs((prev) => [
         ...prev,

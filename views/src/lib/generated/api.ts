@@ -25,65 +25,30 @@ import type {
 } from '@tanstack/react-query';
 
 import { customMutator } from '../mutator';
-export type ApiErrorDetails = {[key: string]: string};
+export type GithubComSurggedAgniInternalAdaptersHttpWebApiErrorDetails = {[key: string]: string};
 
-export interface ApiError {
-  details?: ApiErrorDetails;
+export interface GithubComSurggedAgniInternalAdaptersHttpWebApiError {
+  details?: GithubComSurggedAgniInternalAdaptersHttpWebApiErrorDetails;
   error?: string;
 }
 
-export interface V1AppDTO {
-  created_at?: string;
-  error_message?: string;
-  id?: string;
-  image_ref?: string;
-  name: string;
-  owner_email: string;
-  pod_name?: string;
-  runtime?: string;
-  service_url?: string;
-  share_url?: string;
-  status?: string;
-  updated_at?: string;
+export interface GithubComSurggedAgniInternalPortsPartUploadURL {
+  part_number?: number;
+  upload_url?: string;
 }
 
-export interface V1LogLinePayload {
-  app_id?: string;
-  line?: string;
-  stream?: string;
-  timestamp?: string;
+export interface GithubComSurggedAgniInternalPortsMultipartUploadInit {
+  archive_key?: string;
+  parts?: GithubComSurggedAgniInternalPortsPartUploadURL[];
+  upload_id?: string;
 }
 
-export interface V1MagicRequestDTO {
-  email: string;
+export interface GithubComSurggedAgniInternalPortsUploadedPart {
+  etag?: string;
+  part_number?: number;
 }
 
-export interface V1ShareDTO {
-  app_id: string;
-  id?: string;
-  permission?: string;
-  recipient_email: string;
-}
-
-export interface V1ShareResponseDTO {
-  accepted_at?: string;
-  app_id?: string;
-  expires_at?: string;
-  id?: string;
-  permission?: string;
-  recipient_email?: string;
-  revoked_at?: string;
-  token?: string;
-}
-
-export interface V1UserDTO {
-  email: string;
-  id?: string;
-  name: string;
-  password: string;
-}
-
-export interface WebCredentials {
+export interface InternalAdaptersHttpWebCredentials {
   email: string;
   /**
      * @minLength 2
@@ -94,11 +59,11 @@ export interface WebCredentials {
   password: string;
 }
 
-export interface WebRefreshRequest {
+export interface InternalAdaptersHttpWebRefreshRequest {
   refresh_token: string;
 }
 
-export interface WebRegisterRequest {
+export interface InternalAdaptersHttpWebRegisterRequest {
   confirm_password: string;
   email: string;
   /**
@@ -110,24 +75,105 @@ export interface WebRegisterRequest {
   password: string;
 }
 
-export interface WebResendVerificationRequest {
+export interface InternalAdaptersHttpWebResendVerificationRequest {
   email: string;
 }
 
-export interface WebTokenResponse {
+export interface InternalAdaptersHttpWebTokenResponse {
   access_token?: string;
   expires_at?: number;
   refresh_token?: string;
 }
 
-export type PostApiV1AppsBody = {
-  /** App Name */
+export interface InternalAdaptersHttpWebV1AppDTO {
+  created_at?: string;
+  error_message?: string;
+  failed_step?: string;
+  id?: string;
+  image_ref?: string;
   name: string;
-  /** Owner Email */
-  owner_email?: string;
-  /** Source tarball bundle */
-  tarball?: Blob;
+  owner_email: string;
+  pod_name?: string;
+  port?: number;
+  runtime?: string;
+  service_url?: string;
+  share_url?: string;
+  slug?: string;
+  status?: string;
+  updated_at?: string;
+}
+
+export interface InternalAdaptersHttpWebV1CreateAppDTO {
+  name: string;
+  port?: number;
+  runtime?: string;
+}
+
+export interface InternalAdaptersHttpWebV1CreateAppResponse {
+  id?: string;
+  slug?: string;
+  upload_expires_at?: string;
+  upload_url?: string;
+}
+
+export interface InternalAdaptersHttpWebV1DeployResponse {
+  status?: string;
+}
+
+export interface InternalAdaptersHttpWebV1LogLinePayload {
+  app_id?: string;
+  line?: string;
+  stream?: string;
+  timestamp?: string;
+}
+
+export interface InternalAdaptersHttpWebV1MagicRequestDTO {
+  email: string;
+}
+
+export interface InternalAdaptersHttpWebV1ShareDTO {
+  app_id: string;
+  id?: string;
+  permission?: string;
+  recipient_email: string;
+}
+
+export interface InternalAdaptersHttpWebV1ShareResponseDTO {
+  accepted_at?: string;
+  app_id?: string;
+  expires_at?: string;
+  id?: string;
+  permission?: string;
+  recipient_email?: string;
+  revoked_at?: string;
+  token?: string;
+}
+
+export interface InternalAdaptersHttpWebV1UserDTO {
+  email: string;
+  id?: string;
+  name: string;
+  password: string;
+}
+
+export type PostApiV1AppsIdMultipartAbortBody = {
+  upload_id?: string;
 };
+
+export type PostApiV1AppsIdMultipartAbort200 = {[key: string]: string};
+
+export type PostApiV1AppsIdMultipartCompleteBody = {
+  parts?: GithubComSurggedAgniInternalPortsUploadedPart[];
+  upload_id?: string;
+};
+
+export type PostApiV1AppsIdMultipartComplete200 = {[key: string]: string};
+
+export type PostApiV1AppsIdMultipartInitBody = {
+  total_size?: number;
+};
+
+export type PostApiV1AppsIdUploadUrl200 = {[key: string]: string};
 
 export type GetApiV1ClusterHealth200 = { [key: string]: unknown };
 
@@ -215,7 +261,7 @@ export const getApiV1Apps = (
 ) => {
 
 
-      return customMutator<V1AppDTO[]>(
+      return customMutator<InternalAdaptersHttpWebV1AppDTO[]>(
       {url: `/api/v1/apps`, method: 'GET', signal
     },
       options);
@@ -231,7 +277,7 @@ export const getGetApiV1AppsQueryKey = () => {
     }
 
 
-export const getGetApiV1AppsQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1Apps>>, TError = ApiError>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Apps>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+export const getGetApiV1AppsQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1Apps>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Apps>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -250,10 +296,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetApiV1AppsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1Apps>>>
-export type GetApiV1AppsQueryError = ApiError
+export type GetApiV1AppsQueryError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
 
-export function useGetApiV1Apps<TData = Awaited<ReturnType<typeof getApiV1Apps>>, TError = ApiError>(
+export function useGetApiV1Apps<TData = Awaited<ReturnType<typeof getApiV1Apps>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Apps>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getApiV1Apps>>,
@@ -263,7 +309,7 @@ export function useGetApiV1Apps<TData = Awaited<ReturnType<typeof getApiV1Apps>>
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiV1Apps<TData = Awaited<ReturnType<typeof getApiV1Apps>>, TError = ApiError>(
+export function useGetApiV1Apps<TData = Awaited<ReturnType<typeof getApiV1Apps>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Apps>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getApiV1Apps>>,
@@ -273,7 +319,7 @@ export function useGetApiV1Apps<TData = Awaited<ReturnType<typeof getApiV1Apps>>
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiV1Apps<TData = Awaited<ReturnType<typeof getApiV1Apps>>, TError = ApiError>(
+export function useGetApiV1Apps<TData = Awaited<ReturnType<typeof getApiV1Apps>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Apps>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -281,7 +327,7 @@ export function useGetApiV1Apps<TData = Awaited<ReturnType<typeof getApiV1Apps>>
  * @summary List applications
  */
 
-export function useGetApiV1Apps<TData = Awaited<ReturnType<typeof getApiV1Apps>>, TError = ApiError>(
+export function useGetApiV1Apps<TData = Awaited<ReturnType<typeof getApiV1Apps>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Apps>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -300,29 +346,19 @@ export function useGetApiV1Apps<TData = Awaited<ReturnType<typeof getApiV1Apps>>
 
 
 /**
- * Creates a new microVM container application and deploys optional source tarball.
+ * Creates a new application with a presigned upload URL for archive submission.
  * @summary Create application
  */
 export const postApiV1Apps = (
-    postApiV1AppsBody?: PostApiV1AppsBody,
+    internalAdaptersHttpWebV1CreateAppDTO: InternalAdaptersHttpWebV1CreateAppDTO,
  options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
 ) => {
 
-      const formData = new FormData();
-if(postApiV1AppsBody?.name !== undefined) {
- formData.append(`name`, postApiV1AppsBody.name);
- }
-if(postApiV1AppsBody?.owner_email !== undefined) {
- formData.append(`owner_email`, postApiV1AppsBody.owner_email);
- }
-if(postApiV1AppsBody?.tarball !== undefined) {
- formData.append(`tarball`, postApiV1AppsBody.tarball);
- }
 
-      return customMutator<V1AppDTO>(
+      return customMutator<InternalAdaptersHttpWebV1CreateAppResponse>(
       {url: `/api/v1/apps`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData, signal
+      headers: {'Content-Type': 'application/json', },
+      data: internalAdaptersHttpWebV1CreateAppDTO, signal
     },
       options);
     }
@@ -330,9 +366,9 @@ if(postApiV1AppsBody?.tarball !== undefined) {
 
 
 
-export const getPostApiV1AppsMutationOptions = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1Apps>>, TError,{data?: PostApiV1AppsBody}, TContext>, request?: SecondParameter<typeof customMutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof postApiV1Apps>>, TError,{data?: PostApiV1AppsBody}, TContext> => {
+export const getPostApiV1AppsMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1Apps>>, TError,{data: InternalAdaptersHttpWebV1CreateAppDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiV1Apps>>, TError,{data: InternalAdaptersHttpWebV1CreateAppDTO}, TContext> => {
 
 const mutationKey = ['postApiV1Apps'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -344,7 +380,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV1Apps>>, {data?: PostApiV1AppsBody}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV1Apps>>, {data: InternalAdaptersHttpWebV1CreateAppDTO}> = (props) => {
           const {data} = props ?? {};
 
           return  postApiV1Apps(data,requestOptions)
@@ -358,18 +394,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostApiV1AppsMutationResult = NonNullable<Awaited<ReturnType<typeof postApiV1Apps>>>
-    export type PostApiV1AppsMutationBody = PostApiV1AppsBody | undefined
-    export type PostApiV1AppsMutationError = ApiError
+    export type PostApiV1AppsMutationBody = InternalAdaptersHttpWebV1CreateAppDTO
+    export type PostApiV1AppsMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
     /**
  * @summary Create application
  */
-export const usePostApiV1Apps = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1Apps>>, TError,{data?: PostApiV1AppsBody}, TContext>, request?: SecondParameter<typeof customMutator>}
+export const usePostApiV1Apps = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1Apps>>, TError,{data: InternalAdaptersHttpWebV1CreateAppDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postApiV1Apps>>,
         TError,
-        {data?: PostApiV1AppsBody},
+        {data: InternalAdaptersHttpWebV1CreateAppDTO},
         TContext
       > => {
       return useMutation(getPostApiV1AppsMutationOptions(options), queryClient);
@@ -385,7 +421,7 @@ export const getApiV1AppsId = (
 ) => {
 
 
-      return customMutator<V1AppDTO>(
+      return customMutator<InternalAdaptersHttpWebV1AppDTO>(
       {url: `/api/v1/apps/${id}`, method: 'GET', signal
     },
       options);
@@ -401,7 +437,7 @@ export const getGetApiV1AppsIdQueryKey = (id: string,) => {
     }
 
 
-export const getGetApiV1AppsIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1AppsId>>, TError = ApiError>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+export const getGetApiV1AppsIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1AppsId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -420,10 +456,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetApiV1AppsIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1AppsId>>>
-export type GetApiV1AppsIdQueryError = ApiError
+export type GetApiV1AppsIdQueryError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
 
-export function useGetApiV1AppsId<TData = Awaited<ReturnType<typeof getApiV1AppsId>>, TError = ApiError>(
+export function useGetApiV1AppsId<TData = Awaited<ReturnType<typeof getApiV1AppsId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsId>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getApiV1AppsId>>,
@@ -433,7 +469,7 @@ export function useGetApiV1AppsId<TData = Awaited<ReturnType<typeof getApiV1Apps
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiV1AppsId<TData = Awaited<ReturnType<typeof getApiV1AppsId>>, TError = ApiError>(
+export function useGetApiV1AppsId<TData = Awaited<ReturnType<typeof getApiV1AppsId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsId>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getApiV1AppsId>>,
@@ -443,7 +479,7 @@ export function useGetApiV1AppsId<TData = Awaited<ReturnType<typeof getApiV1Apps
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiV1AppsId<TData = Awaited<ReturnType<typeof getApiV1AppsId>>, TError = ApiError>(
+export function useGetApiV1AppsId<TData = Awaited<ReturnType<typeof getApiV1AppsId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -451,7 +487,7 @@ export function useGetApiV1AppsId<TData = Awaited<ReturnType<typeof getApiV1Apps
  * @summary Get application details
  */
 
-export function useGetApiV1AppsId<TData = Awaited<ReturnType<typeof getApiV1AppsId>>, TError = ApiError>(
+export function useGetApiV1AppsId<TData = Awaited<ReturnType<typeof getApiV1AppsId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -488,7 +524,7 @@ export const deleteApiV1AppsId = (
 
 
 
-export const getDeleteApiV1AppsIdMutationOptions = <TError = ApiError,
+export const getDeleteApiV1AppsIdMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiV1AppsId>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customMutator>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteApiV1AppsId>>, TError,{id: string}, TContext> => {
 
@@ -517,12 +553,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteApiV1AppsIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiV1AppsId>>>
 
-    export type DeleteApiV1AppsIdMutationError = ApiError
+    export type DeleteApiV1AppsIdMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
     /**
  * @summary Destroy application
  */
-export const useDeleteApiV1AppsId = <TError = ApiError,
+export const useDeleteApiV1AppsId = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiV1AppsId>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteApiV1AppsId>>,
@@ -531,6 +567,70 @@ export const useDeleteApiV1AppsId = <TError = ApiError,
         TContext
       > => {
       return useMutation(getDeleteApiV1AppsIdMutationOptions(options), queryClient);
+    }
+
+/**
+ * Starts the deployment workflow for an app that has an uploaded archive.
+ * @summary Deploy application
+ */
+export const postApiV1AppsIdDeploy = (
+    id: string,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<InternalAdaptersHttpWebV1DeployResponse>(
+      {url: `/api/v1/apps/${id}/deploy`, method: 'POST', signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostApiV1AppsIdDeployMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdDeploy>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdDeploy>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['postApiV1AppsIdDeploy'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV1AppsIdDeploy>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  postApiV1AppsIdDeploy(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiV1AppsIdDeployMutationResult = NonNullable<Awaited<ReturnType<typeof postApiV1AppsIdDeploy>>>
+
+    export type PostApiV1AppsIdDeployMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
+
+    /**
+ * @summary Deploy application
+ */
+export const usePostApiV1AppsIdDeploy = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdDeploy>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiV1AppsIdDeploy>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getPostApiV1AppsIdDeployMutationOptions(options), queryClient);
     }
 
 /**
@@ -543,7 +643,7 @@ export const getApiV1AppsIdLogs = (
 ) => {
 
 
-      return customMutator<V1LogLinePayload>(
+      return customMutator<InternalAdaptersHttpWebV1LogLinePayload>(
       {url: `/api/v1/apps/${id}/logs`, method: 'GET', signal
     },
       options);
@@ -559,7 +659,7 @@ export const getGetApiV1AppsIdLogsQueryKey = (id: string,) => {
     }
 
 
-export const getGetApiV1AppsIdLogsQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError = ApiError>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+export const getGetApiV1AppsIdLogsQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -578,10 +678,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetApiV1AppsIdLogsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1AppsIdLogs>>>
-export type GetApiV1AppsIdLogsQueryError = ApiError
+export type GetApiV1AppsIdLogsQueryError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
 
-export function useGetApiV1AppsIdLogs<TData = Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError = ApiError>(
+export function useGetApiV1AppsIdLogs<TData = Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getApiV1AppsIdLogs>>,
@@ -591,7 +691,7 @@ export function useGetApiV1AppsIdLogs<TData = Awaited<ReturnType<typeof getApiV1
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiV1AppsIdLogs<TData = Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError = ApiError>(
+export function useGetApiV1AppsIdLogs<TData = Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getApiV1AppsIdLogs>>,
@@ -601,7 +701,7 @@ export function useGetApiV1AppsIdLogs<TData = Awaited<ReturnType<typeof getApiV1
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiV1AppsIdLogs<TData = Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError = ApiError>(
+export function useGetApiV1AppsIdLogs<TData = Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -609,7 +709,7 @@ export function useGetApiV1AppsIdLogs<TData = Awaited<ReturnType<typeof getApiV1
  * @summary Stream application logs
  */
 
-export function useGetApiV1AppsIdLogs<TData = Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError = ApiError>(
+export function useGetApiV1AppsIdLogs<TData = Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdLogs>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -628,20 +728,20 @@ export function useGetApiV1AppsIdLogs<TData = Awaited<ReturnType<typeof getApiV1
 
 
 /**
- * Creates a zero-trust share link for an application with specified permission and recipient email.
- * @summary Create application share link
+ * Cancels an incomplete multipart upload and cleans up partial parts.
+ * @summary Abort multipart upload
  */
-export const postApiV1AppsIdShare = (
+export const postApiV1AppsIdMultipartAbort = (
     id: string,
-    v1ShareDTO: V1ShareDTO,
+    postApiV1AppsIdMultipartAbortBody: PostApiV1AppsIdMultipartAbortBody,
  options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
 ) => {
 
 
-      return customMutator<V1ShareResponseDTO>(
-      {url: `/api/v1/apps/${id}/share`, method: 'POST',
+      return customMutator<PostApiV1AppsIdMultipartAbort200>(
+      {url: `/api/v1/apps/${id}/multipart/abort`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: v1ShareDTO, signal
+      data: postApiV1AppsIdMultipartAbortBody, signal
     },
       options);
     }
@@ -649,9 +749,274 @@ export const postApiV1AppsIdShare = (
 
 
 
-export const getPostApiV1AppsIdShareMutationOptions = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdShare>>, TError,{id: string;data: V1ShareDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdShare>>, TError,{id: string;data: V1ShareDTO}, TContext> => {
+export const getPostApiV1AppsIdMultipartAbortMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdMultipartAbort>>, TError,{id: string;data: PostApiV1AppsIdMultipartAbortBody}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdMultipartAbort>>, TError,{id: string;data: PostApiV1AppsIdMultipartAbortBody}, TContext> => {
+
+const mutationKey = ['postApiV1AppsIdMultipartAbort'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV1AppsIdMultipartAbort>>, {id: string;data: PostApiV1AppsIdMultipartAbortBody}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  postApiV1AppsIdMultipartAbort(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiV1AppsIdMultipartAbortMutationResult = NonNullable<Awaited<ReturnType<typeof postApiV1AppsIdMultipartAbort>>>
+    export type PostApiV1AppsIdMultipartAbortMutationBody = PostApiV1AppsIdMultipartAbortBody
+    export type PostApiV1AppsIdMultipartAbortMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
+
+    /**
+ * @summary Abort multipart upload
+ */
+export const usePostApiV1AppsIdMultipartAbort = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdMultipartAbort>>, TError,{id: string;data: PostApiV1AppsIdMultipartAbortBody}, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiV1AppsIdMultipartAbort>>,
+        TError,
+        {id: string;data: PostApiV1AppsIdMultipartAbortBody},
+        TContext
+      > => {
+      return useMutation(getPostApiV1AppsIdMultipartAbortMutationOptions(options), queryClient);
+    }
+
+/**
+ * Finalizes a multipart upload by assembling all uploaded parts.
+ * @summary Complete multipart upload
+ */
+export const postApiV1AppsIdMultipartComplete = (
+    id: string,
+    postApiV1AppsIdMultipartCompleteBody: PostApiV1AppsIdMultipartCompleteBody,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<PostApiV1AppsIdMultipartComplete200>(
+      {url: `/api/v1/apps/${id}/multipart/complete`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: postApiV1AppsIdMultipartCompleteBody, signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostApiV1AppsIdMultipartCompleteMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdMultipartComplete>>, TError,{id: string;data: PostApiV1AppsIdMultipartCompleteBody}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdMultipartComplete>>, TError,{id: string;data: PostApiV1AppsIdMultipartCompleteBody}, TContext> => {
+
+const mutationKey = ['postApiV1AppsIdMultipartComplete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV1AppsIdMultipartComplete>>, {id: string;data: PostApiV1AppsIdMultipartCompleteBody}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  postApiV1AppsIdMultipartComplete(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiV1AppsIdMultipartCompleteMutationResult = NonNullable<Awaited<ReturnType<typeof postApiV1AppsIdMultipartComplete>>>
+    export type PostApiV1AppsIdMultipartCompleteMutationBody = PostApiV1AppsIdMultipartCompleteBody
+    export type PostApiV1AppsIdMultipartCompleteMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
+
+    /**
+ * @summary Complete multipart upload
+ */
+export const usePostApiV1AppsIdMultipartComplete = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdMultipartComplete>>, TError,{id: string;data: PostApiV1AppsIdMultipartCompleteBody}, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiV1AppsIdMultipartComplete>>,
+        TError,
+        {id: string;data: PostApiV1AppsIdMultipartCompleteBody},
+        TContext
+      > => {
+      return useMutation(getPostApiV1AppsIdMultipartCompleteMutationOptions(options), queryClient);
+    }
+
+/**
+ * Starts a multipart upload and returns presigned URLs for each part. For files > 100 MB.
+ * @summary Initialize multipart upload
+ */
+export const postApiV1AppsIdMultipartInit = (
+    id: string,
+    postApiV1AppsIdMultipartInitBody: PostApiV1AppsIdMultipartInitBody,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<GithubComSurggedAgniInternalPortsMultipartUploadInit>(
+      {url: `/api/v1/apps/${id}/multipart/init`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: postApiV1AppsIdMultipartInitBody, signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostApiV1AppsIdMultipartInitMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdMultipartInit>>, TError,{id: string;data: PostApiV1AppsIdMultipartInitBody}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdMultipartInit>>, TError,{id: string;data: PostApiV1AppsIdMultipartInitBody}, TContext> => {
+
+const mutationKey = ['postApiV1AppsIdMultipartInit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV1AppsIdMultipartInit>>, {id: string;data: PostApiV1AppsIdMultipartInitBody}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  postApiV1AppsIdMultipartInit(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiV1AppsIdMultipartInitMutationResult = NonNullable<Awaited<ReturnType<typeof postApiV1AppsIdMultipartInit>>>
+    export type PostApiV1AppsIdMultipartInitMutationBody = PostApiV1AppsIdMultipartInitBody
+    export type PostApiV1AppsIdMultipartInitMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
+
+    /**
+ * @summary Initialize multipart upload
+ */
+export const usePostApiV1AppsIdMultipartInit = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdMultipartInit>>, TError,{id: string;data: PostApiV1AppsIdMultipartInitBody}, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiV1AppsIdMultipartInit>>,
+        TError,
+        {id: string;data: PostApiV1AppsIdMultipartInitBody},
+        TContext
+      > => {
+      return useMutation(getPostApiV1AppsIdMultipartInitMutationOptions(options), queryClient);
+    }
+
+/**
+ * Retries a failed deployment from scratch.
+ * @summary Retry deployment
+ */
+export const postApiV1AppsIdRetry = (
+    id: string,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<InternalAdaptersHttpWebV1DeployResponse>(
+      {url: `/api/v1/apps/${id}/retry`, method: 'POST', signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostApiV1AppsIdRetryMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdRetry>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdRetry>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['postApiV1AppsIdRetry'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV1AppsIdRetry>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  postApiV1AppsIdRetry(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiV1AppsIdRetryMutationResult = NonNullable<Awaited<ReturnType<typeof postApiV1AppsIdRetry>>>
+
+    export type PostApiV1AppsIdRetryMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
+
+    /**
+ * @summary Retry deployment
+ */
+export const usePostApiV1AppsIdRetry = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdRetry>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiV1AppsIdRetry>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getPostApiV1AppsIdRetryMutationOptions(options), queryClient);
+    }
+
+/**
+ * Creates a zero-trust share link for an application with specified permission and recipient email.
+ * @summary Create application share link
+ */
+export const postApiV1AppsIdShare = (
+    id: string,
+    internalAdaptersHttpWebV1ShareDTO: InternalAdaptersHttpWebV1ShareDTO,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<InternalAdaptersHttpWebV1ShareResponseDTO>(
+      {url: `/api/v1/apps/${id}/share`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: internalAdaptersHttpWebV1ShareDTO, signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostApiV1AppsIdShareMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdShare>>, TError,{id: string;data: InternalAdaptersHttpWebV1ShareDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdShare>>, TError,{id: string;data: InternalAdaptersHttpWebV1ShareDTO}, TContext> => {
 
 const mutationKey = ['postApiV1AppsIdShare'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -663,7 +1028,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV1AppsIdShare>>, {id: string;data: V1ShareDTO}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV1AppsIdShare>>, {id: string;data: InternalAdaptersHttpWebV1ShareDTO}> = (props) => {
           const {id,data} = props ?? {};
 
           return  postApiV1AppsIdShare(id,data,requestOptions)
@@ -677,18 +1042,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostApiV1AppsIdShareMutationResult = NonNullable<Awaited<ReturnType<typeof postApiV1AppsIdShare>>>
-    export type PostApiV1AppsIdShareMutationBody = V1ShareDTO
-    export type PostApiV1AppsIdShareMutationError = ApiError
+    export type PostApiV1AppsIdShareMutationBody = InternalAdaptersHttpWebV1ShareDTO
+    export type PostApiV1AppsIdShareMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
     /**
  * @summary Create application share link
  */
-export const usePostApiV1AppsIdShare = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdShare>>, TError,{id: string;data: V1ShareDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+export const usePostApiV1AppsIdShare = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdShare>>, TError,{id: string;data: InternalAdaptersHttpWebV1ShareDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postApiV1AppsIdShare>>,
         TError,
-        {id: string;data: V1ShareDTO},
+        {id: string;data: InternalAdaptersHttpWebV1ShareDTO},
         TContext
       > => {
       return useMutation(getPostApiV1AppsIdShareMutationOptions(options), queryClient);
@@ -704,7 +1069,7 @@ export const getApiV1AppsIdShares = (
 ) => {
 
 
-      return customMutator<V1ShareResponseDTO[]>(
+      return customMutator<InternalAdaptersHttpWebV1ShareResponseDTO[]>(
       {url: `/api/v1/apps/${id}/shares`, method: 'GET', signal
     },
       options);
@@ -720,7 +1085,7 @@ export const getGetApiV1AppsIdSharesQueryKey = (id: string,) => {
     }
 
 
-export const getGetApiV1AppsIdSharesQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError = ApiError>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+export const getGetApiV1AppsIdSharesQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -739,10 +1104,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetApiV1AppsIdSharesQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1AppsIdShares>>>
-export type GetApiV1AppsIdSharesQueryError = ApiError
+export type GetApiV1AppsIdSharesQueryError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
 
-export function useGetApiV1AppsIdShares<TData = Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError = ApiError>(
+export function useGetApiV1AppsIdShares<TData = Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getApiV1AppsIdShares>>,
@@ -752,7 +1117,7 @@ export function useGetApiV1AppsIdShares<TData = Awaited<ReturnType<typeof getApi
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiV1AppsIdShares<TData = Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError = ApiError>(
+export function useGetApiV1AppsIdShares<TData = Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getApiV1AppsIdShares>>,
@@ -762,7 +1127,7 @@ export function useGetApiV1AppsIdShares<TData = Awaited<ReturnType<typeof getApi
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiV1AppsIdShares<TData = Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError = ApiError>(
+export function useGetApiV1AppsIdShares<TData = Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -770,7 +1135,7 @@ export function useGetApiV1AppsIdShares<TData = Awaited<ReturnType<typeof getApi
  * @summary List application share links
  */
 
-export function useGetApiV1AppsIdShares<TData = Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError = ApiError>(
+export function useGetApiV1AppsIdShares<TData = Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1AppsIdShares>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -808,7 +1173,7 @@ export const deleteApiV1AppsIdSharesSid = (
 
 
 
-export const getDeleteApiV1AppsIdSharesSidMutationOptions = <TError = ApiError,
+export const getDeleteApiV1AppsIdSharesSidMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiV1AppsIdSharesSid>>, TError,{id: string;sid: string}, TContext>, request?: SecondParameter<typeof customMutator>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteApiV1AppsIdSharesSid>>, TError,{id: string;sid: string}, TContext> => {
 
@@ -837,12 +1202,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteApiV1AppsIdSharesSidMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiV1AppsIdSharesSid>>>
 
-    export type DeleteApiV1AppsIdSharesSidMutationError = ApiError
+    export type DeleteApiV1AppsIdSharesSidMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
     /**
  * @summary Revoke application share link
  */
-export const useDeleteApiV1AppsIdSharesSid = <TError = ApiError,
+export const useDeleteApiV1AppsIdSharesSid = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiV1AppsIdSharesSid>>, TError,{id: string;sid: string}, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteApiV1AppsIdSharesSid>>,
@@ -851,6 +1216,70 @@ export const useDeleteApiV1AppsIdSharesSid = <TError = ApiError,
         TContext
       > => {
       return useMutation(getDeleteApiV1AppsIdSharesSidMutationOptions(options), queryClient);
+    }
+
+/**
+ * Generates a fresh presigned upload URL for an app.
+ * @summary Refresh upload URL
+ */
+export const postApiV1AppsIdUploadUrl = (
+    id: string,
+ options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
+) => {
+
+
+      return customMutator<PostApiV1AppsIdUploadUrl200>(
+      {url: `/api/v1/apps/${id}/upload-url`, method: 'POST', signal
+    },
+      options);
+    }
+
+
+
+
+export const getPostApiV1AppsIdUploadUrlMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdUploadUrl>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdUploadUrl>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['postApiV1AppsIdUploadUrl'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV1AppsIdUploadUrl>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  postApiV1AppsIdUploadUrl(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiV1AppsIdUploadUrlMutationResult = NonNullable<Awaited<ReturnType<typeof postApiV1AppsIdUploadUrl>>>
+
+    export type PostApiV1AppsIdUploadUrlMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
+
+    /**
+ * @summary Refresh upload URL
+ */
+export const usePostApiV1AppsIdUploadUrl = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV1AppsIdUploadUrl>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customMutator>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiV1AppsIdUploadUrl>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getPostApiV1AppsIdUploadUrlMutationOptions(options), queryClient);
     }
 
 /**
@@ -973,7 +1402,7 @@ export const getGetApiV1MeQueryKey = () => {
     }
 
 
-export const getGetApiV1MeQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1Me>>, TError = ApiError>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Me>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+export const getGetApiV1MeQueryOptions = <TData = Awaited<ReturnType<typeof getApiV1Me>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Me>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -992,10 +1421,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetApiV1MeQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV1Me>>>
-export type GetApiV1MeQueryError = ApiError
+export type GetApiV1MeQueryError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
 
-export function useGetApiV1Me<TData = Awaited<ReturnType<typeof getApiV1Me>>, TError = ApiError>(
+export function useGetApiV1Me<TData = Awaited<ReturnType<typeof getApiV1Me>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Me>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getApiV1Me>>,
@@ -1005,7 +1434,7 @@ export function useGetApiV1Me<TData = Awaited<ReturnType<typeof getApiV1Me>>, TE
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiV1Me<TData = Awaited<ReturnType<typeof getApiV1Me>>, TError = ApiError>(
+export function useGetApiV1Me<TData = Awaited<ReturnType<typeof getApiV1Me>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Me>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getApiV1Me>>,
@@ -1015,7 +1444,7 @@ export function useGetApiV1Me<TData = Awaited<ReturnType<typeof getApiV1Me>>, TE
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetApiV1Me<TData = Awaited<ReturnType<typeof getApiV1Me>>, TError = ApiError>(
+export function useGetApiV1Me<TData = Awaited<ReturnType<typeof getApiV1Me>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Me>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -1023,7 +1452,7 @@ export function useGetApiV1Me<TData = Awaited<ReturnType<typeof getApiV1Me>>, TE
  * @summary Get authenticated user profile
  */
 
-export function useGetApiV1Me<TData = Awaited<ReturnType<typeof getApiV1Me>>, TError = ApiError>(
+export function useGetApiV1Me<TData = Awaited<ReturnType<typeof getApiV1Me>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV1Me>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -1060,7 +1489,7 @@ export const postAuthAgentToken = (
 
 
 
-export const getPostAuthAgentTokenMutationOptions = <TError = ApiError,
+export const getPostAuthAgentTokenMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthAgentToken>>, TError,void, TContext>, request?: SecondParameter<typeof customMutator>}
 ): UseMutationOptions<Awaited<ReturnType<typeof postAuthAgentToken>>, TError,void, TContext> => {
 
@@ -1089,12 +1518,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type PostAuthAgentTokenMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthAgentToken>>>
 
-    export type PostAuthAgentTokenMutationError = ApiError
+    export type PostAuthAgentTokenMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
     /**
  * @summary Issue MCP agent token
  */
-export const usePostAuthAgentToken = <TError = ApiError,
+export const usePostAuthAgentToken = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthAgentToken>>, TError,void, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postAuthAgentToken>>,
@@ -1110,15 +1539,15 @@ export const usePostAuthAgentToken = <TError = ApiError,
  * @summary User login
  */
 export const postAuthLogin = (
-    webCredentials: WebCredentials,
+    internalAdaptersHttpWebCredentials: InternalAdaptersHttpWebCredentials,
  options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
 ) => {
 
 
-      return customMutator<WebTokenResponse>(
+      return customMutator<InternalAdaptersHttpWebTokenResponse>(
       {url: `/auth/login`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: webCredentials, signal
+      data: internalAdaptersHttpWebCredentials, signal
     },
       options);
     }
@@ -1126,9 +1555,9 @@ export const postAuthLogin = (
 
 
 
-export const getPostAuthLoginMutationOptions = <TError = ApiError | PostAuthLogin403,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogin>>, TError,{data: WebCredentials}, TContext>, request?: SecondParameter<typeof customMutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof postAuthLogin>>, TError,{data: WebCredentials}, TContext> => {
+export const getPostAuthLoginMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError | PostAuthLogin403,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogin>>, TError,{data: InternalAdaptersHttpWebCredentials}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthLogin>>, TError,{data: InternalAdaptersHttpWebCredentials}, TContext> => {
 
 const mutationKey = ['postAuthLogin'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -1140,7 +1569,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthLogin>>, {data: WebCredentials}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthLogin>>, {data: InternalAdaptersHttpWebCredentials}> = (props) => {
           const {data} = props ?? {};
 
           return  postAuthLogin(data,requestOptions)
@@ -1154,18 +1583,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostAuthLoginMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthLogin>>>
-    export type PostAuthLoginMutationBody = WebCredentials
-    export type PostAuthLoginMutationError = ApiError | PostAuthLogin403
+    export type PostAuthLoginMutationBody = InternalAdaptersHttpWebCredentials
+    export type PostAuthLoginMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError | PostAuthLogin403
 
     /**
  * @summary User login
  */
-export const usePostAuthLogin = <TError = ApiError | PostAuthLogin403,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogin>>, TError,{data: WebCredentials}, TContext>, request?: SecondParameter<typeof customMutator>}
+export const usePostAuthLogin = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError | PostAuthLogin403,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogin>>, TError,{data: InternalAdaptersHttpWebCredentials}, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postAuthLogin>>,
         TError,
-        {data: WebCredentials},
+        {data: InternalAdaptersHttpWebCredentials},
         TContext
       > => {
       return useMutation(getPostAuthLoginMutationOptions(options), queryClient);
@@ -1176,7 +1605,7 @@ export const usePostAuthLogin = <TError = ApiError | PostAuthLogin403,
  * @summary Logout user
  */
 export const postAuthLogout = (
-    webRefreshRequest: WebRefreshRequest,
+    internalAdaptersHttpWebRefreshRequest: InternalAdaptersHttpWebRefreshRequest,
  options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
 ) => {
 
@@ -1184,7 +1613,7 @@ export const postAuthLogout = (
       return customMutator<void>(
       {url: `/auth/logout`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: webRefreshRequest, signal
+      data: internalAdaptersHttpWebRefreshRequest, signal
     },
       options);
     }
@@ -1192,9 +1621,9 @@ export const postAuthLogout = (
 
 
 
-export const getPostAuthLogoutMutationOptions = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogout>>, TError,{data: WebRefreshRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof postAuthLogout>>, TError,{data: WebRefreshRequest}, TContext> => {
+export const getPostAuthLogoutMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogout>>, TError,{data: InternalAdaptersHttpWebRefreshRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthLogout>>, TError,{data: InternalAdaptersHttpWebRefreshRequest}, TContext> => {
 
 const mutationKey = ['postAuthLogout'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -1206,7 +1635,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthLogout>>, {data: WebRefreshRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthLogout>>, {data: InternalAdaptersHttpWebRefreshRequest}> = (props) => {
           const {data} = props ?? {};
 
           return  postAuthLogout(data,requestOptions)
@@ -1220,18 +1649,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostAuthLogoutMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthLogout>>>
-    export type PostAuthLogoutMutationBody = WebRefreshRequest
-    export type PostAuthLogoutMutationError = ApiError
+    export type PostAuthLogoutMutationBody = InternalAdaptersHttpWebRefreshRequest
+    export type PostAuthLogoutMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
     /**
  * @summary Logout user
  */
-export const usePostAuthLogout = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogout>>, TError,{data: WebRefreshRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
+export const usePostAuthLogout = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogout>>, TError,{data: InternalAdaptersHttpWebRefreshRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postAuthLogout>>,
         TError,
-        {data: WebRefreshRequest},
+        {data: InternalAdaptersHttpWebRefreshRequest},
         TContext
       > => {
       return useMutation(getPostAuthLogoutMutationOptions(options), queryClient);
@@ -1264,7 +1693,7 @@ export const getGetAuthMagicQueryKey = (params?: GetAuthMagicParams,) => {
     }
 
 
-export const getGetAuthMagicQueryOptions = <TData = Awaited<ReturnType<typeof getAuthMagic>>, TError = ApiError>(params: GetAuthMagicParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthMagic>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+export const getGetAuthMagicQueryOptions = <TData = Awaited<ReturnType<typeof getAuthMagic>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(params: GetAuthMagicParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthMagic>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1283,10 +1712,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetAuthMagicQueryResult = NonNullable<Awaited<ReturnType<typeof getAuthMagic>>>
-export type GetAuthMagicQueryError = ApiError
+export type GetAuthMagicQueryError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
 
-export function useGetAuthMagic<TData = Awaited<ReturnType<typeof getAuthMagic>>, TError = ApiError>(
+export function useGetAuthMagic<TData = Awaited<ReturnType<typeof getAuthMagic>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  params: GetAuthMagicParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthMagic>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getAuthMagic>>,
@@ -1296,7 +1725,7 @@ export function useGetAuthMagic<TData = Awaited<ReturnType<typeof getAuthMagic>>
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetAuthMagic<TData = Awaited<ReturnType<typeof getAuthMagic>>, TError = ApiError>(
+export function useGetAuthMagic<TData = Awaited<ReturnType<typeof getAuthMagic>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  params: GetAuthMagicParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthMagic>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getAuthMagic>>,
@@ -1306,7 +1735,7 @@ export function useGetAuthMagic<TData = Awaited<ReturnType<typeof getAuthMagic>>
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetAuthMagic<TData = Awaited<ReturnType<typeof getAuthMagic>>, TError = ApiError>(
+export function useGetAuthMagic<TData = Awaited<ReturnType<typeof getAuthMagic>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  params: GetAuthMagicParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthMagic>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -1314,7 +1743,7 @@ export function useGetAuthMagic<TData = Awaited<ReturnType<typeof getAuthMagic>>
  * @summary Verify magic link token
  */
 
-export function useGetAuthMagic<TData = Awaited<ReturnType<typeof getAuthMagic>>, TError = ApiError>(
+export function useGetAuthMagic<TData = Awaited<ReturnType<typeof getAuthMagic>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  params: GetAuthMagicParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthMagic>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -1337,7 +1766,7 @@ export function useGetAuthMagic<TData = Awaited<ReturnType<typeof getAuthMagic>>
  * @summary Request magic link
  */
 export const postAuthMagic = (
-    v1MagicRequestDTO: V1MagicRequestDTO,
+    internalAdaptersHttpWebV1MagicRequestDTO: InternalAdaptersHttpWebV1MagicRequestDTO,
  options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
 ) => {
 
@@ -1345,7 +1774,7 @@ export const postAuthMagic = (
       return customMutator<PostAuthMagic202>(
       {url: `/auth/magic`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: v1MagicRequestDTO, signal
+      data: internalAdaptersHttpWebV1MagicRequestDTO, signal
     },
       options);
     }
@@ -1353,9 +1782,9 @@ export const postAuthMagic = (
 
 
 
-export const getPostAuthMagicMutationOptions = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthMagic>>, TError,{data: V1MagicRequestDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof postAuthMagic>>, TError,{data: V1MagicRequestDTO}, TContext> => {
+export const getPostAuthMagicMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthMagic>>, TError,{data: InternalAdaptersHttpWebV1MagicRequestDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthMagic>>, TError,{data: InternalAdaptersHttpWebV1MagicRequestDTO}, TContext> => {
 
 const mutationKey = ['postAuthMagic'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -1367,7 +1796,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthMagic>>, {data: V1MagicRequestDTO}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthMagic>>, {data: InternalAdaptersHttpWebV1MagicRequestDTO}> = (props) => {
           const {data} = props ?? {};
 
           return  postAuthMagic(data,requestOptions)
@@ -1381,18 +1810,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostAuthMagicMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthMagic>>>
-    export type PostAuthMagicMutationBody = V1MagicRequestDTO
-    export type PostAuthMagicMutationError = ApiError
+    export type PostAuthMagicMutationBody = InternalAdaptersHttpWebV1MagicRequestDTO
+    export type PostAuthMagicMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
     /**
  * @summary Request magic link
  */
-export const usePostAuthMagic = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthMagic>>, TError,{data: V1MagicRequestDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+export const usePostAuthMagic = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthMagic>>, TError,{data: InternalAdaptersHttpWebV1MagicRequestDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postAuthMagic>>,
         TError,
-        {data: V1MagicRequestDTO},
+        {data: InternalAdaptersHttpWebV1MagicRequestDTO},
         TContext
       > => {
       return useMutation(getPostAuthMagicMutationOptions(options), queryClient);
@@ -1403,15 +1832,15 @@ export const usePostAuthMagic = <TError = ApiError,
  * @summary Refresh access token
  */
 export const postAuthRefresh = (
-    webRefreshRequest: WebRefreshRequest,
+    internalAdaptersHttpWebRefreshRequest: InternalAdaptersHttpWebRefreshRequest,
  options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
 ) => {
 
 
-      return customMutator<WebTokenResponse>(
+      return customMutator<InternalAdaptersHttpWebTokenResponse>(
       {url: `/auth/refresh`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: webRefreshRequest, signal
+      data: internalAdaptersHttpWebRefreshRequest, signal
     },
       options);
     }
@@ -1419,9 +1848,9 @@ export const postAuthRefresh = (
 
 
 
-export const getPostAuthRefreshMutationOptions = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthRefresh>>, TError,{data: WebRefreshRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof postAuthRefresh>>, TError,{data: WebRefreshRequest}, TContext> => {
+export const getPostAuthRefreshMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthRefresh>>, TError,{data: InternalAdaptersHttpWebRefreshRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthRefresh>>, TError,{data: InternalAdaptersHttpWebRefreshRequest}, TContext> => {
 
 const mutationKey = ['postAuthRefresh'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -1433,7 +1862,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthRefresh>>, {data: WebRefreshRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthRefresh>>, {data: InternalAdaptersHttpWebRefreshRequest}> = (props) => {
           const {data} = props ?? {};
 
           return  postAuthRefresh(data,requestOptions)
@@ -1447,18 +1876,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostAuthRefreshMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthRefresh>>>
-    export type PostAuthRefreshMutationBody = WebRefreshRequest
-    export type PostAuthRefreshMutationError = ApiError
+    export type PostAuthRefreshMutationBody = InternalAdaptersHttpWebRefreshRequest
+    export type PostAuthRefreshMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
     /**
  * @summary Refresh access token
  */
-export const usePostAuthRefresh = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthRefresh>>, TError,{data: WebRefreshRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
+export const usePostAuthRefresh = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthRefresh>>, TError,{data: InternalAdaptersHttpWebRefreshRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postAuthRefresh>>,
         TError,
-        {data: WebRefreshRequest},
+        {data: InternalAdaptersHttpWebRefreshRequest},
         TContext
       > => {
       return useMutation(getPostAuthRefreshMutationOptions(options), queryClient);
@@ -1469,7 +1898,7 @@ export const usePostAuthRefresh = <TError = ApiError,
  * @summary Register a new user
  */
 export const postAuthRegister = (
-    webRegisterRequest: WebRegisterRequest,
+    internalAdaptersHttpWebRegisterRequest: InternalAdaptersHttpWebRegisterRequest,
  options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
 ) => {
 
@@ -1477,7 +1906,7 @@ export const postAuthRegister = (
       return customMutator<PostAuthRegister201>(
       {url: `/auth/register`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: webRegisterRequest, signal
+      data: internalAdaptersHttpWebRegisterRequest, signal
     },
       options);
     }
@@ -1485,9 +1914,9 @@ export const postAuthRegister = (
 
 
 
-export const getPostAuthRegisterMutationOptions = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthRegister>>, TError,{data: WebRegisterRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof postAuthRegister>>, TError,{data: WebRegisterRequest}, TContext> => {
+export const getPostAuthRegisterMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthRegister>>, TError,{data: InternalAdaptersHttpWebRegisterRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthRegister>>, TError,{data: InternalAdaptersHttpWebRegisterRequest}, TContext> => {
 
 const mutationKey = ['postAuthRegister'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -1499,7 +1928,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthRegister>>, {data: WebRegisterRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthRegister>>, {data: InternalAdaptersHttpWebRegisterRequest}> = (props) => {
           const {data} = props ?? {};
 
           return  postAuthRegister(data,requestOptions)
@@ -1513,18 +1942,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostAuthRegisterMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthRegister>>>
-    export type PostAuthRegisterMutationBody = WebRegisterRequest
-    export type PostAuthRegisterMutationError = ApiError
+    export type PostAuthRegisterMutationBody = InternalAdaptersHttpWebRegisterRequest
+    export type PostAuthRegisterMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
     /**
  * @summary Register a new user
  */
-export const usePostAuthRegister = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthRegister>>, TError,{data: WebRegisterRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
+export const usePostAuthRegister = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthRegister>>, TError,{data: InternalAdaptersHttpWebRegisterRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postAuthRegister>>,
         TError,
-        {data: WebRegisterRequest},
+        {data: InternalAdaptersHttpWebRegisterRequest},
         TContext
       > => {
       return useMutation(getPostAuthRegisterMutationOptions(options), queryClient);
@@ -1535,7 +1964,7 @@ export const usePostAuthRegister = <TError = ApiError,
  * @summary Resend email verification
  */
 export const postAuthResendVerification = (
-    webResendVerificationRequest: WebResendVerificationRequest,
+    internalAdaptersHttpWebResendVerificationRequest: InternalAdaptersHttpWebResendVerificationRequest,
  options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
 ) => {
 
@@ -1543,7 +1972,7 @@ export const postAuthResendVerification = (
       return customMutator<PostAuthResendVerification200>(
       {url: `/auth/resend-verification`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: webResendVerificationRequest, signal
+      data: internalAdaptersHttpWebResendVerificationRequest, signal
     },
       options);
     }
@@ -1551,9 +1980,9 @@ export const postAuthResendVerification = (
 
 
 
-export const getPostAuthResendVerificationMutationOptions = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthResendVerification>>, TError,{data: WebResendVerificationRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof postAuthResendVerification>>, TError,{data: WebResendVerificationRequest}, TContext> => {
+export const getPostAuthResendVerificationMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthResendVerification>>, TError,{data: InternalAdaptersHttpWebResendVerificationRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthResendVerification>>, TError,{data: InternalAdaptersHttpWebResendVerificationRequest}, TContext> => {
 
 const mutationKey = ['postAuthResendVerification'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -1565,7 +1994,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthResendVerification>>, {data: WebResendVerificationRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthResendVerification>>, {data: InternalAdaptersHttpWebResendVerificationRequest}> = (props) => {
           const {data} = props ?? {};
 
           return  postAuthResendVerification(data,requestOptions)
@@ -1579,18 +2008,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostAuthResendVerificationMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthResendVerification>>>
-    export type PostAuthResendVerificationMutationBody = WebResendVerificationRequest
-    export type PostAuthResendVerificationMutationError = ApiError
+    export type PostAuthResendVerificationMutationBody = InternalAdaptersHttpWebResendVerificationRequest
+    export type PostAuthResendVerificationMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
     /**
  * @summary Resend email verification
  */
-export const usePostAuthResendVerification = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthResendVerification>>, TError,{data: WebResendVerificationRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
+export const usePostAuthResendVerification = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthResendVerification>>, TError,{data: InternalAdaptersHttpWebResendVerificationRequest}, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postAuthResendVerification>>,
         TError,
-        {data: WebResendVerificationRequest},
+        {data: InternalAdaptersHttpWebResendVerificationRequest},
         TContext
       > => {
       return useMutation(getPostAuthResendVerificationMutationOptions(options), queryClient);
@@ -1718,7 +2147,7 @@ export const getGetAuthVerifyEmailQueryKey = (params?: GetAuthVerifyEmailParams,
     }
 
 
-export const getGetAuthVerifyEmailQueryOptions = <TData = Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError = ApiError>(params: GetAuthVerifyEmailParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+export const getGetAuthVerifyEmailQueryOptions = <TData = Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(params: GetAuthVerifyEmailParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1737,10 +2166,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetAuthVerifyEmailQueryResult = NonNullable<Awaited<ReturnType<typeof getAuthVerifyEmail>>>
-export type GetAuthVerifyEmailQueryError = ApiError
+export type GetAuthVerifyEmailQueryError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
 
-export function useGetAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError = ApiError>(
+export function useGetAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  params: GetAuthVerifyEmailParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getAuthVerifyEmail>>,
@@ -1750,7 +2179,7 @@ export function useGetAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAuthV
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError = ApiError>(
+export function useGetAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  params: GetAuthVerifyEmailParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getAuthVerifyEmail>>,
@@ -1760,7 +2189,7 @@ export function useGetAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAuthV
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError = ApiError>(
+export function useGetAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  params: GetAuthVerifyEmailParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -1768,7 +2197,7 @@ export function useGetAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAuthV
  * @summary Verify email address
  */
 
-export function useGetAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError = ApiError>(
+export function useGetAuthVerifyEmail<TData = Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  params: GetAuthVerifyEmailParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthVerifyEmail>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -1812,7 +2241,7 @@ export const getGetMeQueryKey = () => {
     }
 
 
-export const getGetMeQueryOptions = <TData = Awaited<ReturnType<typeof getMe>>, TError = ApiError>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+export const getGetMeQueryOptions = <TData = Awaited<ReturnType<typeof getMe>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1831,10 +2260,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetMeQueryResult = NonNullable<Awaited<ReturnType<typeof getMe>>>
-export type GetMeQueryError = ApiError
+export type GetMeQueryError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
 
-export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = ApiError>(
+export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getMe>>,
@@ -1844,7 +2273,7 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = Api
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = ApiError>(
+export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getMe>>,
@@ -1854,7 +2283,7 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = Api
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = ApiError>(
+export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -1862,7 +2291,7 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = Api
  * @summary Get authenticated user ID
  */
 
-export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = ApiError>(
+export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -1906,7 +2335,7 @@ export const getGetPreviewIdQueryKey = (id: string,) => {
     }
 
 
-export const getGetPreviewIdQueryOptions = <TData = Awaited<ReturnType<typeof getPreviewId>>, TError = ApiError>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreviewId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+export const getGetPreviewIdQueryOptions = <TData = Awaited<ReturnType<typeof getPreviewId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreviewId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1925,10 +2354,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetPreviewIdQueryResult = NonNullable<Awaited<ReturnType<typeof getPreviewId>>>
-export type GetPreviewIdQueryError = ApiError
+export type GetPreviewIdQueryError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
 
-export function useGetPreviewId<TData = Awaited<ReturnType<typeof getPreviewId>>, TError = ApiError>(
+export function useGetPreviewId<TData = Awaited<ReturnType<typeof getPreviewId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreviewId>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getPreviewId>>,
@@ -1938,7 +2367,7 @@ export function useGetPreviewId<TData = Awaited<ReturnType<typeof getPreviewId>>
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetPreviewId<TData = Awaited<ReturnType<typeof getPreviewId>>, TError = ApiError>(
+export function useGetPreviewId<TData = Awaited<ReturnType<typeof getPreviewId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreviewId>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getPreviewId>>,
@@ -1948,7 +2377,7 @@ export function useGetPreviewId<TData = Awaited<ReturnType<typeof getPreviewId>>
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetPreviewId<TData = Awaited<ReturnType<typeof getPreviewId>>, TError = ApiError>(
+export function useGetPreviewId<TData = Awaited<ReturnType<typeof getPreviewId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreviewId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -1956,7 +2385,7 @@ export function useGetPreviewId<TData = Awaited<ReturnType<typeof getPreviewId>>
  * @summary Preview application UI
  */
 
-export function useGetPreviewId<TData = Awaited<ReturnType<typeof getPreviewId>>, TError = ApiError>(
+export function useGetPreviewId<TData = Awaited<ReturnType<typeof getPreviewId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreviewId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -1979,15 +2408,15 @@ export function useGetPreviewId<TData = Awaited<ReturnType<typeof getPreviewId>>
  * @summary Create a user
  */
 export const postV1Users = (
-    v1UserDTO: V1UserDTO,
+    internalAdaptersHttpWebV1UserDTO: InternalAdaptersHttpWebV1UserDTO,
  options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
 ) => {
 
 
-      return customMutator<V1UserDTO>(
+      return customMutator<InternalAdaptersHttpWebV1UserDTO>(
       {url: `/v1/users`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: v1UserDTO, signal
+      data: internalAdaptersHttpWebV1UserDTO, signal
     },
       options);
     }
@@ -1995,9 +2424,9 @@ export const postV1Users = (
 
 
 
-export const getPostV1UsersMutationOptions = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postV1Users>>, TError,{data: V1UserDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof postV1Users>>, TError,{data: V1UserDTO}, TContext> => {
+export const getPostV1UsersMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postV1Users>>, TError,{data: InternalAdaptersHttpWebV1UserDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postV1Users>>, TError,{data: InternalAdaptersHttpWebV1UserDTO}, TContext> => {
 
 const mutationKey = ['postV1Users'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -2009,7 +2438,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postV1Users>>, {data: V1UserDTO}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postV1Users>>, {data: InternalAdaptersHttpWebV1UserDTO}> = (props) => {
           const {data} = props ?? {};
 
           return  postV1Users(data,requestOptions)
@@ -2023,18 +2452,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostV1UsersMutationResult = NonNullable<Awaited<ReturnType<typeof postV1Users>>>
-    export type PostV1UsersMutationBody = V1UserDTO
-    export type PostV1UsersMutationError = ApiError
+    export type PostV1UsersMutationBody = InternalAdaptersHttpWebV1UserDTO
+    export type PostV1UsersMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
     /**
  * @summary Create a user
  */
-export const usePostV1Users = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postV1Users>>, TError,{data: V1UserDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+export const usePostV1Users = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postV1Users>>, TError,{data: InternalAdaptersHttpWebV1UserDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postV1Users>>,
         TError,
-        {data: V1UserDTO},
+        {data: InternalAdaptersHttpWebV1UserDTO},
         TContext
       > => {
       return useMutation(getPostV1UsersMutationOptions(options), queryClient);
@@ -2050,7 +2479,7 @@ export const getV1UsersId = (
 ) => {
 
 
-      return customMutator<V1UserDTO>(
+      return customMutator<InternalAdaptersHttpWebV1UserDTO>(
       {url: `/v1/users/${id}`, method: 'GET', signal
     },
       options);
@@ -2066,7 +2495,7 @@ export const getGetV1UsersIdQueryKey = (id: string,) => {
     }
 
 
-export const getGetV1UsersIdQueryOptions = <TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = ApiError>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getV1UsersId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
+export const getGetV1UsersIdQueryOptions = <TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getV1UsersId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -2085,10 +2514,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetV1UsersIdQueryResult = NonNullable<Awaited<ReturnType<typeof getV1UsersId>>>
-export type GetV1UsersIdQueryError = ApiError
+export type GetV1UsersIdQueryError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
 
-export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = ApiError>(
+export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getV1UsersId>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getV1UsersId>>,
@@ -2098,7 +2527,7 @@ export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = ApiError>(
+export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getV1UsersId>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getV1UsersId>>,
@@ -2108,7 +2537,7 @@ export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>
       >, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = ApiError>(
+export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getV1UsersId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -2116,7 +2545,7 @@ export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>
  * @summary Get a user
  */
 
-export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = ApiError>(
+export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>, TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getV1UsersId>>, TError, TData>>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -2140,15 +2569,15 @@ export function useGetV1UsersId<TData = Awaited<ReturnType<typeof getV1UsersId>>
  */
 export const putV1UsersId = (
     id: string,
-    v1UserDTO: V1UserDTO,
+    internalAdaptersHttpWebV1UserDTO: InternalAdaptersHttpWebV1UserDTO,
  options?: SecondParameter<typeof customMutator>,signal?: AbortSignal
 ) => {
 
 
-      return customMutator<V1UserDTO>(
+      return customMutator<InternalAdaptersHttpWebV1UserDTO>(
       {url: `/v1/users/${id}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
-      data: v1UserDTO, signal
+      data: internalAdaptersHttpWebV1UserDTO, signal
     },
       options);
     }
@@ -2156,9 +2585,9 @@ export const putV1UsersId = (
 
 
 
-export const getPutV1UsersIdMutationOptions = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putV1UsersId>>, TError,{id: string;data: V1UserDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof putV1UsersId>>, TError,{id: string;data: V1UserDTO}, TContext> => {
+export const getPutV1UsersIdMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putV1UsersId>>, TError,{id: string;data: InternalAdaptersHttpWebV1UserDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof putV1UsersId>>, TError,{id: string;data: InternalAdaptersHttpWebV1UserDTO}, TContext> => {
 
 const mutationKey = ['putV1UsersId'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -2170,7 +2599,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putV1UsersId>>, {id: string;data: V1UserDTO}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putV1UsersId>>, {id: string;data: InternalAdaptersHttpWebV1UserDTO}> = (props) => {
           const {id,data} = props ?? {};
 
           return  putV1UsersId(id,data,requestOptions)
@@ -2184,18 +2613,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PutV1UsersIdMutationResult = NonNullable<Awaited<ReturnType<typeof putV1UsersId>>>
-    export type PutV1UsersIdMutationBody = V1UserDTO
-    export type PutV1UsersIdMutationError = ApiError
+    export type PutV1UsersIdMutationBody = InternalAdaptersHttpWebV1UserDTO
+    export type PutV1UsersIdMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
     /**
  * @summary Update a user
  */
-export const usePutV1UsersId = <TError = ApiError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putV1UsersId>>, TError,{id: string;data: V1UserDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
+export const usePutV1UsersId = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putV1UsersId>>, TError,{id: string;data: InternalAdaptersHttpWebV1UserDTO}, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof putV1UsersId>>,
         TError,
-        {id: string;data: V1UserDTO},
+        {id: string;data: InternalAdaptersHttpWebV1UserDTO},
         TContext
       > => {
       return useMutation(getPutV1UsersIdMutationOptions(options), queryClient);
@@ -2220,7 +2649,7 @@ export const deleteV1UsersId = (
 
 
 
-export const getDeleteV1UsersIdMutationOptions = <TError = ApiError,
+export const getDeleteV1UsersIdMutationOptions = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteV1UsersId>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customMutator>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteV1UsersId>>, TError,{id: string}, TContext> => {
 
@@ -2249,12 +2678,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteV1UsersIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteV1UsersId>>>
 
-    export type DeleteV1UsersIdMutationError = ApiError
+    export type DeleteV1UsersIdMutationError = GithubComSurggedAgniInternalAdaptersHttpWebApiError
 
     /**
  * @summary Delete a user
  */
-export const useDeleteV1UsersId = <TError = ApiError,
+export const useDeleteV1UsersId = <TError = GithubComSurggedAgniInternalAdaptersHttpWebApiError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteV1UsersId>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customMutator>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteV1UsersId>>,

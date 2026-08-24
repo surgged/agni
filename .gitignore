@@ -19,3 +19,6 @@
 
 # ai
 .commandcode/
+
+# mac
+.DS_Store

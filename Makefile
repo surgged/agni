@@ -8,7 +8,7 @@ BIN_DIR  := bin
 # run with either `make <target>` or `crank <target>` (crank transparently
 # delegates unknown commands to this Makefile).
 
-.PHONY: help clean
+.PHONY: help clean server worker fe dev
 
 help:
 	@echo "Common tasks are provided by the crank CLI:"
@@ -25,11 +25,16 @@ help:
 	@echo ""
 	@echo "Project-specific Makefile targets:"
 	@echo "  make clean       - remove build artifacts ($(BIN_DIR)/)"
+	@echo "  make server      - run only the API server (cmd/server)"
+	@echo "  make worker      - run only the Temporal worker (cmd/worker)"
+	@echo "  make fe          - run only the Vite frontend dev server"
+	@echo "  make dev         - run API server + frontend together"
 
 clean:
 	rm -rf $(BIN_DIR)
 
-.PHONY: dev
+.PHONY: dev server worker fe
+
 dev:
 	@echo "Starting backend (Go) & frontend (Vite)..."
 	@trap 'kill 0' EXIT; \
@@ -39,3 +44,15 @@ dev:
 	cd views && bun run dev & \
 	FE_PID=$$!; \
 	wait
+
+# Run only the API server (cmd/server)
+server:
+	crank run
+
+# Run only the Temporal worker (cmd/worker)
+worker:
+	go run ./cmd/worker
+
+# Run only the Vite dev server (frontend)
+fe:
+	cd views && bun run dev

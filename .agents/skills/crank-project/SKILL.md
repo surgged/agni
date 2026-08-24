@@ -96,7 +96,7 @@ internal/
   domain/{aggregate}/        — aggregates, events, repository ports, errors
   application/{aggregate}/   — command/query handlers, CQRS
   adapters/http/web/v1/      — Echo HTTP handlers (versioned at /api/v1)
-  adapters/http/web/api/     — api.Error envelope
+  adapters/http/web/api/     — rest.Error envelope
   adapters/persistence/      — GORM/Bun repos (row DTO pattern, never scan into aggregate)
   ports/                     — cross-cutting interfaces
   application/uow/           — UnitOfWork + TxRepositories port
@@ -120,7 +120,7 @@ With the `outbox` feature, the UoW runs in a GORM/Bun transaction and appends ou
 
 ### Handlers
 
-HTTP handlers live in `package v1` under `internal/adapters/http/web/v1/`. Routes mount at `e.Group("/api/v1")`. Self-scoped endpoints (like users) verify `user_id == c.Param("id")`. All error responses use `api.Error` from `internal/adapters/http/web/api/`.
+HTTP handlers live in `package v1` under `internal/adapters/http/web/v1/`. Routes mount at `e.Group("/api/v1")`. Self-scoped endpoints (like users) verify `user_id == c.Param("id")`. All error responses use `rest.Error` from `internal/adapters/http/web/api/`.
 
 ### Authentication
 

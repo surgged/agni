@@ -1,0 +1,36 @@
+services:
+  db:
+    image: docker.io/library/postgres:16-alpine
+    environment:
+      POSTGRES_USER: agni
+      POSTGRES_PASSWORD: agni
+      POSTGRES_DB: agni
+    volumes:
+      - pgdata:/var/lib/postgresql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agni"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: docker.io/library/redis:8-alpine
+    ports:
+      - "6379:6379"
+
+  # Temporal dev server — single binary with embedded Web UI on :8233.
+  # Persistence: file-backed SQLite (--db-filename); in-memory if omitted.
+  temporal-dev:
+    image: temporalio/temporal:1.8.2
+    command: ["server", "start-dev", "--ip", "0.0.0.0", "--db-filename", "/home/temporal/temporal.db"]
+    ports:
+      - "7233:7233" # gRPC frontend (workers / SDK clients)
+      - "8233:8233" # Web UI — http://localhost:8233
+    volumes:
+      - temporal_data:/home/temporal
+
+volumes:
+  pgdata:
+  temporal_data:

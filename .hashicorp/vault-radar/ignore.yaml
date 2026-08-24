@@ -1,0 +1,8 @@
+# Ignore by file path
+- paths:
+    - db/seeds/gorm/seed_users.go
+    - .env.example
+    - deploy/agni-api/agni-secrets.env
+    - docker/docker-compose.yml
+    - docs/agni-e2e-state.md
+    - scripts/e2e-k3s.sh

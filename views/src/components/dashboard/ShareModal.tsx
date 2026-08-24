@@ -70,7 +70,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
     const expHours = expiryOption === 'never' ? null : parseInt(expiryOption, 10);
     const tokenHash = `tok_${Math.random().toString(36).substring(2, 10)}`;
-    const newShareUrl = `https://agni.dev/share/${tokenHash}?app=${app.id}`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const newShareUrl = `${origin}/share/${tokenHash}?app=${app.id}`;
 
     if (onGenerateShareLink) {
       onGenerateShareLink(app.id, recipientEmail, permission, expHours);
@@ -103,7 +104,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 Share Management — {app.name}
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                Generate secure tokenized access links and manage permissions for this MicroVM app.
+                Generate secure tokenized access links and manage permissions for this application.
               </DialogDescription>
             </div>
           </div>
@@ -227,7 +228,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             ) : (
               <div className="flex flex-col gap-2 max-h-[240px] overflow-y-auto pr-1">
                 {activeLinks.map((link) => {
-                  const shareUrl = `https://agni.dev/share/${link.tokenHash}`;
+                  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+                  const shareUrl = `${origin}/share/${link.tokenHash}`;
                   return (
                     <div
                       key={link.id}

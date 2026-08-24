@@ -31,8 +31,8 @@ export default function Register() {
             </span>
           </h1>
           <p className="text-muted-foreground text-base lg:text-lg leading-relaxed">
-            High-performance Kata MicroVM orchestrator and agent workspace.
-            Create your account to launch hardware-isolated micro-sandboxes and deploy apps.
+            High-performance cloud workspace for your applications.
+            Create your account to deploy, manage, and share your services.
           </p>
 
           {/* Feature highlights */}
@@ -40,22 +40,22 @@ export default function Register() {
             <div className="flex items-center gap-3 p-3.5 rounded-xl bg-background/60 border border-border">
               <Terminal className="size-5 text-orange-500 shrink-0" />
               <div>
-                <span className="text-sm font-semibold">MCP Agent Integration</span>
-                <p className="text-xs text-muted-foreground">Connect AI assistants directly via Model Context Protocol</p>
+                <span className="text-sm font-semibold">API & Agent Integration</span>
+                <p className="text-xs text-muted-foreground">Connect developer tools and assistants securely</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3.5 rounded-xl bg-background/60 border border-border">
               <ShieldCheck className="size-5 text-emerald-500 shrink-0" />
               <div>
-                <span className="text-sm font-semibold">Hardware-Isolated Sandboxes</span>
-                <p className="text-xs text-muted-foreground">Kata MicroVM security with 420ms cold boot</p>
+                <span className="text-sm font-semibold">Secure Sandboxes</span>
+                <p className="text-xs text-muted-foreground">Isolated execution environment for your apps</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3.5 rounded-xl bg-background/60 border border-border">
               <Sparkles className="size-5 text-amber-500 shrink-0" />
               <div>
                 <span className="text-sm font-semibold">Instant Deployment</span>
-                <p className="text-xs text-muted-foreground">Sub-second app launches with shareable HTTPS links</p>
+                <p className="text-xs text-muted-foreground">Fast app launches with shareable HTTPS links</p>
               </div>
             </div>
           </div>
@@ -91,7 +91,7 @@ export default function Register() {
         <div className="flex items-center justify-between text-xs text-muted-foreground mt-6 w-full max-w-md px-2">
           <div className="flex items-center gap-1.5">
             <Laptop className="size-3.5 text-orange-500" />
-            <span>Agni Engine v0.1.0 • Kata MicroVMs</span>
+            <span>Agni Engine v0.1.0</span>
           </div>
           <a
             href="https://github.com/indralab/agni"
